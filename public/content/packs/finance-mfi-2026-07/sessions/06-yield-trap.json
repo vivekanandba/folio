@@ -1,0 +1,62 @@
+{
+  "id": "yield-trap",
+  "kind": "classify",
+  "title": "Yield Trap",
+  "conceptIds": ["invit-yields"],
+  "intro": "InvITs can advertise striking yields. Sort each card into whether it supports a naive ‘high income like an FD’ reading — or warns that headline yield hides structure.",
+  "buckets": [
+    {
+      "id": "seduction",
+      "label": "Sounds like easy income",
+      "hint": "Marketing-friendly surface"
+    },
+    {
+      "id": "structure",
+      "label": "Look under the lid",
+      "hint": "Structure, risk, or true earn"
+    }
+  ],
+  "cards": [
+    {
+      "id": "c1",
+      "text": "Advertised annual yield of 12–20% vs bank FD rates",
+      "bucketId": "seduction"
+    },
+    {
+      "id": "c2",
+      "text": "Payout may include return of capital, not only earnings",
+      "bucketId": "structure"
+    },
+    {
+      "id": "c3",
+      "text": "Steady cash distributions highlighted in product notes",
+      "bucketId": "seduction"
+    },
+    {
+      "id": "c4",
+      "text": "Concession length and asset life bound future cash flows",
+      "bucketId": "structure"
+    },
+    {
+      "id": "c5",
+      "text": "Unit price can fall even while distributions continue",
+      "bucketId": "structure"
+    },
+    {
+      "id": "c6",
+      "text": "‘Attractive alternative to equity in a choppy market’ headline",
+      "bucketId": "seduction"
+    },
+    {
+      "id": "c7",
+      "text": "Counterparty and tariff/toll contract terms drive risk",
+      "bucketId": "structure"
+    },
+    {
+      "id": "c8",
+      "text": "Fees and trust structure sit between asset cash and your pocket",
+      "bucketId": "structure"
+    }
+  ],
+  "debrief": "Headline InvIT yields are a starting clue, not the ending answer. Separate distribution theatre from what you keep after structure, capital return, fees, and unit-price risk."
+}
