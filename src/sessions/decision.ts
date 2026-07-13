@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { burst } from '../fx'
 import type { DecisionSession } from '../types'
 import { pathTrail } from '../visuals'
 
@@ -20,49 +21,65 @@ export function mountDecision(
     }
 
     root.replaceChildren()
+    const stage = el('div', { class: 'stage stage-decision' }, [
+      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
+    ])
+    const inner = el('div', { class: 'stage-inner' })
+    inner.append(
+      el('div', { class: 'stage-kicker' }, [`Fork ${depth + 1}`]),
+      el('h2', { class: 'stage-title' }, [session.title]),
+    )
     if (session.intro && current === session.startId) {
-      root.append(el('p', { class: 'lead' }, [session.intro]))
+      inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
     }
 
-    root.append(
-      el('div', { class: 'decision-layout' }, [
-        pathTrail(notes),
-        el('div', { class: 'decision-stage' }, [
-          el('p', { class: 'muted small' }, [`Fork ${depth + 1}`]),
-          el('div', { class: 'decision-text pop-in' }, [
-            el('p', {}, [node.text]),
-          ]),
-        ]),
-      ]),
-    )
+    const layout = el('div', { class: 'decision-immersive' })
+    layout.append(pathTrail(notes))
+
+    const scene = el('div', { class: 'decision-scene pop-in' }, [
+      el('div', { class: 'decision-prompt' }, [node.text]),
+    ])
 
     if (node.ending) {
-      const stage = root.querySelector('.decision-stage')!
-      stage.append(
-        el('div', { class: 'result-card pop-in' }, [
+      scene.append(
+        el('div', { class: 'result-card ending-card pop-in' }, [
           el('p', { class: 'eyebrow' }, ['Principle']),
           el('h2', {}, [node.ending.principle]),
           el('p', {}, [node.ending.debrief]),
         ]),
       )
+      layout.append(scene)
+      inner.append(layout)
+      stage.append(inner)
+      root.append(stage)
+      if (node.ending.score > 0) burst(scene)
       onComplete(node.ending.score, 1)
       return
     }
 
-    const choices = el('div', { class: 'choice-list' })
-    for (const choice of node.choices ?? []) {
-      const btn = el('button', { class: 'choice-btn fork-btn', type: 'button' }, [
-        choice.label,
+    const doors = el('div', { class: 'fork-doors' })
+    ;(node.choices ?? []).forEach((choice, i) => {
+      const door = el('button', {
+        class: `fork-door door-${i % 2 === 0 ? 'a' : 'b'}`,
+        type: 'button',
+      }, [
+        el('span', { class: 'door-label' }, [i % 2 === 0 ? 'Path A' : 'Path B']),
+        el('span', { class: 'door-text' }, [choice.label]),
       ])
-      btn.addEventListener('click', () => {
+      door.addEventListener('click', () => {
+        burst(door, i % 2 === 0 ? ['#f59e0b', '#fbbf24'] : ['#6366f1', '#a5b4fc'])
         if (choice.note) notes.push(choice.note)
         current = choice.next
         depth += 1
-        render()
+        window.setTimeout(render, 180)
       })
-      choices.append(btn)
-    }
-    root.querySelector('.decision-stage')!.append(choices)
+      doors.append(door)
+    })
+    scene.append(doors)
+    layout.append(scene)
+    inner.append(layout)
+    stage.append(inner)
+    root.append(stage)
   }
 
   render()
