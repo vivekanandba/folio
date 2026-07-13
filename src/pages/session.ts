@@ -24,9 +24,10 @@ export async function renderSession(
 
   const session = await loadSession(packPath, file)
 
-  const shell = el('div', { class: 'session-shell' })
+  const shell = el('div', { class: 'session-shell immersive' })
   const mount = el('div', { class: 'session-mount' })
 
+  root.classList.add('main-wide')
   root.replaceChildren(
     el('nav', { class: 'crumb' }, [
       el('a', { href: href({ name: 'hub' }) }, ['Folio']),

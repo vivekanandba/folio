@@ -21,6 +21,7 @@ app.append(shell)
 const main = shell.querySelector<HTMLElement>('#main')!
 
 onRoute(async (route) => {
+  main.classList.remove('main-wide')
   try {
     switch (route.name) {
       case 'hub':

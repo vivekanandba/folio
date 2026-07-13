@@ -19,24 +19,31 @@ export async function renderHub(root: HTMLElement): Promise<void> {
     const pct = total ? Math.round((done / total) * 100) : 0
     cards.append(
       el('a', {
-        class: 'pack-card',
+        class: 'pack-card cinematic',
         href: href({ name: 'pack', packId: meta.id }),
       }, [
-        el('div', { class: 'pack-card-top' }, [
-          el('span', { class: 'tag' }, [meta.subject]),
-          el('span', { class: 'pack-type' }, [meta.type]),
+        el('div', { class: 'pack-card-art', 'aria-hidden': 'true' }, [
+          el('div', { class: 'art-orb orb-1' }),
+          el('div', { class: 'art-orb orb-2' }),
+          el('div', { class: 'art-orb orb-3' }),
         ]),
-        el('h2', {}, [meta.title]),
-        el('p', {}, [meta.summary]),
-        el('div', { class: 'pack-progress' }, [
-          el('div', { class: 'pack-progress-track' }, [
-            el('div', {
-              class: 'pack-progress-fill',
-              style: `width:${pct}%`,
-            }),
+        el('div', { class: 'pack-card-body' }, [
+          el('div', { class: 'pack-card-top' }, [
+            el('span', { class: 'tag' }, [meta.subject]),
+            el('span', { class: 'pack-type' }, [meta.type]),
           ]),
-          el('span', { class: 'muted small' }, [
-            `${done}/${total} sessions`,
+          el('h2', {}, [meta.title]),
+          el('p', {}, [meta.summary]),
+          el('div', { class: 'pack-progress' }, [
+            el('div', { class: 'pack-progress-track' }, [
+              el('div', {
+                class: 'pack-progress-fill',
+                style: `width:${pct}%`,
+              }),
+            ]),
+            el('span', { class: 'muted small' }, [
+              `${done}/${total} sessions`,
+            ]),
           ]),
         ]),
       ]),
@@ -44,18 +51,18 @@ export async function renderHub(root: HTMLElement): Promise<void> {
   }
 
   root.replaceChildren(
-    el('header', { class: 'page-header hub-hero' }, [
+    el('header', { class: 'page-header hub-hero cinematic-hero' }, [
       el('p', { class: 'eyebrow' }, ['Folio']),
-      el('h1', {}, ['What you’ve learned, ready to revisit']),
+      el('h1', {}, ['Learn it once. Play it back.']),
       el('p', { class: 'lead' }, [
-        'Interactive visual sessions and concept cards — start with finance, grow into anything you study.',
+        'Revision as interactive stages — peel clues, drag cards, twist knobs, walk decision forks.',
       ]),
       el('div', { class: 'kind-strip' }, [
         chip('Detective'),
         chip('Lab'),
         chip('Audit map'),
         chip('Decision forks'),
-        chip('Classify'),
+        chip('Sort bench'),
       ]),
     ]),
     cards,

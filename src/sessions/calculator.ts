@@ -1,22 +1,26 @@
 import { el } from '../dom'
+import { burst, donut, shake } from '../fx'
 import type { CalculatorSession } from '../types'
 import { gauge, twinBars } from '../visuals'
 
 function activeShare(
   holdings: { fundWeight: number; indexWeight: number }[],
 ): number {
-  const sum = holdings.reduce(
-    (acc, h) => acc + Math.abs(h.fundWeight - h.indexWeight),
-    0,
+  return (
+    holdings.reduce(
+      (acc, h) => acc + Math.abs(h.fundWeight - h.indexWeight),
+      0,
+    ) / 2
   )
-  return sum / 2
 }
 
 function caption(as: number): string {
-  if (as < 0.2) return 'Looks close to an index fund.'
-  if (as < 0.6) return 'Moderately active.'
-  return 'Highly different from the index.'
+  if (as < 0.2) return 'Closet indexer territory'
+  if (as < 0.6) return 'Moderately active'
+  return 'Highly different from the index'
 }
+
+const COLORS = ['#0f766e', '#c2410c', '#1d4ed8', '#a16207', '#7c3aed']
 
 export function mountCalculator(
   root: HTMLElement,
@@ -27,52 +31,72 @@ export function mountCalculator(
 
   const renderLab = () => {
     root.replaceChildren()
+    const stage = el('div', { class: 'stage stage-calculator' }, [
+      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
+    ])
+    const inner = el('div', { class: 'stage-inner' })
+    inner.append(
+      el('div', { class: 'stage-kicker' }, ['Live lab']),
+      el('h2', { class: 'stage-title' }, [session.title]),
+    )
     if (session.intro) {
-      root.append(el('p', { class: 'lead' }, [session.intro]))
+      inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
     }
 
-    root.append(
-      el('p', { class: 'muted' }, [
-        'Active share = ½ × Σ |fund weight − index weight|. Drag fund weights; watch the gauge and bar gaps move.',
-      ]),
-    )
+    const gaugeHost = el('div', { class: 'lab-left' })
+    const chartHost = el('div', { class: 'lab-right' })
+    const board = el('div', { class: 'lab-immersive' }, [gaugeHost, chartHost])
 
-    const as = activeShare(weights)
-    const board = el('div', { class: 'lab-board' })
-    const gaugeHost = el('div', { class: 'lab-gauge' })
-    gaugeHost.append(gauge(as, 'Active share', caption(as)))
-
-    const chartHost = el('div', { class: 'lab-chart viz-panel' })
-    const rebuildChart = () => {
+    const refreshViz = () => {
+      const as = activeShare(weights)
+      gaugeHost.replaceChildren(
+        gauge(as, 'Active share', caption(as)),
+        el('div', { class: 'as-scale' }, [
+          el('span', {}, ['Index-like']),
+          el('span', {}, ['Active']),
+          el('span', {}, ['Very active']),
+        ]),
+      )
+      const segs = weights.map((w, j) => ({
+        label: w.name,
+        pct: Math.max(0, Math.round(w.fundWeight * 100)),
+        color: COLORS[j % COLORS.length],
+      }))
       chartHost.replaceChildren(
-        el('p', { class: 'viz-title' }, ['Fund vs index weights']),
-        twinBars(
-          weights.map((h) => ({
-            name: h.name,
-            fund: h.fundWeight,
-            index: h.indexWeight,
-          })),
-        ),
+        donut(segs.filter((s) => s.pct > 0), {
+          title: 'Your fund mix',
+          size: 200,
+        }),
+        el('div', { class: 'viz-panel tight' }, [
+          twinBars(
+            weights.map((w) => ({
+              name: w.name,
+              fund: w.fundWeight,
+              index: w.indexWeight,
+            })),
+          ),
+        ]),
       )
     }
-    rebuildChart()
+    refreshViz()
+    inner.append(board)
 
-    const refreshGauge = () => {
-      const next = activeShare(weights)
-      gaugeHost.replaceChildren(gauge(next, 'Active share', caption(next)))
-      rebuildChart()
-    }
-
-    board.append(gaugeHost, chartHost)
-
-    const table = el('div', { class: 'holdings' })
+    const sliders = el('div', { class: 'slider-deck' }, [
+      el('h3', {}, ['Twist the knobs']),
+      el('p', { class: 'muted small' }, [
+        'Index weights stay fixed. Drag fund weights — gauge and donut move live.',
+      ]),
+    ])
     weights.forEach((h, i) => {
-      const row = el('div', { class: 'holding-row' }, [
-        el('span', { class: 'holding-name' }, [h.name]),
-        el('span', { class: 'muted small' }, [
-          `Index ${(h.indexWeight * 100).toFixed(0)}%`,
+      const row = el('div', { class: 'knob-row' })
+      row.append(
+        el('div', { class: 'knob-label' }, [
+          el('strong', {}, [h.name]),
+          el('span', { class: 'muted small' }, [
+            `Index ${(h.indexWeight * 100).toFixed(0)}%`,
+          ]),
         ]),
-      ])
+      )
       const input = document.createElement('input')
       input.type = 'range'
       input.min = '0'
@@ -84,29 +108,36 @@ export function mountCalculator(
       input.addEventListener('input', () => {
         weights[i].fundWeight = Number(input.value) / 100
         val.textContent = `${input.value}%`
-        refreshGauge()
+        refreshViz()
       })
       row.append(input, val)
-      table.append(row)
+      sliders.append(row)
     })
 
-    const next = el('button', { class: 'primary', type: 'button' }, [
-      'Continue to judgment',
+    const next = el('button', { class: 'primary pulse', type: 'button' }, [
+      'Lock lab → judgment',
     ])
     next.addEventListener('click', () => renderJudgment())
-    root.append(board, table, next)
+    inner.append(sliders, next)
+    stage.append(inner)
+    root.append(stage)
   }
 
   const renderJudgment = () => {
-    root.replaceChildren(
-      el('div', { class: 'judgment-panel viz-panel' }, [
-        el('p', { class: 'eyebrow' }, ['Judgment']),
-        el('h2', {}, [session.judgmentPrompt]),
-      ]),
-    )
-    const choices = el('div', { class: 'choice-list' })
+    root.replaceChildren()
+    const stage = el('div', { class: 'stage stage-calculator' }, [
+      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
+    ])
+    const inner = el('div', { class: 'stage-inner' }, [
+      el('div', { class: 'stage-kicker' }, ['Judgment call']),
+      el('h2', { class: 'stage-title' }, [session.judgmentPrompt]),
+    ])
+    const choices = el('div', { class: 'choice-grid' })
     session.judgmentChoices.forEach((choice, i) => {
-      const btn = el('button', { class: 'choice-btn', type: 'button' }, [choice])
+      const btn = el('button', { class: 'choice-tile', type: 'button' }, [
+        el('span', { class: 'choice-letter' }, [String.fromCharCode(65 + i)]),
+        el('span', {}, [choice]),
+      ])
       btn.addEventListener('click', () => {
         const correct = i === session.judgmentAnswerIndex
         choices.querySelectorAll('button').forEach((b, j) => {
@@ -114,7 +145,9 @@ export function mountCalculator(
           if (j === session.judgmentAnswerIndex) b.classList.add('correct')
           if (j === i && !correct) b.classList.add('wrong')
         })
-        root.append(
+        if (correct) burst(btn)
+        else shake(btn)
+        inner.append(
           el('div', { class: 'feedback pop-in' }, [
             el('p', {}, [session.debrief]),
           ]),
@@ -123,7 +156,9 @@ export function mountCalculator(
       })
       choices.append(btn)
     })
-    root.append(choices)
+    inner.append(choices)
+    stage.append(inner)
+    root.append(stage)
   }
 
   renderLab()
