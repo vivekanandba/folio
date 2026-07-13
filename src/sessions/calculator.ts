@@ -1,5 +1,6 @@
 import { el } from '../dom'
 import type { CalculatorSession } from '../types'
+import { gauge, twinBars } from '../visuals'
 
 function activeShare(
   holdings: { fundWeight: number; indexWeight: number }[],
@@ -9,6 +10,12 @@ function activeShare(
     0,
   )
   return sum / 2
+}
+
+function caption(as: number): string {
+  if (as < 0.2) return 'Looks close to an index fund.'
+  if (as < 0.6) return 'Moderately active.'
+  return 'Highly different from the index.'
 }
 
 export function mountCalculator(
@@ -26,29 +33,37 @@ export function mountCalculator(
 
     root.append(
       el('p', { class: 'muted' }, [
-        'Active share = ½ × Σ |fund weight − index weight|. Drag fund weights; index stays fixed.',
+        'Active share = ½ × Σ |fund weight − index weight|. Drag fund weights; watch the gauge and bar gaps move.',
       ]),
     )
 
     const as = activeShare(weights)
-    const meter = el('div', { class: 'meter' }, [
-      el('div', { class: 'meter-label' }, [
-        `Active share: ${(as * 100).toFixed(1)}%`,
-      ]),
-      el('div', { class: 'meter-bar' }, [
-        el('div', {
-          class: 'meter-fill',
-          style: `width:${Math.min(100, as * 100)}%`,
-        }),
-      ]),
-      el('p', { class: 'muted small' }, [
-        as < 0.2
-          ? 'Looks close to an index fund.'
-          : as < 0.6
-            ? 'Moderately active.'
-            : 'Highly different from the index.',
-      ]),
-    ])
+    const board = el('div', { class: 'lab-board' })
+    const gaugeHost = el('div', { class: 'lab-gauge' })
+    gaugeHost.append(gauge(as, 'Active share', caption(as)))
+
+    const chartHost = el('div', { class: 'lab-chart viz-panel' })
+    const rebuildChart = () => {
+      chartHost.replaceChildren(
+        el('p', { class: 'viz-title' }, ['Fund vs index weights']),
+        twinBars(
+          weights.map((h) => ({
+            name: h.name,
+            fund: h.fundWeight,
+            index: h.indexWeight,
+          })),
+        ),
+      )
+    }
+    rebuildChart()
+
+    const refreshGauge = () => {
+      const next = activeShare(weights)
+      gaugeHost.replaceChildren(gauge(next, 'Active share', caption(next)))
+      rebuildChart()
+    }
+
+    board.append(gaugeHost, chartHost)
 
     const table = el('div', { class: 'holdings' })
     weights.forEach((h, i) => {
@@ -69,12 +84,7 @@ export function mountCalculator(
       input.addEventListener('input', () => {
         weights[i].fundWeight = Number(input.value) / 100
         val.textContent = `${input.value}%`
-        // re-render meter only cheaply
-        const next = activeShare(weights)
-        meter.querySelector('.meter-label')!.textContent =
-          `Active share: ${(next * 100).toFixed(1)}%`
-        ;(meter.querySelector('.meter-fill') as HTMLElement).style.width =
-          `${Math.min(100, next * 100)}%`
+        refreshGauge()
       })
       row.append(input, val)
       table.append(row)
@@ -84,12 +94,15 @@ export function mountCalculator(
       'Continue to judgment',
     ])
     next.addEventListener('click', () => renderJudgment())
-    root.append(meter, table, next)
+    root.append(board, table, next)
   }
 
   const renderJudgment = () => {
     root.replaceChildren(
-      el('h2', {}, [session.judgmentPrompt]),
+      el('div', { class: 'judgment-panel viz-panel' }, [
+        el('p', { class: 'eyebrow' }, ['Judgment']),
+        el('h2', {}, [session.judgmentPrompt]),
+      ]),
     )
     const choices = el('div', { class: 'choice-list' })
     session.judgmentChoices.forEach((choice, i) => {
@@ -102,7 +115,7 @@ export function mountCalculator(
           if (j === i && !correct) b.classList.add('wrong')
         })
         root.append(
-          el('div', { class: 'feedback' }, [
+          el('div', { class: 'feedback pop-in' }, [
             el('p', {}, [session.debrief]),
           ]),
         )

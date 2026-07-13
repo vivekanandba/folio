@@ -1,8 +1,9 @@
 import { loadPackMeta, loadSession } from '../content'
-import { el, kindLabel } from '../dom'
+import { el, kindBlurb, kindLabel } from '../dom'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
 import { mountSession } from '../sessions'
+import { kindIcon } from '../visuals'
 import { resolvePackPath } from './pack'
 
 export async function renderSession(
@@ -34,9 +35,13 @@ export async function renderSession(
       el('span', {}, [' / ']),
       el('span', {}, [session.title]),
     ]),
-    el('header', { class: 'page-header compact' }, [
-      el('span', { class: 'tag kind' }, [kindLabel(session.kind)]),
-      el('h1', {}, [session.title]),
+    el('header', { class: 'page-header compact session-hero' }, [
+      kindIcon(session.kind),
+      el('div', {}, [
+        el('span', { class: 'tag kind' }, [kindLabel(session.kind)]),
+        el('h1', {}, [session.title]),
+        el('p', { class: 'muted small' }, [kindBlurb(session.kind)]),
+      ]),
     ]),
     shell,
   )

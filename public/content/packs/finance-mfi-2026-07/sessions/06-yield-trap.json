@@ -8,12 +8,14 @@
     {
       "id": "seduction",
       "label": "Sounds like easy income",
-      "hint": "Marketing-friendly surface"
+      "hint": "Marketing-friendly surface",
+      "tone": "warm"
     },
     {
       "id": "structure",
       "label": "Look under the lid",
-      "hint": "Structure, risk, or true earn"
+      "hint": "Structure, risk, or true earn",
+      "tone": "cool"
     }
   ],
   "cards": [

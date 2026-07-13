@@ -53,6 +53,8 @@ export interface ClassifyBucket {
   id: string
   label: string
   hint?: string
+  /** Visual accent: warm | cool | neutral */
+  tone?: 'warm' | 'cool' | 'neutral'
 }
 
 export interface ClassifySession {
@@ -71,6 +73,14 @@ export interface DetectiveFact {
   value: string
 }
 
+export interface AllocationSegment {
+  label: string
+  pct: number
+  /** Fact index (1-based) after which this segment appears/updates */
+  revealAfter: number
+  color?: string
+}
+
 export interface DetectiveSession {
   id: string
   kind: 'detective'
@@ -78,6 +88,8 @@ export interface DetectiveSession {
   conceptIds: string[]
   intro?: string
   facts: DetectiveFact[]
+  /** Optional live allocation chart that builds as clues appear */
+  composition?: AllocationSegment[]
   question: string
   choices: string[]
   answerIndex: number
