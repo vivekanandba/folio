@@ -30,3 +30,15 @@ export function kindLabel(kind: string): string {
   }
   return map[kind] ?? kind
 }
+
+export function kindBlurb(kind: string): string {
+  const map: Record<string, string> = {
+    quiz: 'Check what stuck',
+    classify: 'Sort the signal',
+    detective: 'Clues → diagnosis',
+    calculator: 'Hands-on numbers',
+    audit: 'Map your gaps',
+    decision: 'Forking judgment',
+  }
+  return map[kind] ?? ''
+}

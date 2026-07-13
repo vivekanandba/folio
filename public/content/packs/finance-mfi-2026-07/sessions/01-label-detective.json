@@ -3,7 +3,7 @@
   "kind": "detective",
   "title": "Label Detective",
   "conceptIds": ["flexi-cap-vs-multi-cap", "style-drift-flexi-tax"],
-  "intro": "A fund is sold as flexible and go-anywhere. Clues about its portfolio arrive one by one. Diagnose what it really behaves like.",
+  "intro": "A fund is sold as flexible and go-anywhere. Clues about its portfolio arrive one by one. Watch the allocation bar assemble — then diagnose what it really behaves like.",
   "facts": [
     {
       "label": "Equity mandate",
@@ -25,6 +25,11 @@
       "label": "Peer contrast",
       "value": "True multi-cap peers must hold at least 25% each in large, mid, and small"
     }
+  ],
+  "composition": [
+    { "label": "Large", "pct": 60, "revealAfter": 2, "color": "#0f766e" },
+    { "label": "Mid", "pct": 22, "revealAfter": 3, "color": "#c2410c" },
+    { "label": "Small", "pct": 18, "revealAfter": 3, "color": "#1d4ed8" }
   ],
   "question": "Best diagnosis for this case?",
   "choices": [

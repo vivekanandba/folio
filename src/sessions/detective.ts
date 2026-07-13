@@ -1,5 +1,6 @@
 import { el } from '../dom'
 import type { DetectiveSession } from '../types'
+import { stackedBar, stepPills } from '../visuals'
 
 export function mountDetective(
   root: HTMLElement,
@@ -8,26 +9,71 @@ export function mountDetective(
 ): void {
   let revealed = 0
 
+  const compositionFor = (n: number) => {
+    if (!session.composition?.length) return null
+    const segs = session.composition
+      .filter((s) => s.revealAfter <= n)
+      .map((s) => ({ label: s.label, pct: s.pct, color: s.color }))
+    if (!segs.length) return null
+    return stackedBar(segs, {
+      title: n < session.facts.length ? 'Portfolio emerging…' : 'Portfolio picture',
+      height: 36,
+    })
+  }
+
   const render = () => {
     root.replaceChildren()
     if (session.intro) {
       root.append(el('p', { class: 'lead' }, [session.intro]))
     }
+    root.append(stepPills(Math.max(1, revealed), session.facts.length))
+
+    const viz = compositionFor(revealed)
+    if (viz) {
+      viz.classList.add('viz-panel', 'pop-in')
+      root.append(viz)
+    } else if (session.composition) {
+      root.append(
+        el('div', { class: 'viz-placeholder' }, [
+          el('p', { class: 'muted' }, [
+            'Reveal clues to assemble the portfolio picture.',
+          ]),
+        ]),
+      )
+    }
 
     const dossier = el('div', { class: 'dossier' }, [
-      el('h2', {}, ['Dossier']),
+      el('div', { class: 'dossier-head' }, [
+        el('h2', {}, ['Case dossier']),
+        el('span', { class: 'muted small' }, [
+          `${revealed}/${session.facts.length} clues`,
+        ]),
+      ]),
     ])
-    session.facts.slice(0, revealed).forEach((fact) => {
+
+    if (revealed === 0) {
       dossier.append(
-        el('div', { class: 'fact' }, [
-          el('span', { class: 'fact-label' }, [fact.label]),
-          el('span', { class: 'fact-value' }, [fact.value]),
+        el('div', { class: 'dossier-empty' }, [
+          'No clues yet — peel the case open one layer at a time.',
+        ]),
+      )
+    }
+
+    session.facts.slice(0, revealed).forEach((fact, i) => {
+      dossier.append(
+        el('div', { class: 'fact pop-in', style: `--i:${i}` }, [
+          el('span', { class: 'fact-index' }, [String(i + 1)]),
+          el('div', { class: 'fact-body' }, [
+            el('span', { class: 'fact-label' }, [fact.label]),
+            el('span', { class: 'fact-value' }, [fact.value]),
+          ]),
         ]),
       )
     })
     root.append(dossier)
 
     if (revealed < session.facts.length) {
+      const actions = el('div', { class: 'session-actions' })
       const btn = el('button', { class: 'primary', type: 'button' }, [
         revealed === 0 ? 'Reveal first clue' : 'Reveal next clue',
       ])
@@ -35,19 +81,15 @@ export function mountDetective(
         revealed += 1
         render()
       })
-      root.append(btn)
+      actions.append(btn)
       if (revealed > 0) {
-        root.append(
-          el('p', { class: 'muted' }, [
-            `${revealed} of ${session.facts.length} clues revealed. You can diagnose early when ready.`,
-          ]),
-        )
         const diagnoseEarly = el('button', { class: 'ghost', type: 'button' }, [
           'Diagnose now',
         ])
         diagnoseEarly.addEventListener('click', () => showDiagnosis())
-        root.append(diagnoseEarly)
+        actions.append(diagnoseEarly)
       }
+      root.append(actions)
       return
     }
 
@@ -56,16 +98,31 @@ export function mountDetective(
 
   const showDiagnosis = () => {
     root.replaceChildren()
-    const dossier = el('div', { class: 'dossier' }, [el('h2', {}, ['Full dossier'])])
-    session.facts.forEach((fact) => {
+    root.append(stepPills(session.facts.length, session.facts.length))
+    const viz = compositionFor(session.facts.length)
+    if (viz) {
+      viz.classList.add('viz-panel')
+      root.append(viz)
+    }
+
+    const dossier = el('div', { class: 'dossier' }, [
+      el('h2', {}, ['Full dossier']),
+    ])
+    session.facts.forEach((fact, i) => {
       dossier.append(
         el('div', { class: 'fact' }, [
-          el('span', { class: 'fact-label' }, [fact.label]),
-          el('span', { class: 'fact-value' }, [fact.value]),
+          el('span', { class: 'fact-index' }, [String(i + 1)]),
+          el('div', { class: 'fact-body' }, [
+            el('span', { class: 'fact-label' }, [fact.label]),
+            el('span', { class: 'fact-value' }, [fact.value]),
+          ]),
         ]),
       )
     })
-    root.append(dossier, el('h2', {}, [session.question]))
+    root.append(
+      dossier,
+      el('h2', { class: 'diagnose-q' }, [session.question]),
+    )
 
     const choices = el('div', { class: 'choice-list' })
     session.choices.forEach((choice, i) => {
@@ -78,7 +135,7 @@ export function mountDetective(
           if (j === i && !correct) b.classList.add('wrong')
         })
         root.append(
-          el('div', { class: 'feedback' }, [
+          el('div', { class: 'feedback pop-in' }, [
             el('p', { class: correct ? 'ok' : 'bad' }, [
               correct ? 'Diagnosis matches the case.' : 'Close — see the debrief.',
             ]),

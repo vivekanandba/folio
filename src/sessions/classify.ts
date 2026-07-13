@@ -15,20 +15,40 @@ export function mountClassify(
       root.append(el('p', { class: 'lead' }, [session.intro]))
     }
 
+    const progress = el('div', { class: 'classify-progress' }, [
+      el('div', { class: 'classify-progress-track' }, [
+        el('div', {
+          class: 'classify-progress-fill',
+          style: `width:${(assignment.size / max) * 100}%`,
+        }),
+      ]),
+      el('span', { class: 'muted small' }, [
+        `${assignment.size}/${max} placed`,
+      ]),
+    ])
+    root.append(progress)
+
     const board = el('div', { class: 'classify-board' })
     for (const bucket of session.buckets) {
-      const col = el('div', { class: 'bucket', 'data-bucket': bucket.id }, [
-        el('h3', {}, [bucket.label]),
+      const tone = bucket.tone ?? 'neutral'
+      const col = el('div', {
+        class: `bucket tone-${tone}`,
+        'data-bucket': bucket.id,
+      }, [
+        el('div', { class: 'bucket-head' }, [
+          el('span', { class: `bucket-dot tone-${tone}` }),
+          el('h3', {}, [bucket.label]),
+        ]),
       ])
       if (bucket.hint) col.append(el('p', { class: 'muted small' }, [bucket.hint]))
-      const drop = el('div', { class: 'bucket-drop' })
-      col.append(drop)
+      col.append(el('div', { class: 'bucket-drop' }))
       board.append(col)
     }
 
     const pool = el('div', { class: 'card-pool' }, [
-      el('h3', {}, ['Cards']),
+      el('h3', {}, ['Cards to sort']),
     ])
+    const poolInner = el('div', { class: 'card-pool-inner' })
 
     for (const card of session.cards) {
       if (assignment.has(card.id)) continue
@@ -38,13 +58,15 @@ export function mountClassify(
         'data-card': card.id,
       }, [card.text])
       chip.addEventListener('click', () => {
-        const picker = el('div', { class: 'bucket-picker' }, [
-          el('p', {}, ['Place in:']),
+        const picker = el('div', { class: 'bucket-picker pop-in' }, [
+          el('p', { class: 'small' }, ['Place in:']),
         ])
         for (const bucket of session.buckets) {
-          const b = el('button', { class: 'choice-btn', type: 'button' }, [
-            bucket.label,
-          ])
+          const tone = bucket.tone ?? 'neutral'
+          const b = el('button', {
+            class: `choice-btn tone-${tone}`,
+            type: 'button',
+          }, [bucket.label])
           b.addEventListener('click', () => {
             assignment.set(card.id, bucket.id)
             render()
@@ -53,17 +75,17 @@ export function mountClassify(
         }
         chip.replaceWith(picker)
       })
-      pool.append(chip)
+      poolInner.append(chip)
     }
+    pool.append(poolInner)
 
-    // Render assigned into buckets
     for (const card of session.cards) {
       const bid = assignment.get(card.id)
       if (!bid) continue
       const drop = board.querySelector(`[data-bucket="${bid}"] .bucket-drop`)
       if (!drop) continue
       const chip = el('button', {
-        class: 'classify-card placed',
+        class: 'classify-card placed pop-in',
         type: 'button',
       }, [card.text])
       chip.addEventListener('click', () => {
@@ -82,14 +104,27 @@ export function mountClassify(
     }, ['Check placement'])
     check.addEventListener('click', () => {
       let score = 0
+      const review = el('div', { class: 'classify-review' })
       for (const card of session.cards) {
-        if (assignment.get(card.id) === card.bucketId) score += 1
+        const got = assignment.get(card.id)
+        const ok = got === card.bucketId
+        if (ok) score += 1
+        const bucket = session.buckets.find((b) => b.id === card.bucketId)
+        review.append(
+          el('div', { class: `review-row ${ok ? 'ok' : 'bad'}` }, [
+            el('span', {}, [card.text]),
+            el('span', { class: 'muted small' }, [
+              ok ? 'Correct' : `Belongs in: ${bucket?.label ?? card.bucketId}`,
+            ]),
+          ]),
+        )
       }
       root.replaceChildren(
-        el('div', { class: 'result-card' }, [
+        el('div', { class: 'result-card pop-in' }, [
           el('h2', {}, ['Placement checked']),
-          el('p', {}, [`${score} / ${max} in the right bucket.`]),
+          el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
           el('p', {}, [session.debrief]),
+          review,
         ]),
       )
       onComplete(score, max)
