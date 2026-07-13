@@ -36,9 +36,10 @@ export function mountDecision(
     const layout = el('div', { class: 'decision-immersive' })
     layout.append(pathTrail(notes))
 
-    const scene = el('div', { class: 'decision-scene pop-in' }, [
-      el('div', { class: 'decision-prompt' }, [node.text]),
-    ])
+    const scene = el('div', { class: 'decision-scene pop-in' })
+    if (node.text) {
+      scene.append(el('div', { class: 'decision-prompt' }, [node.text]))
+    }
 
     if (node.ending) {
       scene.append(

@@ -134,7 +134,7 @@ export interface AuditSession {
 
 export interface DecisionNode {
   id: string
-  text: string
+  text?: string
   choices?: { label: string; next: string; note?: string }[]
   ending?: { principle: string; debrief: string; score: number }
 }
