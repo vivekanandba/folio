@@ -1,0 +1,25 @@
+{
+  "id": "finance-mfi-2026-07",
+  "title": "Mutual Fund Insight — Jul 2026",
+  "subject": "finance",
+  "type": "magazine",
+  "source": "Personal study notes paraphrased from Value Research Mutual Fund Insight, July 2026 (Vol. XXIII, No. 10). Not affiliated with Value Research; not investment advice.",
+  "summary": "Flexi-cap style drift, planning pillars, active share, and InvIT yield traps — revised through interactive sessions.",
+  "tags": ["mutual-funds", "india", "sebi", "value-research"],
+  "concepts": [
+    "flexi-cap-vs-multi-cap",
+    "style-drift-flexi-tax",
+    "four-pillars-planning",
+    "active-share",
+    "invit-yields",
+    "crowded-corners"
+  ],
+  "sessions": [
+    "01-label-detective.json",
+    "02-sebi-fork.json",
+    "03-act-or-leave-alone.json",
+    "04-four-pillar-audit.json",
+    "05-active-share-lab.json",
+    "06-yield-trap.json"
+  ]
+}

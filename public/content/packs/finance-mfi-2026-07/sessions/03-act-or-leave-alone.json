@@ -1,0 +1,85 @@
+{
+  "id": "act-or-leave-alone",
+  "kind": "decision",
+  "title": "Act or Leave Alone",
+  "conceptIds": ["style-drift-flexi-tax"],
+  "intro": "You hold a flexi-cap SIP for years. A fresh analysis shows it has quietly behaved like a large-cap fund. What now?",
+  "startId": "news",
+  "nodes": [
+    {
+      "id": "news",
+      "text": "Your fund’s large-cap weight has barely moved through a crash and a bull market. Mid and small sleeves stay thin. Your first instinct?",
+      "choices": [
+        {
+          "label": "Sell everything tomorrow and switch to a hot multi-cap",
+          "next": "churn",
+          "note": "Chose restless exit."
+        },
+        {
+          "label": "Pause and verify: tax, goals, and whether the drift is real for MY folio",
+          "next": "verify",
+          "note": "Chose careful verification."
+        },
+        {
+          "label": "Ignore forever — analysis always causes harm",
+          "next": "ignore",
+          "note": "Chose total inaction."
+        }
+      ]
+    },
+    {
+      "id": "churn",
+      "text": "STCG/LTCG, exit loads, and timing risk hit at once. You may have fixed a style mismatch by creating a tax and behaviour problem. Want a calmer path?",
+      "choices": [
+        {
+          "label": "Back up — verify first, then adjust on the margin",
+          "next": "verify",
+          "note": "Recovered to the careful path."
+        }
+      ]
+    },
+    {
+      "id": "ignore",
+      "text": "Blind inaction is not the same as patience. If the fund no longer matches the job you hired it for, you still need a plan — just not a panicked one.",
+      "choices": [
+        {
+          "label": "Verify holdings vs my intent, then decide",
+          "next": "verify",
+          "note": "Moved to verification."
+        }
+      ]
+    },
+    {
+      "id": "verify",
+      "text": "Holdings confirm large-cap bias. Your goal was ‘true diversified flex across market caps.’ Sensible next move?",
+      "choices": [
+        {
+          "label": "Redirect new SIPs / fresh money toward a fund that matches the job; leave old units unless tax/plan says otherwise",
+          "next": "end-good",
+          "note": "Patient course-correction."
+        },
+        {
+          "label": "Day-trade the switch across five funds this week based on last quarter’s winners",
+          "next": "end-bad",
+          "note": "Churn disguised as optimisation."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "Read the finding; resist restless churn. Correct with patience — often on fresh investments.",
+        "debrief": "There is a difference between acting on every new article and noticing a lasting mandate mismatch. Knowing what you own is most of the work; the rest can be done calmly, one fresh investment at a time.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-bad",
+      "ending": {
+        "principle": "The impulse to act on every new finding has harmed more investors than many market falls.",
+        "debrief": "Style awareness is useful; hyperactivity is not. Prefer deliberate reallocation over tax-blind, winner-chasing exits.",
+        "score": 0
+      }
+    }
+  ]
+}
