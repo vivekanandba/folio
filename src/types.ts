@@ -2,9 +2,12 @@ export type SessionKind =
   | 'quiz'
   | 'classify'
   | 'detective'
+  | 'lab'
   | 'calculator'
   | 'audit'
   | 'decision'
+
+export type NormalizedKind = Exclude<SessionKind, 'calculator'>
 
 export interface CatalogPackRef {
   id: string
@@ -15,7 +18,14 @@ export interface Catalog {
   packs: CatalogPackRef[]
 }
 
+export interface FolioCurriculum {
+  sheet?: string
+  concepts: string[]
+  sessions: string[]
+}
+
 export interface FolioPackMeta {
+  schemaVersion: 2
   id: string
   title: string
   subject: string
@@ -23,8 +33,35 @@ export interface FolioPackMeta {
   source: string
   summary: string
   tags: string[]
-  concepts: string[]
-  sessions: string[]
+  curriculum: FolioCurriculum
+  practiceNone?: string[]
+  /** @deprecated prefer curriculum */
+  concepts?: string[]
+  /** @deprecated prefer curriculum */
+  sessions?: string[]
+}
+
+export interface ConceptMeta {
+  id: string
+  title: string
+  summary?: string
+  relatedSessions: string[]
+  body: string
+}
+
+export interface DebriefBlock {
+  summary: string
+  principle?: string
+}
+
+export interface SessionBase {
+  schemaVersion: 2
+  id: string
+  title: string
+  conceptIds: string[]
+  estimatedMinutes?: number
+  intro?: string
+  debrief?: string | DebriefBlock
 }
 
 export interface QuizQuestion {
@@ -34,12 +71,8 @@ export interface QuizQuestion {
   explanation: string
 }
 
-export interface QuizSession {
-  id: string
+export interface QuizSession extends SessionBase {
   kind: 'quiz'
-  title: string
-  conceptIds: string[]
-  intro?: string
   questions: QuizQuestion[]
 }
 
@@ -53,19 +86,14 @@ export interface ClassifyBucket {
   id: string
   label: string
   hint?: string
-  /** Visual accent: warm | cool | neutral */
   tone?: 'warm' | 'cool' | 'neutral'
 }
 
-export interface ClassifySession {
-  id: string
+export interface ClassifySession extends SessionBase {
   kind: 'classify'
-  title: string
-  conceptIds: string[]
-  intro?: string
   buckets: ClassifyBucket[]
   cards: ClassifyCard[]
-  debrief: string
+  round2?: ClassifyCard[]
 }
 
 export interface DetectiveFact {
@@ -76,43 +104,54 @@ export interface DetectiveFact {
 export interface AllocationSegment {
   label: string
   pct: number
-  /** Fact index (1-based) after which this segment appears/updates */
   revealAfter: number
   color?: string
 }
 
-export interface DetectiveSession {
-  id: string
+export interface DetectiveSession extends SessionBase {
   kind: 'detective'
-  title: string
-  conceptIds: string[]
-  intro?: string
   facts: DetectiveFact[]
-  /** Optional live allocation chart that builds as clues appear */
   composition?: AllocationSegment[]
-  question: string
-  choices: string[]
-  answerIndex: number
-  debrief: string
+  /** Behaviour labels shown beside the visual */
+  diagnoses?: { id: string; label: string; correct?: boolean }[]
+  /** Legacy MCQ fields (migrated to diagnoses when absent) */
+  question?: string
+  choices?: string[]
+  answerIndex?: number
 }
 
-export interface CalculatorHolding {
-  name: string
-  fundWeight: number
-  indexWeight: number
-}
-
-export interface CalculatorSession {
+export interface LabInput {
   id: string
-  kind: 'calculator'
-  title: string
-  conceptIds: string[]
-  intro?: string
-  holdings: CalculatorHolding[]
-  judgmentPrompt: string
-  judgmentChoices: string[]
-  judgmentAnswerIndex: number
-  debrief: string
+  label: string
+  value: number
+  indexValue?: number
+  min?: number
+  max?: number
+  step?: number
+}
+
+export interface LabSession extends SessionBase {
+  kind: 'lab' | 'calculator'
+  formulaId?: string
+  inputs?: LabInput[]
+  constraints?: { sumTo?: number; epsilon?: number }
+  passBand?: { metric: string; min: number; max: number }
+  transferCheck?: {
+    prompt: string
+    choices: string[]
+    answerIndex: number
+  }
+  /** Legacy calculator fields */
+  holdings?: { name: string; fundWeight: number; indexWeight: number }[]
+  judgmentPrompt?: string
+  judgmentChoices?: string[]
+  judgmentAnswerIndex?: number
+}
+
+export interface AuditRemediation {
+  conceptId?: string
+  sessionId?: string
+  label?: string
 }
 
 export interface AuditPillar {
@@ -120,43 +159,89 @@ export interface AuditPillar {
   label: string
   prompt: string
   actions: string[]
+  remediation?: AuditRemediation[]
 }
 
-export interface AuditSession {
-  id: string
+export interface AuditSession extends SessionBase {
   kind: 'audit'
-  title: string
-  conceptIds: string[]
-  intro?: string
   pillars: AuditPillar[]
-  debrief: string
+}
+
+export interface DecisionChoice {
+  label: string
+  next: string
+  note?: string
+  scoreDelta?: number
 }
 
 export interface DecisionNode {
   id: string
   text?: string
-  choices?: { label: string; next: string; note?: string }[]
-  ending?: { principle: string; debrief: string; score: number }
+  choices?: DecisionChoice[]
+  ending?: { principle: string; debrief: string; score?: number }
 }
 
-export interface DecisionSession {
-  id: string
+export interface DecisionSession extends SessionBase {
   kind: 'decision'
-  title: string
-  conceptIds: string[]
-  intro?: string
   startId: string
   nodes: DecisionNode[]
+  maxScore?: number
 }
 
 export type Session =
   | QuizSession
   | ClassifySession
   | DetectiveSession
-  | CalculatorSession
+  | LabSession
   | AuditSession
   | DecisionSession
 
+export interface SheetBlock {
+  id: string
+  title: string
+  body: string
+  sessionId?: string
+  conceptId?: string
+}
+
+export interface SheetDoc {
+  title: string
+  claim: string
+  blocks: SheetBlock[]
+  diagram?: {
+    type: 'flow'
+    nodes: { id: string; label: string }[]
+    edges: { from: string; to: string }[]
+  }
+}
+
+export interface SessionAttempt {
+  at: string
+  score: number
+  maxScore: number
+}
+
+export interface SessionProgress {
+  attempts: SessionAttempt[]
+  bestScore: number
+  bestMax: number
+  completedAt?: string
+  reflectionOnly?: boolean
+}
+
+export interface ConceptProgress {
+  strength: number
+  lastPracticedAt?: string
+}
+
+export interface ProgressStoreV2 {
+  version: 2
+  lastPackId?: string
+  sessions: Record<string, SessionProgress>
+  concepts: Record<string, ConceptProgress>
+}
+
+/** @deprecated v1 shape retained for migration tests */
 export interface SessionResult {
   packId: string
   sessionId: string
@@ -166,7 +251,16 @@ export interface SessionResult {
   completedAt: string
 }
 
+/** @deprecated */
 export interface ProgressStore {
   sessions: Record<string, SessionResult>
   lastPackId?: string
+}
+
+export type CompleteResult = {
+  score: number
+  maxScore: number
+  conceptDeltas?: Record<string, number>
+  pathNotes?: string[]
+  reflectionOnly?: boolean
 }

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://folio.local/schemas/session.base.schema.json",
+  "title": "SessionBase",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "kind",
+    "title",
+    "conceptIds"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Must equal filename stem (no numeric prefix)"
+    },
+    "kind": {
+      "enum": [
+        "quiz",
+        "classify",
+        "detective",
+        "lab",
+        "calculator",
+        "audit",
+        "decision"
+      ]
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "conceptIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "estimatedMinutes": { "type": "number", "minimum": 1 },
+    "intro": { "type": "string" },
+    "debrief": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["summary"],
+          "properties": {
+            "summary": { "type": "string" },
+            "principle": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

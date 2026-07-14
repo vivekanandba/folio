@@ -1,0 +1,84 @@
+{
+  "id": "four-pillar-audit",
+  "kind": "audit",
+  "title": "Four-Pillar Gap Audit",
+  "conceptIds": [
+    "four-pillars-planning"
+  ],
+  "intro": "A health scare can reveal that \u2018SIPs are running\u2019 is not the same as \u2018my family is protected.\u2019 Rate your real-world pillars.",
+  "pillars": [
+    {
+      "id": "protection",
+      "label": "Protection",
+      "prompt": "Life cover adequacy and health insurance that does not depend only on your current employer.",
+      "actions": [
+        "List employer vs personal health cover gaps",
+        "Estimate income-replacement need for dependants",
+        "Review nominees and policy documents this month"
+      ],
+      "remediation": [
+        {
+          "conceptId": "four-pillars-planning",
+          "sessionId": "four-pillar-audit",
+          "label": "Re-read four pillars"
+        }
+      ]
+    },
+    {
+      "id": "growth",
+      "label": "Growth",
+      "prompt": "Long-term investments (equity/hybrid etc.) aligned to horizon \u2014 not idle cash pretending to be a plan.",
+      "actions": [
+        "Confirm equity allocation matches time horizon",
+        "Avoid stopping SIPs for non-emergency noise",
+        "Rebalance only with a written rule"
+      ],
+      "remediation": [
+        {
+          "conceptId": "active-share",
+          "sessionId": "active-share-lab",
+          "label": "Active share lab"
+        }
+      ]
+    },
+    {
+      "id": "liquidity",
+      "label": "Liquidity",
+      "prompt": "Emergency cash so you do not liquidate long-term assets (or take costly debt) under shock.",
+      "actions": [
+        "Target 3\u201312 months of essential expenses in accessible form",
+        "Separate emergency cash from \u2018investable surplus\u2019",
+        "Automate a top-up until the buffer exists"
+      ],
+      "remediation": [
+        {
+          "conceptId": "four-pillars-planning",
+          "sessionId": "four-pillar-audit",
+          "label": "Liquidity actions"
+        }
+      ]
+    },
+    {
+      "id": "goals",
+      "label": "Goals",
+      "prompt": "Named goals with rough amounts and timelines \u2014 education, retirement, house \u2014 not a nameless corpus.",
+      "actions": [
+        "Write 2\u20134 goals with year and ballpark cost",
+        "Map each goal to a sleeve of money",
+        "Review once a year, not once a headline"
+      ],
+      "remediation": [
+        {
+          "conceptId": "four-pillars-planning",
+          "sessionId": "four-pillar-audit",
+          "label": "Name goals"
+        }
+      ]
+    }
+  ],
+  "debrief": {
+    "summary": "Growth without protection and liquidity is a plan that only works when life cooperates. Strengthen weak pillars before optimising fund picks."
+  },
+  "schemaVersion": 2,
+  "estimatedMinutes": 7
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://folio.local/schemas/sheet.schema.json",
+  "title": "Sheet",
+  "type": "object",
+  "required": ["title", "claim", "blocks"],
+  "additionalProperties": false,
+  "properties": {
+    "title": { "type": "string" },
+    "claim": { "type": "string" },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "body"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "sessionId": { "type": "string" },
+          "conceptId": { "type": "string" }
+        }
+      }
+    },
+    "diagram": {
+      "type": "object",
+      "required": ["type", "nodes", "edges"],
+      "properties": {
+        "type": { "enum": ["flow"] },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

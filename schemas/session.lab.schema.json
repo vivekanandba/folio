@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://folio.local/schemas/session.lab.schema.json",
+  "title": "LabSession",
+  "allOf": [
+    { "$ref": "session.base.schema.json" },
+    {
+      "type": "object",
+      "required": ["kind", "formulaId", "inputs", "passBand"],
+      "properties": {
+        "kind": { "enum": ["lab", "calculator"] },
+        "formulaId": { "type": "string", "minLength": 1 },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "value"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "value": { "type": "number" },
+              "indexValue": { "type": "number" },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "step": { "type": "number" }
+            }
+          }
+        },
+        "constraints": {
+          "type": "object",
+          "properties": {
+            "sumTo": { "type": "number" },
+            "epsilon": { "type": "number" }
+          }
+        },
+        "passBand": {
+          "type": "object",
+          "required": ["metric", "min", "max"],
+          "properties": {
+            "metric": { "type": "string" },
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "transferCheck": {
+          "type": "object",
+          "required": ["prompt", "choices", "answerIndex"],
+          "properties": {
+            "prompt": { "type": "string" },
+            "choices": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 2
+            },
+            "answerIndex": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "holdings": { "type": "array" },
+        "judgmentPrompt": { "type": "string" },
+        "judgmentChoices": { "type": "array" },
+        "judgmentAnswerIndex": { "type": "integer" }
+      }
+    }
+  ]
+}

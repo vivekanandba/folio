@@ -1,4 +1,8 @@
-# Crowded corners
+---
+title: Crowded corners
+summary: Overlap and concentration can hide inside 'diversified' shelves.
+relatedSessions: [crowded-corners]
+---
 
 > When many funds and many cities chase the same names, diversification can be thinner than it looks.
 

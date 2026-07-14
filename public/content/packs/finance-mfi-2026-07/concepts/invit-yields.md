@@ -1,4 +1,8 @@
-# InvIT yields — headline vs pocket
+---
+title: InvIT yields
+summary: Headline yield is not the whole structure story.
+relatedSessions: [yield-trap]
+---
 
 > A startling yield is a clue to investigate structure, not a reason to skip reading.
 

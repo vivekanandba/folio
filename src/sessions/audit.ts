@@ -1,21 +1,30 @@
 import { el } from '../dom'
 import { burst } from '../fx'
-import type { AuditSession } from '../types'
+import type { KindMount, RuntimeApi } from '../runtime/phases'
+import type { AuditSession, Session } from '../types'
 import { radarChart } from '../visuals'
 
 const PILLAR_COLORS = ['#0f766e', '#c2410c', '#1d4ed8', '#7c3aed']
 
-export function mountAudit(
-  root: HTMLElement,
-  session: AuditSession,
-  onComplete: (score: number, max: number) => void,
-): void {
-  const scores = new Map<string, number>()
-  const maxPer = 4
-  const max = session.pillars.length * maxPer
+export function createAuditMount(): KindMount {
+  let host: HTMLElement | undefined
 
-  const render = () => {
-    root.replaceChildren()
+  return {
+    mount(nextHost: HTMLElement, rawSession: Session, api: RuntimeApi): void {
+      const session = rawSession as AuditSession
+      host = nextHost
+      const scores = new Map<string, number>()
+      const maxPer = 4
+      const packId = location.hash.match(/^#\/pack\/([^/]+)/)?.[1]
+      const remediationLink = (sessionId?: string, conceptId?: string): string | undefined => {
+        if (!packId) return undefined
+        if (sessionId) return `#/pack/${packId}/session/${sessionId}`
+        if (conceptId) return `#/pack/${packId}/concept/${conceptId}`
+        return undefined
+      }
+
+      const render = () => {
+        host?.replaceChildren()
     const stage = el('div', { class: 'stage stage-audit' }, [
       el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
     ])
@@ -23,6 +32,7 @@ export function mountAudit(
     inner.append(
       el('div', { class: 'stage-kicker' }, ['Self audit']),
       el('h2', { class: 'stage-title' }, [session.title]),
+      el('p', { class: 'muted small' }, ['Self-inventory — not a knowledge score.']),
     )
     if (session.intro) {
       inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
@@ -72,7 +82,7 @@ export function mountAudit(
         )
         btn.addEventListener('click', () => {
           scores.set(pillar.id, n)
-          burst(btn, [color, '#f8fafc'])
+          if (!api.reducedMotion) burst(btn, [color, '#f8fafc'])
           render()
         })
         row.append(btn)
@@ -89,10 +99,8 @@ export function mountAudit(
       ...(ready ? {} : { disabled: 'true' }),
     }, ['Reveal gap report'])
     finish.addEventListener('click', () => {
-      let total = 0
       const finalAxes = session.pillars.map((p) => {
         const s = scores.get(p.id) ?? 0
-        total += s
         return { label: p.label, value: s, max: maxPer }
       })
       const report = el('div', { class: 'stage stage-audit' }, [
@@ -109,19 +117,44 @@ export function mountAudit(
             el('div', { class: 'gap-item pop-in' }, [
               el('h3', {}, [`Strengthen: ${pillar.label}`]),
               el('ul', {}, pillar.actions.map((a) => el('li', {}, [a]))),
+              ...(pillar.remediation ?? []).map((remediation) => {
+                const label = remediation.label ??
+                  (remediation.sessionId
+                    ? `Practice next: ${remediation.sessionId}`
+                    : `Review: ${remediation.conceptId ?? 'related concept'}`)
+                const href = remediationLink(remediation.sessionId, remediation.conceptId)
+                return el('p', { class: 'muted small' }, [
+                  href ? el('a', { href }, [label]) : label,
+                ])
+              }),
             ]),
           )
         }
       }
-      body.append(el('p', {}, [session.debrief]))
-      burst(finish)
-      root.replaceChildren(report)
-      onComplete(total, max)
+      if (session.debrief) {
+        body.append(el('p', {}, [
+          typeof session.debrief === 'string' ? session.debrief : session.debrief.summary,
+        ]))
+      }
+      api.requestCheck()
+      if (!api.reducedMotion) burst(finish)
+      host?.replaceChildren(report)
+      api.complete({
+        score: scores.size,
+        maxScore: session.pillars.length,
+        reflectionOnly: true,
+      })
     })
     inner.append(finish)
     stage.append(inner)
-    root.append(stage)
+    host?.append(stage)
   }
 
-  render()
+      render()
+    },
+    destroy(): void {
+      host?.replaceChildren()
+      host = undefined
+    },
+  }
 }

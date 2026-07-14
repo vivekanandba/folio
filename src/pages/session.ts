@@ -1,8 +1,14 @@
-import { loadPackMeta, loadSession } from '../content'
+import {
+  canonicalizeSessionId,
+  loadPackMeta,
+  loadSession,
+  packSessions,
+} from '../content'
 import { el, kindBlurb, kindLabel } from '../dom'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
-import { mountSession } from '../sessions'
+import { mountSessionShell } from '../runtime/session-shell'
+import { getKindMount } from '../sessions'
 import { kindIcon } from '../visuals'
 import { resolvePackPath } from './pack'
 
@@ -14,19 +20,13 @@ export async function renderSession(
   root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
   const packPath = await resolvePackPath(packId)
   const meta = await loadPackMeta(packPath)
-
-  const file =
-    meta.sessions.find(
-      (s) =>
-        s.replace(/\.json$/, '').replace(/^\d+-/, '') === sessionId ||
-        s.replace(/\.json$/, '') === sessionId,
-    ) ?? `${sessionId}.json`
+  const sid = canonicalizeSessionId(sessionId)
+  const known = packSessions(meta)
+  const file = known.includes(sid) ? sid : sid
 
   const session = await loadSession(packPath, file)
 
   const shell = el('div', { class: 'session-shell immersive' })
-  const mount = el('div', { class: 'session-mount' })
-
   root.classList.add('main-wide')
   root.replaceChildren(
     el('nav', { class: 'crumb' }, [
@@ -46,25 +46,28 @@ export async function renderSession(
     ]),
     shell,
   )
-  shell.append(mount)
-
   let saved = false
-  mountSession(mount, session, (score, maxScore) => {
-    if (saved) return
-    saved = true
-    saveSessionResult({
-      packId,
-      sessionId: session.id,
-      kind: session.kind,
-      score,
-      maxScore,
-      completedAt: new Date().toISOString(),
-    })
-    shell.append(
-      el('p', { class: 'saved-note' }, [
-        'Progress saved on this device. ',
-        el('a', { href: href({ name: 'pack', packId }) }, ['Back to pack']),
-      ]),
-    )
+  mountSessionShell(shell, session, {
+    mount: getKindMount(session),
+    onComplete: (result) => {
+      if (saved) return
+      saved = true
+      saveSessionResult({
+        packId,
+        sessionId: session.id,
+        kind: session.kind,
+        score: result.score,
+        maxScore: result.maxScore,
+        completedAt: new Date().toISOString(),
+        reflectionOnly: result.reflectionOnly,
+        conceptIds: session.conceptIds,
+      })
+      shell.append(
+        el('p', { class: 'saved-note' }, [
+          'Progress saved on this device. ',
+          el('a', { href: href({ name: 'pack', packId }) }, ['Back to pack']),
+        ]),
+      )
+    },
   })
 }

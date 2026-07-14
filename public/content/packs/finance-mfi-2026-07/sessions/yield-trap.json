@@ -2,8 +2,10 @@
   "id": "yield-trap",
   "kind": "classify",
   "title": "Yield Trap",
-  "conceptIds": ["invit-yields"],
-  "intro": "InvITs can advertise striking yields. Sort each card into whether it supports a naive ‘high income like an FD’ reading — or warns that headline yield hides structure.",
+  "conceptIds": [
+    "invit-yields"
+  ],
+  "intro": "InvITs can advertise striking yields. Sort each card into whether it supports a naive \u2018high income like an FD\u2019 reading \u2014 or warns that headline yield hides structure.",
   "buckets": [
     {
       "id": "seduction",
@@ -21,7 +23,7 @@
   "cards": [
     {
       "id": "c1",
-      "text": "Advertised annual yield of 12–20% vs bank FD rates",
+      "text": "Advertised annual yield of 12\u201320% vs bank FD rates",
       "bucketId": "seduction"
     },
     {
@@ -46,7 +48,7 @@
     },
     {
       "id": "c6",
-      "text": "‘Attractive alternative to equity in a choppy market’ headline",
+      "text": "\u2018Attractive alternative to equity in a choppy market\u2019 headline",
       "bucketId": "seduction"
     },
     {
@@ -60,5 +62,31 @@
       "bucketId": "structure"
     }
   ],
-  "debrief": "Headline InvIT yields are a starting clue, not the ending answer. Separate distribution theatre from what you keep after structure, capital return, fees, and unit-price risk."
+  "round2": [
+    {
+      "id": "r1",
+      "text": "Distribution yield quoted before fees and expenses",
+      "bucketId": "seduction"
+    },
+    {
+      "id": "r2",
+      "text": "NAV can drop while distributions look steady",
+      "bucketId": "structure"
+    },
+    {
+      "id": "r3",
+      "text": "Toll/tariff reset clauses buried in offer docs",
+      "bucketId": "structure"
+    },
+    {
+      "id": "r4",
+      "text": "Compared only to FD rates in the brochure",
+      "bucketId": "seduction"
+    }
+  ],
+  "debrief": {
+    "summary": "Headline InvIT yields are a starting clue, not the ending answer. Separate distribution theatre from what you keep after structure, capital return, fees, and unit-price risk."
+  },
+  "schemaVersion": 2,
+  "estimatedMinutes": 7
 }

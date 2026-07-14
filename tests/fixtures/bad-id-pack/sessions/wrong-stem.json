@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "id": "not-the-filename",
+  "kind": "quiz",
+  "title": "Mismatch",
+  "conceptIds": ["c1"],
+  "questions": [
+    {
+      "prompt": "x?",
+      "choices": ["a", "b"],
+      "answerIndex": 0,
+      "explanation": "a"
+    }
+  ]
+}

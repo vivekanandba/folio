@@ -2,7 +2,10 @@
   "id": "sebi-fork",
   "kind": "decision",
   "title": "SEBI Fork",
-  "conceptIds": ["flexi-cap-vs-multi-cap", "style-drift-flexi-tax"],
+  "conceptIds": [
+    "flexi-cap-vs-multi-cap",
+    "style-drift-flexi-tax"
+  ],
   "intro": "It is 2020. Multi-cap funds were sold as go-anywhere products but many settled into large caps. You are shaping the rulebook response.",
   "startId": "problem",
   "nodes": [
@@ -11,14 +14,16 @@
       "text": "The complaint: multi-caps are not true to label. Investors thought they bought diversification across market caps; portfolios disagree. What do you do?",
       "choices": [
         {
-          "label": "Force every multi-cap to hold ≥25% in large, mid, and small",
+          "label": "Force every multi-cap to hold \u226525% in large, mid, and small",
           "next": "hard-rule",
-          "note": "You chose hard floors for multi-cap."
+          "note": "You chose hard floors for multi-cap.",
+          "scoreDelta": 1
         },
         {
-          "label": "Ignore it — labels are marketing, not promises",
+          "label": "Ignore it \u2014 labels are marketing, not promises",
           "next": "ignore",
-          "note": "You left the label-substance gap unfixed."
+          "note": "You left the label-substance gap unfixed.",
+          "scoreDelta": -1
         }
       ]
     },
@@ -29,7 +34,8 @@
         {
           "label": "Impose 25/25/25 floors on multi-cap",
           "next": "hard-rule",
-          "note": "Forced toward the floor solution."
+          "note": "Forced toward the floor solution.",
+          "scoreDelta": 1
         }
       ]
     },
@@ -38,25 +44,28 @@
       "text": "Floors make multi-caps truer to the name. Managers object: some books cannot rebalance overnight; others want a freer sleeve for clients. Industry lobbies for an escape hatch. Do you offer one?",
       "choices": [
         {
-          "label": "Hold the line — no new category; multi-cap means floors",
+          "label": "Hold the line \u2014 no new category; multi-cap means floors",
           "next": "hold-line",
-          "note": "No flexi escape hatch."
+          "note": "No flexi escape hatch.",
+          "scoreDelta": 0
         },
         {
-          "label": "Create flexi-cap: ≥65% equity, no mid/small floors",
+          "label": "Create flexi-cap: \u226565% equity, no mid/small floors",
           "next": "create-flexi",
-          "note": "Created the freedom category."
+          "note": "Created the freedom category.",
+          "scoreDelta": 1
         }
       ]
     },
     {
       "id": "hold-line",
-      "text": "Every diversified ‘go anywhere’ product must live with floors. That honesty helps labelling — but many managers still want a freedom product for investors who accept active large-cap bias.",
+      "text": "Every diversified \u2018go anywhere\u2019 product must live with floors. That honesty helps labelling \u2014 but many managers still want a freedom product for investors who accept active large-cap bias.",
       "choices": [
         {
           "label": "Acknowledge the demand and create flexi-cap anyway",
           "next": "create-flexi",
-          "note": "Flexi-cap arrives after all."
+          "note": "Flexi-cap arrives after all.",
+          "scoreDelta": 0
         }
       ]
     },
@@ -67,20 +76,22 @@
         {
           "label": "Rules can rename buckets; they cannot force conviction to use freedom",
           "next": "end-good",
-          "note": "Landed on the right lesson."
+          "note": "Landed on the right lesson.",
+          "scoreDelta": 1
         },
         {
           "label": "Flexi-caps always beat because freedom = alpha",
           "next": "end-bad",
-          "note": "Confused freedom with guaranteed skill."
+          "note": "Confused freedom with guaranteed skill.",
+          "scoreDelta": -1
         }
       ]
     },
     {
       "id": "end-good",
       "ending": {
-        "principle": "You can rename a category and write floors — you cannot force managers to use freedom.",
-        "debrief": "Flexi-cap was the escape hatch after multi-cap floors. Style drift can reappear inside any label that allows it. Read holdings; don’t worship the category name.",
+        "principle": "You can rename a category and write floors \u2014 you cannot force managers to use freedom.",
+        "debrief": "Flexi-cap was the escape hatch after multi-cap floors. Style drift can reappear inside any label that allows it. Read holdings; don\u2019t worship the category name.",
         "score": 1
       }
     },
@@ -92,5 +103,8 @@
         "score": 0
       }
     }
-  ]
+  ],
+  "schemaVersion": 2,
+  "maxScore": 3,
+  "estimatedMinutes": 7
 }
