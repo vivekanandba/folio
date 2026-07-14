@@ -1,0 +1,68 @@
+{
+  "title": "The freedom you paid for",
+  "claim": "Category labels and headline yields sell stories. Holdings, structure, and planning pillars decide what you actually own.",
+  "blocks": [
+    {
+      "id": "labels",
+      "title": "Label vs holdings",
+      "body": "Flexi-cap freedom is real only when the book uses it. Large-cap-heavy ‘go anywhere’ funds teach style drift — know the composition, not just the SEBI bucket.",
+      "sessionId": "label-detective",
+      "conceptId": "flexi-cap-vs-multi-cap"
+    },
+    {
+      "id": "sebi",
+      "title": "Rules rename; conviction decides",
+      "body": "Floors on multi-cap and the birth of flexi-cap show how regulation can fix labels without forcing managers to wander. Freedom unused is still a style.",
+      "sessionId": "sebi-fork",
+      "conceptId": "style-drift-flexi-tax"
+    },
+    {
+      "id": "patience",
+      "title": "Act or leave alone",
+      "body": "When a flexi drifts, the hard judgment is tax, conviction, and whether selling fixes the mismatch you bought.",
+      "sessionId": "act-or-leave-alone"
+    },
+    {
+      "id": "pillars",
+      "title": "Four pillars before fund picks",
+      "body": "Protection, growth, liquidity, and named goals. SIPs alone are not a plan. Inventory gaps honestly — self-ratings are inventory, not mastery.",
+      "sessionId": "four-pillar-audit",
+      "conceptId": "four-pillars-planning"
+    },
+    {
+      "id": "active",
+      "title": "Active share ≠ alpha",
+      "body": "Construct a toy book until active share sits in a deliberate band. Difference from the index measures honesty of active risk — not whether that risk pays.",
+      "sessionId": "active-share-lab",
+      "conceptId": "active-share"
+    },
+    {
+      "id": "yields",
+      "title": "Yield under the lid",
+      "body": "InvIT headlines can look like easy income. Separate seduction copy from structure: capital return, fees, contracts, unit price.",
+      "sessionId": "yield-trap",
+      "conceptId": "invit-yields"
+    },
+    {
+      "id": "crowded",
+      "title": "Crowded corners",
+      "body": "Many folios can still be one crowded bet. Discriminate overlap from true spread before you call a shelf diversified.",
+      "sessionId": "crowded-corners",
+      "conceptId": "crowded-corners"
+    }
+  ],
+  "diagram": {
+    "type": "flow",
+    "nodes": [
+      { "id": "sheet", "label": "Sheet" },
+      { "id": "concepts", "label": "Concepts" },
+      { "id": "sessions", "label": "Sessions" },
+      { "id": "revisit", "label": "Revisit" }
+    ],
+    "edges": [
+      { "from": "sheet", "to": "concepts" },
+      { "from": "concepts", "to": "sessions" },
+      { "from": "sessions", "to": "revisit" }
+    ]
+  }
+}

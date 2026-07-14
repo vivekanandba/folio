@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "id": "bad-id-pack",
+  "title": "Bad ID Pack",
+  "subject": "test",
+  "type": "notes",
+  "source": "fixture",
+  "summary": "Invalid session id vs filename",
+  "tags": [],
+  "curriculum": {
+    "concepts": ["c1"],
+    "sessions": ["wrong-stem"]
+  }
+}

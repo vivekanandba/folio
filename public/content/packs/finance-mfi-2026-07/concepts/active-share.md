@@ -1,4 +1,8 @@
-# Active share
+---
+title: Active share
+summary: How different you are is not the same as whether difference pays.
+relatedSessions: [active-share-lab]
+---
 
 > Being different from the index is a *process* claim — not a performance guarantee.
 

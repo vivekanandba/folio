@@ -1,4 +1,8 @@
-# Flexi-cap vs multi-cap
+---
+title: Flexi-cap vs multi-cap
+summary: Labels sell a promise; holdings are what you own.
+relatedSessions: [label-detective, sebi-fork]
+---
 
 > Category names sell a promise. Rules decide what managers *must* do. Freedom decides what they *can* ignore.
 

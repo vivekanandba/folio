@@ -1,39 +1,41 @@
 # Folio
 
-Personal **interactive revision** site — concept cards + creative sessions, static and deployable to **GitHub Pages**.
+Personal **revision studio** — distill reading into packs (sheet + concepts + sessions), then revisit until ideas stick. Static site for **GitHub Pages**.
 
 ## Quick start
 
 ```bash
 npm install
+npm test
+npm run validate
 npm run dev
 ```
 
-Open the URL Vite prints (with base `/folio/`, usually `http://localhost:5173/folio/`).
+Open the URL Vite prints (base `/folio/`, usually `http://localhost:5173/folio/`).
 
 ```bash
 npm run build
 npm run preview
 ```
 
+## Development
+
+See `docs/PRODUCT.md`, `docs/CONTENT_CONTRACT.md`, and `docs/DEV_WORKFLOW.md` (spec → failing tests → implementation). Specs live under `specs/`.
+
 ## Content
 
-Packs live under `public/content/`:
+Packs under `public/content/packs/<id>/`:
 
-- `catalog.json` — registered packs
-- `packs/<id>/folio.json` — metadata
-- `packs/<id>/concepts/*.md` — paraphrased notes
-- `packs/<id>/sessions/*.json` — interactive sessions (`kind`: quiz | classify | detective | calculator | audit | decision)
+- `folio.json` — schemaVersion 2 + `curriculum` graph
+- `sheet.json` — optional revision one-pager
+- `concepts/*.md` — YAML frontmatter + paraphrased notes
+- `sessions/<id>.json` — kinds: quiz | classify | detective | lab | audit | decision
 
-Pilot pack: **Mutual Fund Insight — Jul 2026** (personal paraphrases only; not affiliated with Value Research; not investment advice).
+Pilot: **Mutual Fund Insight — Jul 2026** (paraphrases only; not affiliated with Value Research; not investment advice).
 
 ## GitHub Pages
 
-1. Push this repo to GitHub as `folio` (or change `VITE_BASE` / `pages:build` to match the repo name).
-2. Settings → Pages → Source: **GitHub Actions**.
-3. Push to `main` (workflow: `.github/workflows/pages.yml`).
-
-Progress is stored in **localStorage** (per browser); nothing is synced to a server.
+Push to `main` → workflow runs `npm test` then `npm run pages:build`. Progress stays in **localStorage**.
 
 ## License
 

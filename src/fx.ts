@@ -1,7 +1,18 @@
 import { el } from './dom'
 
+export function prefersReducedMotion(): boolean {
+  return (
+    typeof matchMedia !== 'undefined' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
 /** Burst of colored dots from a point (correct answer / reveal). */
-export function burst(at: HTMLElement, colors = ['#14b8a6', '#f59e0b', '#3b82f6', '#f43f5e']): void {
+export function burst(
+  at: HTMLElement,
+  colors = ['#14b8a6', '#f59e0b', '#3b82f6', '#f43f5e'],
+): void {
+  if (prefersReducedMotion()) return
   const rect = at.getBoundingClientRect()
   const ox = rect.left + rect.width / 2
   const oy = rect.top + rect.height / 2
@@ -22,6 +33,7 @@ export function burst(at: HTMLElement, colors = ['#14b8a6', '#f59e0b', '#3b82f6'
 }
 
 export function shake(node: HTMLElement): void {
+  if (prefersReducedMotion()) return
   node.classList.remove('fx-shake')
   void node.offsetWidth
   node.classList.add('fx-shake')
@@ -38,55 +50,43 @@ export function donut(
   const cx = size / 2
   const cy = size / 2
   const total = segments.reduce((a, s) => a + s.pct, 0) || 1
-  let angle = -Math.PI / 2
 
+  let angle = -Math.PI / 2
   const paths: string[] = []
-  segments.forEach((s) => {
-    const sweep = (s.pct / total) * Math.PI * 2
-    if (sweep <= 0) return
+  for (const seg of segments) {
+    const sweep = (seg.pct / total) * Math.PI * 2
     const x1 = cx + r * Math.cos(angle)
     const y1 = cy + r * Math.sin(angle)
-    const x2 = cx + r * Math.cos(angle + sweep)
-    const y2 = cy + r * Math.sin(angle + sweep)
-    const large = sweep > Math.PI ? 1 : 0
-    const ri = r * hole
-    const xi1 = cx + ri * Math.cos(angle + sweep)
-    const yi1 = cy + ri * Math.sin(angle + sweep)
-    const xi2 = cx + ri * Math.cos(angle)
-    const yi2 = cy + ri * Math.sin(angle)
-    paths.push(
-      `<path class="donut-seg" d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${ri} ${ri} 0 ${large} 0 ${xi2} ${yi2} Z" fill="${s.color}"><title>${s.label}: ${s.pct}%</title></path>`,
-    )
     angle += sweep
-  })
+    const x2 = cx + r * Math.cos(angle)
+    const y2 = cy + r * Math.sin(angle)
+    const large = sweep > Math.PI ? 1 : 0
+    const ir = r * hole
+    const ix1 = cx + ir * Math.cos(angle)
+    const iy1 = cy + ir * Math.sin(angle)
+    const ix2 = cx + ir * Math.cos(angle - sweep)
+    const iy2 = cy + ir * Math.sin(angle - sweep)
+    paths.push(
+      `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${ir} ${ir} 0 ${large} 0 ${ix2} ${iy2} Z" fill="${seg.color}" />`,
+    )
+  }
 
   const wrap = el('div', { class: 'donut-wrap' })
-  if (opts.title) wrap.append(el('p', { class: 'viz-title' }, [opts.title]))
-  const svg = el('div', { class: 'donut-svg-host' })
-  svg.innerHTML = `<svg viewBox="0 0 ${size} ${size}" class="donut-svg">${paths.join('')}</svg>`
+  if (opts.title) wrap.append(el('h3', { class: 'donut-title' }, [opts.title]))
+  const svg = el('div', {
+    class: 'donut-svg',
+    html: `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img">${paths.join('')}</svg>`,
+  })
   wrap.append(svg)
-
-  const legend = el('div', { class: 'donut-legend' })
-  segments.forEach((s) => {
+  const legend = el('ul', { class: 'donut-legend' })
+  for (const seg of segments) {
     legend.append(
-      el('div', { class: 'donut-legend-row' }, [
-        el('i', { class: 'viz-swatch', style: `background:${s.color}` }),
-        el('span', {}, [s.label]),
-        el('strong', {}, [`${Math.round(s.pct)}%`]),
+      el('li', {}, [
+        el('span', { class: 'swatch', style: `background:${seg.color}` }),
+        `${seg.label} ${Math.round(seg.pct)}%`,
       ]),
     )
-  })
+  }
   wrap.append(legend)
   return wrap
-}
-
-export function stage(kind: string, title: string, children: (Node | string)[]): HTMLElement {
-  return el('div', { class: `stage stage-${kind}` }, [
-    el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
-    el('div', { class: 'stage-inner' }, [
-      el('div', { class: 'stage-kicker' }, [kind]),
-      el('h2', { class: 'stage-title' }, [title]),
-      el('div', { class: 'stage-body' }, children as Node[]),
-    ]),
-  ])
 }

@@ -1,39 +1,38 @@
-import type { Session } from '../types'
-import { mountAudit } from './audit'
-import { mountCalculator } from './calculator'
-import { mountClassify } from './classify'
-import { mountDecision } from './decision'
-import { mountDetective } from './detective'
-import { mountQuiz } from './quiz'
+import type { KindMount, RuntimeApi } from '../runtime/phases'
+import type { CompleteResult, Session } from '../types'
+import { createAuditMount } from './audit'
+import { createCalculatorMount } from './calculator'
+import { createClassifyMount } from './classify'
+import { createDecisionMount } from './decision'
+import { createDetectiveMount } from './detective'
+import { createLabMount } from './lab'
+import { createQuizMount } from './quiz'
+
+export function getKindMount(session: Session): KindMount {
+  switch (session.kind) {
+    case 'quiz': return createQuizMount()
+    case 'classify': return createClassifyMount()
+    case 'detective': return createDetectiveMount()
+    case 'lab': return createLabMount()
+    case 'calculator': return createCalculatorMount()
+    case 'audit': return createAuditMount()
+    case 'decision': return createDecisionMount()
+  }
+}
 
 export function mountSession(
   root: HTMLElement,
   session: Session,
   onComplete: (score: number, max: number) => void,
 ): void {
-  switch (session.kind) {
-    case 'quiz':
-      mountQuiz(root, session, onComplete)
-      break
-    case 'classify':
-      mountClassify(root, session, onComplete)
-      break
-    case 'detective':
-      mountDetective(root, session, onComplete)
-      break
-    case 'calculator':
-      mountCalculator(root, session, onComplete)
-      break
-    case 'audit':
-      mountAudit(root, session, onComplete)
-      break
-    case 'decision':
-      mountDecision(root, session, onComplete)
-      break
-    default: {
-      const _exhaustive: never = session
-      void _exhaustive
-      root.textContent = 'Unknown session kind'
-    }
+  const mount = getKindMount(session)
+  let phase: RuntimeApi['getPhase'] extends () => infer P ? P : never = 'interact'
+  const api: RuntimeApi = {
+    reducedMotion: typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+    getPhase: () => phase,
+    setPhase: (next) => { phase = next },
+    requestCheck: () => { phase = 'check' },
+    complete: (result: CompleteResult) => onComplete(result.score, result.maxScore),
   }
+  mount.mount(root, session, api)
 }

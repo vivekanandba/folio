@@ -1,0 +1,85 @@
+{
+  "id": "label-detective",
+  "kind": "detective",
+  "title": "Label Detective",
+  "conceptIds": [
+    "flexi-cap-vs-multi-cap",
+    "style-drift-flexi-tax"
+  ],
+  "intro": "A fund is sold as flexible and go-anywhere. Clues about its portfolio arrive one by one. Watch the allocation bar assemble \u2014 then diagnose what it really behaves like.",
+  "facts": [
+    {
+      "label": "Equity mandate",
+      "value": "Keeps well above 65% in equities"
+    },
+    {
+      "label": "Large-cap weight",
+      "value": "Roughly three-fifths of the book in large caps"
+    },
+    {
+      "label": "Mid & small motion",
+      "value": "Mid/small weights barely budged across a crash, recovery, and bull run"
+    },
+    {
+      "label": "Category marketing",
+      "value": "Advertised as free to roam the whole market-cap spectrum"
+    },
+    {
+      "label": "Peer contrast",
+      "value": "True multi-cap peers must hold at least 25% each in large, mid, and small"
+    }
+  ],
+  "composition": [
+    {
+      "label": "Large",
+      "pct": 60,
+      "revealAfter": 2,
+      "color": "#0f766e"
+    },
+    {
+      "label": "Mid",
+      "pct": 22,
+      "revealAfter": 3,
+      "color": "#c2410c"
+    },
+    {
+      "label": "Small",
+      "pct": 18,
+      "revealAfter": 3,
+      "color": "#1d4ed8"
+    }
+  ],
+  "question": "Best diagnosis for this case?",
+  "choices": [
+    "A true multi-cap: floors force mid and small exposure",
+    "A flexi-cap that behaves like a large-cap fund in disguise",
+    "An index fund tracking Nifty Midcap 150",
+    "A debt fund with a temporary equity overlay"
+  ],
+  "answerIndex": 1,
+  "diagnoses": [
+    {
+      "id": "multi",
+      "label": "True multi-cap: floors force mid/small exposure"
+    },
+    {
+      "id": "flexi-large",
+      "label": "Large-cap-heavy flexi \u2014 freedom unused",
+      "correct": true
+    },
+    {
+      "id": "mid-index",
+      "label": "Midcap index tracker in disguise"
+    },
+    {
+      "id": "debt",
+      "label": "Debt fund with equity overlay"
+    }
+  ],
+  "debrief": {
+    "summary": "When freedom is unused, the label says flexi-cap while the risk/return path tracks large-cap-heavy exposure. That mismatch is the style-drift story \u2014 know what you own, not only what it is called.",
+    "principle": "Know what you own, not only what it is called."
+  },
+  "schemaVersion": 2,
+  "estimatedMinutes": 7
+}

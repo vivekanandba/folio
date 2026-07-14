@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "id": "crowded-corners",
+  "kind": "classify",
+  "title": "Crowded Corners",
+  "conceptIds": ["crowded-corners"],
+  "estimatedMinutes": 7,
+  "intro": "A ‘diversified’ fund shelf can still concentrate risk. Sort each signal: true diversification vs crowded overlap.",
+  "buckets": [
+    {
+      "id": "diversified",
+      "label": "True spread",
+      "hint": "Risk is deliberately distributed",
+      "tone": "cool"
+    },
+    {
+      "id": "crowded",
+      "label": "Crowded / overlap",
+      "hint": "Same bet dressed as many tickets",
+      "tone": "warm"
+    }
+  ],
+  "cards": [
+    {
+      "id": "cc1",
+      "text": "Three ‘diversified’ equity funds that share the same top-10 names",
+      "bucketId": "crowded"
+    },
+    {
+      "id": "cc2",
+      "text": "Mixing large-cap, mid-cap, and international equity with low name overlap",
+      "bucketId": "diversified"
+    },
+    {
+      "id": "cc3",
+      "text": "Sector funds in IT + a ‘flexi’ that is 40% the same IT leaders",
+      "bucketId": "crowded"
+    },
+    {
+      "id": "cc4",
+      "text": "Debt sleeve for emergencies separate from long equity SIPs",
+      "bucketId": "diversified"
+    },
+    {
+      "id": "cc5",
+      "text": "Four thematic funds that all lean on the same macro narrative",
+      "bucketId": "crowded"
+    },
+    {
+      "id": "cc6",
+      "text": "Index fund + a tightly constrained satelllite you sized intentionally small",
+      "bucketId": "diversified"
+    }
+  ],
+  "round2": [
+    {
+      "id": "cc7",
+      "text": "High active share fund whose active bets are the same five crowded midcaps everyone owns",
+      "bucketId": "crowded"
+    },
+    {
+      "id": "cc8",
+      "text": "Comparing portfolio holding lists before buying another ‘similar’ category fund",
+      "bucketId": "diversified"
+    },
+    {
+      "id": "cc9",
+      "text": "Owning the same bank stock via stock + banking fund + ‘flexi’ heavy finance",
+      "bucketId": "crowded"
+    }
+  ],
+  "debrief": {
+    "summary": "Diversification is about what drives returns and risk together — not the number of fund folios. Overlap and crowded trades can hide inside tidy category labels.",
+    "principle": "Count shared exposures, not just product count."
+  }
+}

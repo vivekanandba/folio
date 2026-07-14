@@ -1,0 +1,66 @@
+{
+  "id": "active-share-lab",
+  "kind": "lab",
+  "title": "Active Share Lab",
+  "conceptIds": [
+    "active-share"
+  ],
+  "intro": "Build a toy portfolio against a simple index. Watch active share move. Then face the judgment question: does \u2018more different\u2019 mean \u2018better\u2019?",
+  "debrief": {
+    "summary": "Active share is a useful honesty check (are you paying for a closet indexer?). It is not a performance score. High active risk can land on either side of the ledger \u2014 process and outcomes still need separate judgment."
+  },
+  "schemaVersion": 2,
+  "formulaId": "active-share",
+  "inputs": [
+    {
+      "id": "h0",
+      "label": "Stock A",
+      "value": 0.3,
+      "indexValue": 0.1
+    },
+    {
+      "id": "h1",
+      "label": "Stock B",
+      "value": 0.25,
+      "indexValue": 0.25
+    },
+    {
+      "id": "h2",
+      "label": "Stock C",
+      "value": 0.2,
+      "indexValue": 0.2
+    },
+    {
+      "id": "h3",
+      "label": "Stock D",
+      "value": 0.15,
+      "indexValue": 0.3
+    },
+    {
+      "id": "h4",
+      "label": "Stock E",
+      "value": 0.1,
+      "indexValue": 0.15
+    }
+  ],
+  "constraints": {
+    "sumTo": 1,
+    "epsilon": 0.02
+  },
+  "passBand": {
+    "metric": "activeShare",
+    "min": 0.25,
+    "max": 0.7
+  },
+  "transferCheck": {
+    "prompt": "A study of highly active funds in popular categories finds a split: some beat their benchmark in every rolling window studied; others in none. What should you conclude?",
+    "choices": [
+      "Maximise active share \u2014 divergence guarantees alpha",
+      "Active share measures how different you are, not whether the difference pays",
+      "Low active share funds are always better because they are safer",
+      "Only funds with active share above 90% should be bought"
+    ],
+    "answerIndex": 1
+  },
+  "estimatedMinutes": 8
+}

@@ -1,4 +1,8 @@
-# Four pillars of planning
+---
+title: Four pillars of planning
+summary: A plan is more than SIPs — know where the gaps are.
+relatedSessions: [four-pillar-audit]
+---
 
 > A portfolio of SIPs is not the same thing as a plan.
 

@@ -1,0 +1,41 @@
+:root {
+  color-scheme: light;
+  --paper: #f7f5f0;
+  --elevated: #fffdf8;
+  --ink: #1c1917;
+  --muted: #78716c;
+  --line: #e7e5e4;
+  --accent: #0f766e;
+  --accent-soft: #ccfbf1;
+  --ok: #166534;
+  --bad: #991b1b;
+  --wrong-bg: #fee2e2;
+  --ok-bg: #dcfce7;
+  --font: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --radius: 10px;
+  --max: 720px;
+  --max-session: 920px;
+  /* aliases used by legacy style.css */
+  --bg: var(--paper);
+  --surface: var(--elevated);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .stage-glow,
+  .pulse,
+  .art-orb {
+    animation: none !important;
+    opacity: 0.35;
+  }
+}

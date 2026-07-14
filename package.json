@@ -1,16 +1,27 @@
 {
   "name": "folio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "validate": "tsx scripts/validate-content.ts",
+    "test": "vitest run",
+    "test:contract": "vitest run tests/contract",
+    "test:watch": "vitest",
+    "build": "npm run validate && tsc && vite build",
     "preview": "vite preview",
     "pages:build": "VITE_BASE=/folio/ npm run build"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "gray-matter": "^4.0.3",
+    "happy-dom": "^20.10.6",
+    "tsx": "^4.20.5",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vitest": "^4.1.10"
   }
 }

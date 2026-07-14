@@ -3,6 +3,8 @@ name: Deploy Folio to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -25,13 +27,21 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Test
+        run: npm test
       - name: Build
+        if: github.event_name != 'pull_request'
+        run: npm run pages:build
+      - name: Build (PR check)
+        if: github.event_name == 'pull_request'
         run: npm run pages:build
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

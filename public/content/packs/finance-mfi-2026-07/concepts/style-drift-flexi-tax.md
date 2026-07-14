@@ -1,4 +1,8 @@
-# Style drift & the “flexi-cap tax”
+---
+title: Style drift and tax
+summary: Unused freedom becomes a large-cap path with flexi fees and tax surprises.
+relatedSessions: [label-detective, act-or-leave-alone]
+---
 
 > Freedom that is never used is not free — it has a cost you only notice later.
 
