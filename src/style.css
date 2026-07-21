@@ -1706,7 +1706,7 @@ input[type='range'] {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
   gap: 0.6rem;
 }
 .stat-tile {
