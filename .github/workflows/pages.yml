@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Lint content
+        run: npm run lint:content
       - name: Build
         run: npm run pages:build
       - uses: actions/upload-pages-artifact@v3

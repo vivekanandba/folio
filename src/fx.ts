@@ -1,7 +1,9 @@
+import { prefersReducedMotion } from './a11y'
 import { el } from './dom'
 
 /** Burst of colored dots from a point (correct answer / reveal). */
 export function burst(at: HTMLElement, colors = ['#14b8a6', '#f59e0b', '#3b82f6', '#f43f5e']): void {
+  if (prefersReducedMotion()) return
   const rect = at.getBoundingClientRect()
   const ox = rect.left + rect.width / 2
   const oy = rect.top + rect.height / 2
@@ -22,6 +24,7 @@ export function burst(at: HTMLElement, colors = ['#14b8a6', '#f59e0b', '#3b82f6'
 }
 
 export function shake(node: HTMLElement): void {
+  if (prefersReducedMotion()) return
   node.classList.remove('fx-shake')
   void node.offsetWidth
   node.classList.add('fx-shake')
@@ -60,9 +63,14 @@ export function donut(
     angle += sweep
   })
 
-  const wrap = el('div', { class: 'donut-wrap' })
+  const summary = segments.map((s) => `${s.label} ${Math.round(s.pct)}%`).join(', ')
+  const wrap = el('div', {
+    class: 'donut-wrap',
+    role: 'img',
+    'aria-label': `${opts.title ? opts.title + ': ' : ''}${summary}`,
+  })
   if (opts.title) wrap.append(el('p', { class: 'viz-title' }, [opts.title]))
-  const svg = el('div', { class: 'donut-svg-host' })
+  const svg = el('div', { class: 'donut-svg-host', 'aria-hidden': 'true' })
   svg.innerHTML = `<svg viewBox="0 0 ${size} ${size}" class="donut-svg">${paths.join('')}</svg>`
   wrap.append(svg)
 
@@ -80,11 +88,17 @@ export function donut(
   return wrap
 }
 
-export function stage(kind: string, title: string, children: (Node | string)[]): HTMLElement {
+/** Dark immersive stage wrapper shared by every session kind. */
+export function stage(
+  kind: string,
+  kicker: string,
+  title: string,
+  children: (Node | string)[],
+): HTMLElement {
   return el('div', { class: `stage stage-${kind}` }, [
     el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
     el('div', { class: 'stage-inner' }, [
-      el('div', { class: 'stage-kicker' }, [kind]),
+      el('div', { class: 'stage-kicker' }, [kicker]),
       el('h2', { class: 'stage-title' }, [title]),
       el('div', { class: 'stage-body' }, children as Node[]),
     ]),

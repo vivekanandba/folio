@@ -1,0 +1,34 @@
+{
+  "id": "overlap-hotspot",
+  "kind": "hotspot",
+  "title": "Which fund isn't really diversifying?",
+  "conceptIds": [
+    "crowded-corners"
+  ],
+  "intro": "You hold a core flexi-cap. These five 'diversifier' funds report their top-holding overlap with it.",
+  "prompt": "Tap the fund whose overlap makes it a lookalike, not a diversifier.",
+  "series": [
+    {
+      "label": "Fund A",
+      "value": 28
+    },
+    {
+      "label": "Fund B",
+      "value": 34
+    },
+    {
+      "label": "Fund C",
+      "value": 81,
+      "anomaly": true
+    },
+    {
+      "label": "Fund D",
+      "value": 41
+    },
+    {
+      "label": "Fund E",
+      "value": 30
+    }
+  ],
+  "debrief": "An 81% overlap means Fund C is buying nearly the same names as your core — adding it stacks single-stock risk instead of spreading it. 'Many funds' is not 'many independent bets.'"
+}

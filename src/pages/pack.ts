@@ -1,8 +1,8 @@
 import { loadCatalog, loadPackMeta, loadSession } from '../content'
-import { el, kindBlurb, kindLabel } from '../dom'
+import { el, prettyId } from '../dom'
 import { getSessionResult } from '../progress'
 import { href } from '../router'
-import { kindIcon } from '../visuals'
+import { kindBlurb, kindIcon, kindLabel } from '../sessions'
 
 async function resolvePackPath(packId: string): Promise<string> {
   const catalog = await loadCatalog()
@@ -33,8 +33,8 @@ export async function renderPack(
   }
 
   const sessionList = el('div', { class: 'session-grid' })
-  for (const file of meta.sessions) {
-    const session = await loadSession(packPath, file)
+  const sessions = await Promise.all(meta.sessions.map((file) => loadSession(packPath, file)))
+  for (const session of sessions) {
     const prev = getSessionResult(packId, session.id)
     const status = prev
       ? `Done · ${prev.score}/${prev.maxScore}`
@@ -79,13 +79,6 @@ export async function renderPack(
       conceptList,
     ]),
   )
-}
-
-function prettyId(id: string): string {
-  return id
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
 }
 
 export { resolvePackPath }

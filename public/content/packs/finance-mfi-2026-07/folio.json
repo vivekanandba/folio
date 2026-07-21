@@ -20,6 +20,9 @@
     "03-act-or-leave-alone.json",
     "04-four-pillar-audit.json",
     "05-active-share-lab.json",
-    "06-yield-trap.json"
+    "06-yield-trap.json",
+    "07-planning-sequence.json",
+    "08-yield-estimate.json",
+    "09-overlap-hotspot.json"
   ]
 }

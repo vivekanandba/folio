@@ -11,11 +11,26 @@ export function renderMarkdown(md: string): string {
     }
   }
 
+  const safeHref = (url: string): string | null => {
+    const u = url.trim()
+    if (/^(javascript|data|vbscript):/i.test(u)) return null
+    if (/^https?:\/\//i.test(u) || u.startsWith('/') || u.startsWith('#') || u.startsWith('mailto:')) return u
+    if (!u.includes(':')) return u // relative path
+    return null
+  }
+
   const inline = (s: string) =>
     s
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text: string, url: string) => {
+        const href = safeHref(url)
+        if (!href) return m
+        // Escape quotes so a URL can't break out of the href="" attribute.
+        const safe = href.replace(/"/g, '%22').replace(/'/g, '%27')
+        return `<a href="${safe}" rel="noopener">${text}</a>`
+      })
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
 

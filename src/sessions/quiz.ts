@@ -1,7 +1,13 @@
 import { el } from '../dom'
+import { stage } from '../fx'
 import type { QuizSession } from '../types'
+import { iconSpan } from './icon'
+import { mountMCQ } from './mcq'
+import { register, type SessionModule } from './registry'
 
-export function mountQuiz(
+const QUIZ_SVG = `<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="2"/><path d="M16 17c0-2.5 1.8-4 4-4s4 1.5 4 3.5c0 2-2 3-4 3.5v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="28" r="1.5" fill="currentColor"/></svg>`
+
+function mountQuiz(
   root: HTMLElement,
   session: QuizSession,
   onComplete: (score: number, max: number) => void,
@@ -11,18 +17,15 @@ export function mountQuiz(
   const max = session.questions.length
 
   const render = () => {
-    root.replaceChildren()
-    if (session.intro && index === 0) {
-      root.append(el('p', { class: 'lead' }, [session.intro]))
-    }
-
     if (index >= max) {
-      root.append(
-        el('div', { class: 'result-card' }, [
-          el('h2', {}, ['Session complete']),
-          el('p', {}, [`Score: ${score} / ${max}`]),
-          el('p', { class: 'muted' }, [
-            'Refresh anytime — progress is saved on this device.',
+      root.replaceChildren(
+        stage('quiz', 'Quick check', session.title, [
+          el('div', { class: 'result-card' }, [
+            el('h2', {}, ['Session complete']),
+            el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
+            el('p', { class: 'muted' }, [
+              'Refresh anytime — progress is saved on this device.',
+            ]),
           ]),
         ]),
       )
@@ -31,43 +34,51 @@ export function mountQuiz(
     }
 
     const q = session.questions[index]
-    const card = el('div', { class: 'session-card' }, [
-      el('p', { class: 'step-meta' }, [`Question ${index + 1} of ${max}`]),
-      el('h2', {}, [q.prompt]),
-    ])
-
-    const choices = el('div', { class: 'choice-list' })
-    q.choices.forEach((choice, i) => {
-      const btn = el('button', { class: 'choice-btn', type: 'button' }, [choice])
-      btn.addEventListener('click', () => {
-        const correct = i === q.answerIndex
-        if (correct) score += 1
-        choices.querySelectorAll('button').forEach((b, j) => {
-          b.setAttribute('disabled', 'true')
-          if (j === q.answerIndex) b.classList.add('correct')
-          if (j === i && !correct) b.classList.add('wrong')
-        })
-        feedback.replaceChildren(
-          el('p', { class: correct ? 'ok' : 'bad' }, [
-            correct ? 'Correct.' : 'Not quite.',
-          ]),
-          el('p', {}, [q.explanation]),
-          el('button', { class: 'primary', type: 'button' }, [
+    const body: (Node | string)[] = []
+    if (session.intro && index === 0) {
+      body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    }
+    body.push(el('p', { class: 'step-meta' }, [`Question ${index + 1} of ${max}`]))
+    body.push(
+      mountMCQ({
+        prompt: q.prompt,
+        choices: q.choices,
+        answerIndex: q.answerIndex,
+        explanation: q.explanation,
+        layout: 'list',
+        onResolve: (correct, feedback) => {
+          if (correct) score += 1
+          const next = el('button', { class: 'primary', type: 'button' }, [
             index + 1 >= max ? 'Finish' : 'Next',
-          ]),
-        )
-        feedback.querySelector('button')!.addEventListener('click', () => {
-          index += 1
-          render()
-        })
-      })
-      choices.append(btn)
-    })
-
-    const feedback = el('div', { class: 'feedback' })
-    card.append(choices, feedback)
-    root.append(card)
+          ])
+          next.addEventListener('click', () => {
+            index += 1
+            render()
+          })
+          feedback.append(next)
+        },
+      }),
+    )
+    root.replaceChildren(stage('quiz', 'Quick check', session.title, body))
   }
 
   render()
 }
+
+export const quizModule: SessionModule<QuizSession> = {
+  kind: 'quiz',
+  label: 'Quiz',
+  blurb: 'Check what stuck',
+  icon: () => iconSpan('quiz', QUIZ_SVG),
+  mount: mountQuiz,
+  validate: (s) => {
+    const errs: string[] = []
+    s.questions.forEach((q, i) => {
+      if (q.answerIndex < 0 || q.answerIndex >= q.choices.length) {
+        errs.push(`questions[${i}].answerIndex out of range`)
+      }
+    })
+    return errs
+  },
+}
+register(quizModule)

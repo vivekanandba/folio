@@ -1,11 +1,13 @@
 import { el } from '../dom'
-import { burst } from '../fx'
+import { burst, stage } from '../fx'
 import type { AuditSession } from '../types'
-import { radarChart } from '../visuals'
+import { PALETTE, radarChart } from '../visuals'
+import { iconSpan } from './icon'
+import { register, type SessionModule } from './registry'
 
-const PILLAR_COLORS = ['#0f766e', '#c2410c', '#1d4ed8', '#7c3aed']
+const AUDIT_SVG = `<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="2"/><path d="M20 10v10l7 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`
 
-export function mountAudit(
+function mountAudit(
   root: HTMLElement,
   session: AuditSession,
   onComplete: (score: number, max: number) => void,
@@ -15,34 +17,25 @@ export function mountAudit(
   const max = session.pillars.length * maxPer
 
   const render = () => {
-    root.replaceChildren()
-    const stage = el('div', { class: 'stage stage-audit' }, [
-      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
-    ])
-    const inner = el('div', { class: 'stage-inner' })
-    inner.append(
-      el('div', { class: 'stage-kicker' }, ['Self audit']),
-      el('h2', { class: 'stage-title' }, [session.title]),
-    )
-    if (session.intro) {
-      inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
-    }
+    const body: (Node | string)[] = []
+    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
 
     const axes = session.pillars.map((p) => ({
       label: p.label,
       value: scores.get(p.id) ?? 0,
       max: maxPer,
     }))
-    const radarHost = el('div', { class: 'audit-radar-stage viz-panel' }, [
-      el('p', { class: 'viz-title' }, ['Balance map — fills as you rate']),
-      radarChart(axes),
-    ])
-    inner.append(radarHost)
+    body.push(
+      el('div', { class: 'audit-radar-stage viz-panel' }, [
+        el('p', { class: 'viz-title' }, ['Balance map — fills as you rate']),
+        radarChart(axes),
+      ]),
+    )
 
     const grid = el('div', { class: 'pillar-grid' })
     session.pillars.forEach((pillar, idx) => {
       const selected = scores.get(pillar.id)
-      const color = PILLAR_COLORS[idx % PILLAR_COLORS.length]
+      const color = PALETTE[idx % PALETTE.length]
       const fill = selected ? (selected / maxPer) * 100 : 0
       const tile = el('div', {
         class: `pillar-tile${selected ? ' rated' : ''}`,
@@ -62,14 +55,10 @@ export function mountAudit(
       )
       const row = el('div', { class: 'score-row' })
       for (let n = 1; n <= maxPer; n++) {
-        const btn = el(
-          'button',
-          {
-            class: `score-btn${selected === n ? ' selected' : ''}`,
-            type: 'button',
-          },
-          [String(n)],
-        )
+        const btn = el('button', {
+          class: `score-btn${selected === n ? ' selected' : ''}`,
+          type: 'button',
+        }, [String(n)])
         btn.addEventListener('click', () => {
           scores.set(pillar.id, n)
           burst(btn, [color, '#f8fafc'])
@@ -80,7 +69,7 @@ export function mountAudit(
       tile.append(row)
       grid.append(tile)
     })
-    inner.append(grid)
+    body.push(grid)
 
     const ready = scores.size === session.pillars.length
     const finish = el('button', {
@@ -95,17 +84,13 @@ export function mountAudit(
         total += s
         return { label: p.label, value: s, max: maxPer }
       })
-      const report = el('div', { class: 'stage stage-audit' }, [
-        el('div', { class: 'stage-inner gap-report pop-in' }, [
-          el('h2', {}, ['Your gap report']),
-          el('div', { class: 'viz-panel' }, [radarChart(finalAxes)]),
-        ]),
-      ])
-      const body = report.querySelector('.stage-inner')!
+      const reportBody: (Node | string)[] = [
+        el('div', { class: 'viz-panel' }, [radarChart(finalAxes)]),
+      ]
       for (const pillar of session.pillars) {
         const s = scores.get(pillar.id) ?? 0
         if (s <= 2) {
-          body.append(
+          reportBody.push(
             el('div', { class: 'gap-item pop-in' }, [
               el('h3', {}, [`Strengthen: ${pillar.label}`]),
               el('ul', {}, pillar.actions.map((a) => el('li', {}, [a]))),
@@ -113,15 +98,34 @@ export function mountAudit(
           )
         }
       }
-      body.append(el('p', {}, [session.debrief]))
+      reportBody.push(el('p', {}, [session.debrief]))
       burst(finish)
-      root.replaceChildren(report)
+      root.replaceChildren(stage('audit', 'Gap report', 'Your gap report', reportBody))
       onComplete(total, max)
     })
-    inner.append(finish)
-    stage.append(inner)
-    root.append(stage)
+    body.push(finish)
+
+    root.replaceChildren(stage('audit', 'Self audit', session.title, body))
   }
 
   render()
 }
+
+export const auditModule: SessionModule<AuditSession> = {
+  kind: 'audit',
+  label: 'Audit',
+  blurb: 'Map your gaps',
+  icon: () => iconSpan('audit', AUDIT_SVG),
+  mount: mountAudit,
+  validate: (s) => {
+    const errs: string[] = []
+    const ids = new Set<string>()
+    s.pillars.forEach((p, i) => {
+      if (ids.has(p.id)) errs.push(`pillars[${i}].id "${p.id}" is duplicated`)
+      ids.add(p.id)
+      if (!p.actions.length) errs.push(`pillars[${i}].actions is empty`)
+    })
+    return errs
+  },
+}
+register(auditModule)
