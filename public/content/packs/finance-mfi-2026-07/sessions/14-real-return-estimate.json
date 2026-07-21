@@ -1,0 +1,15 @@
+{
+  "id": "real-return-estimate",
+  "kind": "estimate",
+  "title": "What's the real return?",
+  "conceptIds": ["rolling-returns"],
+  "intro": "A headline return is before inflation. Estimate what actually grows your purchasing power.",
+  "prompt": "A fund returns 12% nominal while inflation runs at 6%. Estimate the approximate real (inflation-adjusted) return.",
+  "unit": "%",
+  "min": 0,
+  "max": 12,
+  "step": 0.1,
+  "answer": 5.7,
+  "tolerance": 0.1,
+  "debrief": "Real return is (1.12 / 1.06 − 1) ≈ 5.7%, not the tempting 12% − 6% = 6%. At higher inflation the subtraction overstates your real gain even more. Always convert headline returns to real before deciding they're 'enough.'"
+}

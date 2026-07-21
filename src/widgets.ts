@@ -24,6 +24,12 @@ const COMPUTES: Record<string, (v: Record<string, number>) => number> = {
   realReturn: (v) => ((1 + (v.nominal ?? 0) / 100) / (1 + (v.inflation ?? 0) / 100) - 1) * 100,
   // Income-like yield after stripping return-of-capital, in %.
   weightedYield: (v) => (v.yield ?? 0) * (1 - (v.returnOfCapital ?? 0) / 100),
+  // Money lost to fees: gross FV minus net FV over `years` on `principal`.
+  feeImpact: (v) => {
+    const gross = (v.principal ?? 0) * Math.pow(1 + (v.grossReturn ?? 0) / 100, v.years ?? 0)
+    const net = (v.principal ?? 0) * Math.pow(1 + ((v.grossReturn ?? 0) - (v.expenseRatio ?? 0)) / 100, v.years ?? 0)
+    return gross - net
+  },
 }
 
 function fmtNum(n: number, unit?: string, decimals = 2): string {
