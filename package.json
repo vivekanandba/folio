@@ -12,8 +12,8 @@
     "author": "node --experimental-strip-types tools/authoring/cli.ts"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.70.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
-  }
+  },
+  "comment:author": "The AI authoring pipeline (npm run author) needs @anthropic-ai/sdk. Install it on demand — `npm i -D @anthropic-ai/sdk` — it is not part of the app build."
 }
