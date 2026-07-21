@@ -18,6 +18,7 @@ const KIND_WEIGHT: Record<SessionKind, number> = {
   sequence: 1,
   estimate: 1,
   hotspot: 1,
+  explainer: 0.3, // teaching, not assessment — weak mastery signal
 }
 
 // --- date helpers (yyyy-mm-dd in UTC) ------------------------------------

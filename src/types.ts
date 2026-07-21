@@ -8,6 +8,7 @@ export type SessionKind =
   | 'sequence'
   | 'estimate'
   | 'hotspot'
+  | 'explainer'
 
 export interface CatalogPackRef {
   id: string
@@ -205,6 +206,24 @@ export interface HotspotSession {
   debrief: string
 }
 
+/** A guided teaching walkthrough (learn, not test). `body`/`recap` are markdown;
+ * `viz` is an optional inline widget spec (see src/widgets.ts). */
+export interface ExplainerStep {
+  title: string
+  body: string
+  viz?: unknown
+}
+
+export interface ExplainerSession {
+  id: string
+  kind: 'explainer'
+  title: string
+  conceptIds: string[]
+  intro?: string
+  steps: ExplainerStep[]
+  recap: string
+}
+
 export type Session =
   | QuizSession
   | ClassifySession
@@ -215,6 +234,7 @@ export type Session =
   | SequenceSession
   | EstimateSession
   | HotspotSession
+  | ExplainerSession
 
 export interface SessionResult {
   packId: string
@@ -244,6 +264,7 @@ export interface ConceptSrsState {
   lastReviewedAt: string // ISO datetime, '' if never
   mastery: number // 0..1 kind-weighted EMA of normalized grades
   reviewCount: number
+  learnedAt?: string // ISO datetime the concept's explainer/page was marked read
 }
 
 /** One review event (session completion or flashcard round). Append-only, capped. */

@@ -22,7 +22,7 @@ export interface PackInput {
 
 const KNOWN_KINDS = new Set([
   'quiz', 'classify', 'detective', 'calculator', 'audit', 'decision',
-  'sequence', 'estimate', 'hotspot',
+  'sequence', 'estimate', 'hotspot', 'explainer',
 ])
 
 export function lintCatalog(catalog: Json, packPaths: string[]): LintIssue[] {
@@ -181,6 +181,13 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
     case 'hotspot':
       if (!Array.isArray(s.series) || !s.series.length) err('hotspot needs series[]')
       else if (!s.series.some((p: Json) => p.anomaly === true)) err('hotspot needs ≥1 point with anomaly:true')
+      break
+    case 'explainer':
+      if (!Array.isArray(s.steps) || !s.steps.length) err('explainer needs steps[]')
+      else s.steps.forEach((st: Json, i: number) => {
+        if (!st.title || !st.body) err(`steps[${i}] needs title and body`)
+      })
+      if (!s.recap) err('explainer needs a recap')
       break
   }
   return issues
