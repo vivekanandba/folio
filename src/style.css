@@ -5,7 +5,7 @@
   --bg: #f7f5f0;
   --surface: #fffdf8;
   --ink: #1c1917;
-  --muted: #78716c;
+  --muted: #57534e;
   --line: #e7e5e4;
   --accent: #0f766e;
   --accent-soft: #ccfbf1;
@@ -776,13 +776,13 @@ input[type='range'] {
 
 .viz-gauge-bg {
   fill: none;
-  stroke: #e7e5e4;
+  stroke: var(--line);
   stroke-width: 12;
 }
 
 .viz-gauge-fg {
   fill: none;
-  stroke: #0f766e;
+  stroke: var(--accent);
   stroke-width: 12;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.25s ease;
@@ -815,12 +815,12 @@ input[type='range'] {
 
 .viz-radar-ring {
   fill: none;
-  stroke: #e7e5e4;
+  stroke: var(--line);
   stroke-width: 1;
 }
 
 .viz-radar-spoke {
-  stroke: #d6d3d1;
+  stroke: var(--line);
   stroke-width: 1;
 }
 
@@ -833,7 +833,7 @@ input[type='range'] {
 
 .viz-radar-label {
   font-size: 10px;
-  fill: #57534e;
+  fill: var(--muted);
   font-family: var(--sans);
 }
 
@@ -1383,8 +1383,9 @@ input[type='range'] {
   gap: 0.5rem;
   align-items: center;
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: var(--ink);
 }
+.stage .donut-legend-row { color: #cbd5e1; }
 
 /* Classify drag */
 .drop-zone {
