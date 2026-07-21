@@ -32,7 +32,9 @@ function inline(s: string): string {
       return `<a href="${safe}" rel="noopener">${text}</a>`
     })
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Italic: require a non-space right after the opening `*` so spaced `a * b`
+    // multiplication is left alone while `*word*` still italicises.
+    .replace(/\*(\S[^*]*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
 }
 
