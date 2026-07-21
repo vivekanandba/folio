@@ -27,29 +27,9 @@
   --max: 720px;
 }
 
-/* Dark theme tokens. System preference is the default; a stored [data-theme] overrides it. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #0b1120;
-    --surface: #131c2e;
-    --ink: #e7ecf3;
-    --muted: #94a3b8;
-    --line: rgba(148, 163, 184, 0.18);
-    --accent: #2dd4bf;
-    --accent-soft: #0f2f2b;
-    --ok: #34d399;
-    --bad: #f87171;
-    --wrong-bg: #3b1d1d;
-    --ok-bg: #123528;
-    --lead: #cbd5e1;
-    --topbar-bg: rgba(11, 17, 32, 0.85);
-    --feedback-bg: #0f1728;
-    --code-bg: #1e293b;
-    --bg-glow-1: #0c2f2a;
-    --bg-glow-2: #1a2036;
-  }
-}
+/* Light is the default. Dark is opt-in ONLY via the toggle ([data-theme="dark"]);
+   we deliberately do NOT auto-switch on prefers-color-scheme, so a dark-OS user
+   is never dropped into dark unless they choose it. */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0b1120;
