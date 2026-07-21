@@ -17,7 +17,7 @@ function mountHotspot(
   const render = () => {
     const chart = el('div', { class: 'hotspot-chart' })
     const bars: HTMLButtonElement[] = []
-    session.series.forEach((point, i) => {
+    session.series.forEach((point) => {
       const h = Math.max(6, Math.round((point.value / peak) * 100))
       const bar = el('button', {
         class: 'hotspot-bar',
