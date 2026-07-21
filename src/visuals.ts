@@ -1,59 +1,7 @@
 import { el } from './dom'
 
-const PALETTE = ['#0f766e', '#c2410c', '#1d4ed8', '#a16207', '#7c3aed', '#be123c']
-
-export function kindIcon(kind: string): HTMLElement {
-  const wrap = el('span', { class: `kind-icon kind-${kind}`, 'aria-hidden': 'true' })
-  const svg: Record<string, string> = {
-    detective: `<svg viewBox="0 0 40 40" fill="none"><circle cx="18" cy="18" r="8" stroke="currentColor" stroke-width="2"/><path d="M24 24l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 16h8M16 20h4" stroke="currentColor" stroke-width="1.5"/></svg>`,
-    decision: `<svg viewBox="0 0 40 40" fill="none"><path d="M20 6v10M20 16l-8 8M20 16l8 8M12 24v8M28 24v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
-    audit: `<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="2"/><path d="M20 10v10l7 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
-    calculator: `<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="6" width="24" height="28" rx="3" stroke="currentColor" stroke-width="2"/><path d="M12 14h16M12 20h10M12 26h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
-    classify: `<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="22" y="8" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="6" y="22" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="22" y="22" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/></svg>`,
-    quiz: `<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="12" stroke="currentColor" stroke-width="2"/><path d="M16 17c0-2.5 1.8-4 4-4s4 1.5 4 3.5c0 2-2 3-4 3.5v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="28" r="1.5" fill="currentColor"/></svg>`,
-  }
-  wrap.innerHTML = svg[kind] ?? svg.quiz
-  return wrap
-}
-
-/** Segmented horizontal stacked bar (allocation). */
-export function stackedBar(
-  segments: { label: string; pct: number; color?: string }[],
-  opts: { title?: string; height?: number } = {},
-): HTMLElement {
-  const wrap = el('div', { class: 'viz-stack' })
-  if (opts.title) wrap.append(el('p', { class: 'viz-title' }, [opts.title]))
-  const track = el('div', {
-    class: 'viz-stack-track',
-    style: `height:${opts.height ?? 28}px`,
-  })
-  const total = segments.reduce((a, s) => a + s.pct, 0) || 1
-  segments.forEach((s, i) => {
-    const w = (s.pct / total) * 100
-    if (w <= 0) return
-    const seg = el('div', {
-      class: 'viz-stack-seg',
-      style: `width:${w}%;background:${s.color ?? PALETTE[i % PALETTE.length]}`,
-      title: `${s.label}: ${s.pct}%`,
-    }, [w >= 12 ? `${Math.round(s.pct)}%` : ''])
-    track.append(seg)
-  })
-  wrap.append(track)
-  const legend = el('div', { class: 'viz-legend' })
-  segments.forEach((s, i) => {
-    legend.append(
-      el('span', { class: 'viz-legend-item' }, [
-        el('i', {
-          class: 'viz-swatch',
-          style: `background:${s.color ?? PALETTE[i % PALETTE.length]}`,
-        }),
-        `${s.label} ${s.pct}%`,
-      ]),
-    )
-  })
-  wrap.append(legend)
-  return wrap
-}
+/** Single source of truth for categorical chart colors. */
+export const PALETTE = ['#0f766e', '#c2410c', '#1d4ed8', '#a16207', '#7c3aed', '#be123c']
 
 /** Paired horizontal bars: fund vs index for each holding. */
 export function twinBars(

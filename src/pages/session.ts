@@ -1,9 +1,8 @@
 import { loadPackMeta, loadSession } from '../content'
-import { el, kindBlurb, kindLabel } from '../dom'
+import { el } from '../dom'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
-import { mountSession } from '../sessions'
-import { kindIcon } from '../visuals'
+import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
 import { resolvePackPath } from './pack'
 
 export async function renderSession(
@@ -52,14 +51,17 @@ export async function renderSession(
   mountSession(mount, session, (score, maxScore) => {
     if (saved) return
     saved = true
-    saveSessionResult({
-      packId,
-      sessionId: session.id,
-      kind: session.kind,
-      score,
-      maxScore,
-      completedAt: new Date().toISOString(),
-    })
+    saveSessionResult(
+      {
+        packId,
+        sessionId: session.id,
+        kind: session.kind,
+        score,
+        maxScore,
+        completedAt: new Date().toISOString(),
+      },
+      session.conceptIds,
+    )
     shell.append(
       el('p', { class: 'saved-note' }, [
         'Progress saved on this device. ',

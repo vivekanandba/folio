@@ -1,8 +1,13 @@
+import { liveAnnounce } from '../a11y'
 import { el } from '../dom'
-import { burst, shake } from '../fx'
+import { burst, shake, stage } from '../fx'
 import type { ClassifySession } from '../types'
+import { iconSpan } from './icon'
+import { register, type SessionModule } from './registry'
 
-export function mountClassify(
+const CLASSIFY_SVG = `<svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="22" y="8" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="6" y="22" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/><rect x="22" y="22" width="12" height="10" rx="2" stroke="currentColor" stroke-width="2"/></svg>`
+
+function mountClassify(
   root: HTMLElement,
   session: ClassifySession,
   onComplete: (score: number, max: number) => void,
@@ -10,21 +15,16 @@ export function mountClassify(
   const assignment = new Map<string, string>()
   const max = session.cards.length
 
-  const render = () => {
-    root.replaceChildren()
-    const stage = el('div', { class: 'stage stage-classify' }, [
-      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
-    ])
-    const inner = el('div', { class: 'stage-inner' })
-    inner.append(
-      el('div', { class: 'stage-kicker' }, ['Sort bench']),
-      el('h2', { class: 'stage-title' }, [session.title]),
-    )
-    if (session.intro) {
-      inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
-    }
+  const announce = (cardId: string, bucketLabel: string) => {
+    const text = session.cards.find((c) => c.id === cardId)?.text ?? 'Card'
+    liveAnnounce(`${text} → ${bucketLabel}. ${assignment.size} of ${max} sorted.`)
+  }
 
-    inner.append(
+  const render = () => {
+    const body: (Node | string)[] = []
+    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+
+    body.push(
       el('div', { class: 'classify-progress' }, [
         el('div', { class: 'classify-progress-track' }, [
           el('div', {
@@ -42,6 +42,8 @@ export function mountClassify(
       const col = el('div', {
         class: `bucket drop-zone tone-${tone}`,
         'data-bucket': bucket.id,
+        role: 'group',
+        'aria-label': `Bin: ${bucket.label}`,
       })
       col.append(
         el('div', { class: 'bucket-head' }, [
@@ -50,8 +52,7 @@ export function mountClassify(
         ]),
       )
       if (bucket.hint) col.append(el('p', { class: 'muted small' }, [bucket.hint]))
-      const drop = el('div', { class: 'bucket-drop' })
-      col.append(drop)
+      col.append(el('div', { class: 'bucket-drop' }))
 
       col.addEventListener('dragover', (e) => {
         e.preventDefault()
@@ -64,13 +65,13 @@ export function mountClassify(
         const id = e.dataTransfer?.getData('text/card-id')
         if (!id) return
         assignment.set(id, bucket.id)
+        announce(id, bucket.label)
         burst(col, tone === 'warm' ? ['#f59e0b', '#c2410c'] : ['#3b82f6', '#0ea5e9'])
         render()
       })
       board.append(col)
     }
 
-    // Place assigned cards
     for (const card of session.cards) {
       const bid = assignment.get(card.id)
       if (!bid) continue
@@ -79,9 +80,6 @@ export function mountClassify(
       drop.append(makeChip(card.id, card.text, true))
     }
 
-    const pool = el('div', { class: 'card-pool drag-pool' }, [
-      el('h3', {}, ['Drag these']),
-    ])
     const poolInner = el('div', { class: 'card-pool-inner' })
     for (const card of session.cards) {
       if (assignment.has(card.id)) continue
@@ -90,9 +88,12 @@ export function mountClassify(
     if (!poolInner.childNodes.length) {
       poolInner.append(el('p', { class: 'muted' }, ['All cards placed. Check when ready.']))
     }
-    pool.append(poolInner)
+    const pool = el('div', { class: 'card-pool drag-pool' }, [
+      el('h3', {}, ['Drag these']),
+      poolInner,
+    ])
 
-    inner.append(board, pool)
+    body.push(board, pool)
 
     const check = el('button', {
       class: 'primary pulse',
@@ -119,9 +120,8 @@ export function mountClassify(
       if (score === max) burst(check)
       else shake(check)
       root.replaceChildren(
-        el('div', { class: 'stage stage-classify' }, [
-          el('div', { class: 'stage-inner result-card pop-in' }, [
-            el('h2', {}, ['Bench cleared']),
+        stage('classify', 'Sort bench', 'Bench cleared', [
+          el('div', { class: 'result-card pop-in' }, [
             el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
             el('p', {}, [session.debrief]),
             review,
@@ -130,9 +130,9 @@ export function mountClassify(
       )
       onComplete(score, max)
     })
-    inner.append(check)
-    stage.append(inner)
-    root.append(stage)
+    body.push(check)
+
+    root.replaceChildren(stage('classify', 'Sort bench', session.title, body))
   }
 
   function makeChip(id: string, text: string, placed: boolean): HTMLElement {
@@ -152,7 +152,6 @@ export function mountClassify(
         render()
       })
     } else {
-      // tap-to-pick fallback for mobile
       chip.addEventListener('click', () => {
         const picker = el('div', { class: 'bucket-picker pop-in' }, [
           el('p', { class: 'small' }, ['Send to:']),
@@ -164,6 +163,7 @@ export function mountClassify(
           }, [bucket.label])
           b.addEventListener('click', () => {
             assignment.set(id, bucket.id)
+            announce(id, bucket.label)
             render()
           })
           picker.append(b)
@@ -176,3 +176,20 @@ export function mountClassify(
 
   render()
 }
+
+export const classifyModule: SessionModule<ClassifySession> = {
+  kind: 'classify',
+  label: 'Classify',
+  blurb: 'Sort the signal',
+  icon: () => iconSpan('classify', CLASSIFY_SVG),
+  mount: mountClassify,
+  validate: (s) => {
+    const errs: string[] = []
+    const bucketIds = new Set(s.buckets.map((b) => b.id))
+    s.cards.forEach((c, i) => {
+      if (!bucketIds.has(c.bucketId)) errs.push(`cards[${i}].bucketId "${c.bucketId}" has no bucket`)
+    })
+    return errs
+  },
+}
+register(classifyModule)

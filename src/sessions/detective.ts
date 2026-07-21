@@ -1,9 +1,14 @@
 import { el } from '../dom'
-import { burst, donut, shake } from '../fx'
+import { burst, donut, stage } from '../fx'
 import type { DetectiveSession } from '../types'
 import { stepPills } from '../visuals'
+import { iconSpan } from './icon'
+import { mountMCQ } from './mcq'
+import { register, type SessionModule } from './registry'
 
-export function mountDetective(
+const DETECTIVE_SVG = `<svg viewBox="0 0 40 40" fill="none"><circle cx="18" cy="18" r="8" stroke="currentColor" stroke-width="2"/><path d="M24 24l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 16h8M16 20h4" stroke="currentColor" stroke-width="1.5"/></svg>`
+
+function mountDetective(
   root: HTMLElement,
   session: DetectiveSession,
   onComplete: (score: number, max: number) => void,
@@ -15,33 +20,17 @@ export function mountDetective(
     if (!session.composition?.length) return []
     return session.composition
       .filter((s) => s.revealAfter <= n)
-      .map((s) => ({
-        label: s.label,
-        pct: s.pct,
-        color: s.color ?? '#0f766e',
-      }))
+      .map((s) => ({ label: s.label, pct: s.pct, color: s.color ?? '#0f766e' }))
   }
 
   const render = () => {
-    root.replaceChildren()
     diagnosing = false
-
-    const stage = el('div', { class: 'stage stage-detective' }, [
-      el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
-    ])
-    const inner = el('div', { class: 'stage-inner' })
-    inner.append(
-      el('div', { class: 'stage-kicker' }, ['Detective case']),
-      el('h2', { class: 'stage-title' }, [session.title]),
-    )
-    if (session.intro) {
-      inner.append(el('p', { class: 'stage-lead' }, [session.intro]))
-    }
-    inner.append(stepPills(Math.max(revealed, 1), session.facts.length))
+    const body: (Node | string)[] = []
+    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    body.push(stepPills(Math.max(revealed, 1), session.facts.length))
 
     const layout = el('div', { class: 'detective-layout' })
 
-    // Visual board
     const board = el('div', { class: 'detective-board' })
     const segs = segsAt(revealed)
     if (segs.length) {
@@ -56,10 +45,7 @@ export function mountDetective(
     }
     layout.append(board)
 
-    // Clue deck
-    const deck = el('div', { class: 'clue-deck' }, [
-      el('h3', {}, ['Clue deck']),
-    ])
+    const deck = el('div', { class: 'clue-deck' }, [el('h3', {}, ['Clue deck'])])
     session.facts.forEach((fact, i) => {
       const open = i < revealed
       const card = el('button', {
@@ -94,66 +80,70 @@ export function mountDetective(
       deck.append(card)
     })
     layout.append(deck)
-    inner.append(layout)
+    body.push(layout)
 
     const actions = el('div', { class: 'session-actions' })
     if (revealed > 0 && revealed < session.facts.length) {
       const early = el('button', { class: 'ghost', type: 'button' }, [
         'Diagnose with current clues',
       ])
-      early.addEventListener('click', () => showDiagnosis(inner))
+      early.addEventListener('click', () => showDiagnosis(bodyEl))
       actions.append(early)
     }
     if (revealed >= session.facts.length) {
       const go = el('button', { class: 'primary pulse', type: 'button' }, [
         'Make your diagnosis',
       ])
-      go.addEventListener('click', () => showDiagnosis(inner))
+      go.addEventListener('click', () => showDiagnosis(bodyEl))
       actions.append(go)
     }
-    if (actions.childNodes.length) inner.append(actions)
+    if (actions.childNodes.length) body.push(actions)
 
-    stage.append(inner)
-    root.append(stage)
+    const stageEl = stage('detective', 'Detective case', session.title, body)
+    const bodyEl = stageEl.querySelector<HTMLElement>('.stage-body')!
+    root.replaceChildren(stageEl)
   }
 
   const showDiagnosis = (host: HTMLElement) => {
     if (diagnosing) return
     diagnosing = true
-    const panel = el('div', { class: 'diagnose-panel pop-in' }, [
-      el('h3', {}, [session.question]),
-    ])
-    const choices = el('div', { class: 'choice-grid' })
-    session.choices.forEach((choice, i) => {
-      const btn = el('button', { class: 'choice-tile', type: 'button' }, [
-        el('span', { class: 'choice-letter' }, [String.fromCharCode(65 + i)]),
-        el('span', {}, [choice]),
-      ])
-      btn.addEventListener('click', () => {
-        const correct = i === session.answerIndex
-        choices.querySelectorAll('button').forEach((b, j) => {
-          b.setAttribute('disabled', 'true')
-          if (j === session.answerIndex) b.classList.add('correct')
-          if (j === i && !correct) b.classList.add('wrong')
-        })
-        if (correct) burst(btn)
-        else shake(btn)
-        panel.append(
-          el('div', { class: 'feedback pop-in' }, [
-            el('p', { class: correct ? 'ok' : 'bad' }, [
-              correct ? 'Case closed — diagnosis matches.' : 'Not the strongest read.',
-            ]),
-            el('p', {}, [session.debrief]),
-          ]),
-        )
-        onComplete(correct ? 1 : 0, 1)
-      })
-      choices.append(btn)
-    })
-    panel.append(choices)
+    const panel = el('div', { class: 'diagnose-panel pop-in' })
+    panel.append(
+      mountMCQ({
+        prompt: session.question,
+        choices: session.choices,
+        answerIndex: session.answerIndex,
+        explanation: session.debrief,
+        layout: 'grid',
+        okText: 'Case closed — diagnosis matches.',
+        badText: 'Not the strongest read.',
+        onResolve: (correct) => onComplete(correct ? 1 : 0, 1),
+      }),
+    )
     host.append(panel)
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
   render()
 }
+
+export const detectiveModule: SessionModule<DetectiveSession> = {
+  kind: 'detective',
+  label: 'Detective',
+  blurb: 'Clues → diagnosis',
+  icon: () => iconSpan('detective', DETECTIVE_SVG),
+  mount: mountDetective,
+  validate: (s) => {
+    const errs: string[] = []
+    if (s.answerIndex < 0 || s.answerIndex >= s.choices.length) {
+      errs.push('answerIndex out of range')
+    }
+    s.composition?.forEach((c, i) => {
+      if (c.revealAfter < 1 || c.revealAfter > s.facts.length) {
+        errs.push(`composition[${i}].revealAfter out of range`)
+      }
+    })
+    return errs
+  },
+}
+register(detectiveModule)

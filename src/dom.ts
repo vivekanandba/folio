@@ -19,26 +19,10 @@ export function clear(node: HTMLElement): void {
   node.replaceChildren()
 }
 
-export function kindLabel(kind: string): string {
-  const map: Record<string, string> = {
-    quiz: 'Quiz',
-    classify: 'Classify',
-    detective: 'Detective',
-    calculator: 'Lab',
-    audit: 'Audit',
-    decision: 'Decision',
-  }
-  return map[kind] ?? kind
-}
-
-export function kindBlurb(kind: string): string {
-  const map: Record<string, string> = {
-    quiz: 'Check what stuck',
-    classify: 'Sort the signal',
-    detective: 'Clues → diagnosis',
-    calculator: 'Hands-on numbers',
-    audit: 'Map your gaps',
-    decision: 'Forking judgment',
-  }
-  return map[kind] ?? ''
+/** kebab-case id → Title Case label. */
+export function prettyId(id: string): string {
+  return id
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
 }

@@ -1,0 +1,17 @@
+{
+  "id": "yield-estimate",
+  "kind": "estimate",
+  "title": "Headline yield vs pocket yield",
+  "conceptIds": [
+    "invit-yields"
+  ],
+  "intro": "Distribution yield is not the income you keep.",
+  "prompt": "An InvIT advertises a 12% distribution yield, but 40% of the payout is return of capital. Estimate the approximate 'income' portion of the yield.",
+  "unit": "%",
+  "min": 0,
+  "max": 12,
+  "step": 0.1,
+  "answer": 7.2,
+  "tolerance": 0.08,
+  "debrief": "Return of capital is your own money handed back, not earnings. 12% × (1 − 0.40) ≈ 7.2% is the income-like part — and even that ignores ageing assets and unit-price risk."
+}

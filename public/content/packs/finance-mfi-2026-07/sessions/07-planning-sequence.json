@@ -1,0 +1,29 @@
+{
+  "id": "planning-sequence",
+  "kind": "sequence",
+  "title": "Build the plan in the right order",
+  "conceptIds": [
+    "four-pillars-planning"
+  ],
+  "intro": "A plan is not just SIPs. Put the foundations before the wealth engine.",
+  "prompt": "Drag these into a sound order for setting up a household plan.",
+  "steps": [
+    {
+      "id": "protect",
+      "text": "Secure adequate health and life cover (Protection)"
+    },
+    {
+      "id": "liquid",
+      "text": "Build an emergency / near-term cash buffer (Liquidity)"
+    },
+    {
+      "id": "goals",
+      "text": "Name goals with rough timelines (Goals)"
+    },
+    {
+      "id": "grow",
+      "text": "Start and scale long-term SIPs (Growth)"
+    }
+  ],
+  "debrief": "Protection and liquidity come first so a health scare or income blip does not force you to break long-term investments. Growth is the last pillar, not the first."
+}

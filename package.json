@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "pages:build": "VITE_BASE=/folio/ npm run build"
+    "pages:build": "VITE_BASE=/folio/ npm run build",
+    "lint:content": "node --experimental-strip-types tools/lint/cli.ts",
+    "author": "node --experimental-strip-types tools/authoring/cli.ts"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
   }
