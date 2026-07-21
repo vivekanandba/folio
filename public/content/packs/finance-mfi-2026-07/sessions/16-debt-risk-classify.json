@@ -1,0 +1,21 @@
+{
+  "id": "debt-risk-classify",
+  "kind": "classify",
+  "title": "Which risk is this debt fund taking?",
+  "conceptIds": ["debt-fund-categories"],
+  "intro": "Every debt fund sits on two axes — duration and credit. Sort each into its dominant risk.",
+  "buckets": [
+    { "id": "duration", "label": "Mostly duration risk", "hint": "Swings with interest rates", "tone": "cool" },
+    { "id": "credit", "label": "Mostly credit risk", "hint": "Risk of borrower default", "tone": "warm" },
+    { "id": "low", "label": "Lowest risk (cash parking)", "hint": "Short, high-quality", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Long-duration gilt fund", "bucketId": "duration" },
+    { "id": "c2", "text": "10-year constant-maturity govt fund", "bucketId": "duration" },
+    { "id": "c3", "text": "Credit-risk fund holding AA/A paper for extra yield", "bucketId": "credit" },
+    { "id": "c4", "text": "Fund concentrated in a few lower-rated corporate bonds", "bucketId": "credit" },
+    { "id": "c5", "text": "Liquid fund (≤91-day treasury bills)", "bucketId": "low" },
+    { "id": "c6", "text": "Overnight fund", "bucketId": "low" }
+  ],
+  "debrief": "Gilt/long-duration funds have near-zero credit risk but big duration swings. Credit-risk funds chase yield by lending to weaker borrowers. Liquid/overnight funds minimise both — the right home for your emergency buffer. Category name hints at duration; the factsheet reveals credit."
+}

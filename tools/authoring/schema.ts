@@ -31,7 +31,7 @@ export const PLAN_SCHEMA = obj(
         {
           kind: {
             type: 'string',
-            enum: ['quiz', 'classify', 'detective', 'calculator', 'audit', 'decision', 'sequence', 'estimate', 'hotspot'],
+            enum: ['quiz', 'classify', 'detective', 'calculator', 'audit', 'decision', 'sequence', 'estimate', 'hotspot', 'explainer'],
           },
           title: str,
           conceptIds: strArr,
@@ -152,5 +152,13 @@ export const SESSION_SCHEMAS: Record<string, JsonSchema> = {
       debrief: str,
     },
     ['prompt', 'series', 'debrief'],
+  ),
+  // AI-generated explainers omit the hand-authoring-only inline `viz` field.
+  explainer: sessionSchema(
+    {
+      steps: { type: 'array', items: obj({ title: str, body: str }, ['title', 'body']) },
+      recap: str,
+    },
+    ['steps', 'recap'],
   ),
 }

@@ -1,0 +1,16 @@
+{
+  "id": "debt-ladder-sequence",
+  "kind": "sequence",
+  "title": "Order the debt risk ladder",
+  "conceptIds": ["debt-fund-categories"],
+  "intro": "Arrange these debt categories from lowest overall risk to highest.",
+  "prompt": "Drag into order: lowest risk at the top, highest at the bottom.",
+  "steps": [
+    { "id": "liquid", "text": "Liquid (≤91-day paper — parking cash)" },
+    { "id": "ultra", "text": "Ultra-short (3–6 month duration)" },
+    { "id": "corp", "text": "Corporate bond (mostly high-rated)" },
+    { "id": "gilt", "text": "Gilt (govt bonds — high duration risk)" },
+    { "id": "credit", "text": "Credit risk (lower-rated for extra yield)" }
+  ],
+  "debrief": "Gilt funds carry almost no credit risk but sit high on the ladder because of duration risk — they swing when rates move. Credit-risk funds sit highest for default risk. 'Debt' spans a wide risk range; match the category to your horizon and read the credit mix."
+}

@@ -41,6 +41,7 @@ export async function renderHub(root: HTMLElement): Promise<void> {
   const bands = { shaky: 0, developing: 0, solid: 0 }
   for (const st of Object.values(store.concepts)) bands[masteryBand(st.mastery)] += 1
   const retention = retentionRate(store.attempts)
+  const learnedCount = Object.values(store.concepts).filter((s) => s.learnedAt).length
 
   // --- Today panel ---
   const todayPanel = el('section', { class: 'today-panel' }, [
@@ -62,6 +63,7 @@ export async function renderHub(root: HTMLElement): Promise<void> {
       statTile(String(streak), 'day streak', streak > 0 ? 'tone-good' : ''),
       statTile(String(reviewedToday), 'reviewed today'),
       statTile(retention == null ? '—' : `${Math.round(retention * 100)}%`, '30-day recall'),
+      statTile(`${learnedCount}/${allConcepts.length}`, 'concepts learned'),
       statTile(`${bands.solid}/${bands.solid + bands.developing + bands.shaky}`, 'concepts solid'),
     ]),
   ])

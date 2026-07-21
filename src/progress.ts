@@ -144,6 +144,16 @@ export function getConceptState(
   return loadProgress().concepts[conceptKey(packId, conceptId)]
 }
 
+/** Mark a concept's explainer/page as read (the "Learn" step of the guided path). */
+export function markConceptLearned(packId: string, conceptId: string): void {
+  const store = loadProgress()
+  const key = conceptKey(packId, conceptId)
+  const st = store.concepts[key] ?? freshState(packId, conceptId)
+  if (!st.learnedAt) st.learnedAt = new Date().toISOString()
+  store.concepts[key] = st
+  persist(store)
+}
+
 export function packCompletion(
   packId: string,
   sessionIds: string[],

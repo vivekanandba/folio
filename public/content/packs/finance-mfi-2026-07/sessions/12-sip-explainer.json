@@ -1,0 +1,23 @@
+{
+  "id": "sip-explainer",
+  "kind": "explainer",
+  "title": "SIP, lumpsum & averaging — what actually helps",
+  "conceptIds": ["sip-vs-lumpsum"],
+  "intro": "Untangle the myth that a SIP magically beats a lumpsum.",
+  "steps": [
+    {
+      "title": "What rupee-cost averaging really does",
+      "body": "A fixed monthly amount buys **more units when prices are low** and fewer when high, smoothing your average cost. That genuinely reduces the risk of dumping everything at a peak.\n\nBut markets rise more often than they fall — so money invested *earlier* is exposed to more growth time. Averaging manages **regret and timing risk**, not a guaranteed return premium."
+    },
+    {
+      "title": "Watch the compounding",
+      "body": "The power of a SIP is consistency over time, not a trick. Drag the sliders — most of the final corpus is compounding, not your contributions.",
+      "viz": { "type": "what-if", "compute": "sipFuture", "title": "Future value of a monthly SIP", "inputs": [ { "key": "monthly", "label": "Monthly SIP", "min": 1000, "max": 50000, "step": 1000, "value": 10000, "unit": "₹" }, { "key": "rate", "label": "Return", "min": 6, "max": 16, "step": 0.5, "value": 12 }, { "key": "years", "label": "Years", "min": 3, "max": 30, "step": 1, "value": 10 } ], "output": { "label": "Corpus", "unit": "₹", "decimals": 0 } }
+    },
+    {
+      "title": "So which should you use?",
+      "body": "> [!warn] \"SIP always beats lumpsum\" is a myth. If you already hold the cash, delaying it via a SIP usually *lowers* the outcome in a rising market.\n\n- **Monthly salary** → SIP (matches cash flow, builds the habit).\n- **A windfall** → invest sooner, or phase it in with an **STP** (Systematic Transfer Plan) if a peak worries you.\n\nThe SIP's real edge is behavioural: you'll actually stick to it."
+    }
+  ],
+  "recap": "**SIP vs lumpsum answer different questions.**\n\n- Averaging smooths cost and reduces timing regret — it is not a return premium.\n- Have cash now? Investing sooner usually wins; an STP phases it in gently.\n- Pick the plan you will *stick to*, not the back-tested ideal."
+}

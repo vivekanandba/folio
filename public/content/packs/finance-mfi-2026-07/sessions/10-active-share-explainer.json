@@ -1,0 +1,24 @@
+{
+  "id": "active-share-explainer",
+  "kind": "explainer",
+  "title": "Active share, step by step",
+  "conceptIds": ["active-share"],
+  "intro": "Three minutes to understand what active share does — and doesn't — tell you.",
+  "steps": [
+    {
+      "title": "What it measures",
+      "body": "Active share asks a simple question: **how different is this fund from its benchmark?**\n\nAt one extreme, a fund holding exactly the index in exactly the index weights is 0% active — an index fund in disguise. At the other, a fund sharing almost nothing with the index is near 100% active.\n\nThe gauge below shows a **closet indexer**: only 15% different, yet charging active fees.",
+      "viz": { "type": "gauge", "value": 0.15, "label": "Active share", "note": "Closet indexer", "caption": "15% active — you are paying active fees for near-index behaviour." }
+    },
+    {
+      "title": "The formula",
+      "body": "Sum the absolute weight difference for every holding, then halve it:\n\n```\nActive share = ½ × Σ | w_fund − w_index |\n```\n\nWe halve because every overweight is funded by an underweight somewhere else — each real difference is counted twice in the sum. Halving lands the score on a clean 0–100% scale.\n\nThis fund is genuinely active:",
+      "viz": { "type": "gauge", "value": 0.72, "label": "Active share", "note": "Genuinely active", "caption": "72% — real positions, real deviation from the index." }
+    },
+    {
+      "title": "High is not the same as good",
+      "body": "> [!warn] A high active share means the manager is *taking positions* — not that the positions are **right**.\n\nVery-active funds tend to split: some consistently beat the index, others consistently lag. Active share measures **intention and risk**, never skill. Pair it with tracking error and long-horizon, full-cycle results before you judge."
+    }
+  ],
+  "recap": "**Active share = how different, not how good.**\n\n- ~10–20% → closet indexer (active fee, index behaviour).\n- ~80%+ → highly active (big bets, unknown outcome).\n\nAsk two separate questions: *am I paying for low active share?* and *has the active risk been rewarded over full cycles?*"
+}

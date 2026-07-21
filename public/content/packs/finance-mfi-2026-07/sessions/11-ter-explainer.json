@@ -1,0 +1,23 @@
+{
+  "id": "ter-explainer",
+  "kind": "explainer",
+  "title": "Why a tiny fee matters",
+  "conceptIds": ["expense-ratio-ter"],
+  "intro": "The expense ratio is the fee you never see on a bill. Here's why it still reshapes your corpus.",
+  "steps": [
+    {
+      "title": "A fee on everything, every year",
+      "body": "The **Total Expense Ratio (TER)** is charged on your *whole* balance, *every* year, skimmed daily from the NAV — win or lose. You never get an invoice, which is exactly why it's easy to ignore.\n\nTypical bands:\n\n- Index fund: ~0.2–0.5%\n- Direct active: ~0.8–1.2%\n- Regular active: ~1.5–2.0%+"
+    },
+    {
+      "title": "Feel the compounding drag",
+      "body": "Because a fee lowers your growth **rate**, the shortfall compounds — it grows every year, just like returns do. Drag the sliders and watch how much a seemingly small % removes over decades.",
+      "viz": { "type": "what-if", "compute": "feeImpact", "title": "Money lost to fees", "inputs": [ { "key": "principal", "label": "Invested", "min": 100000, "max": 2000000, "step": 100000, "value": 1000000, "unit": "₹" }, { "key": "grossReturn", "label": "Gross return", "min": 6, "max": 16, "step": 0.5, "value": 12, "unit": "%" }, { "key": "expenseRatio", "label": "Expense ratio", "min": 0.2, "max": 2.5, "step": 0.1, "value": 1.5, "unit": "%" }, { "key": "years", "label": "Years", "min": 5, "max": 30, "step": 1, "value": 20 } ], "output": { "label": "Lost to fees", "unit": "₹", "decimals": 0 } }
+    },
+    {
+      "title": "The free win: Direct plans",
+      "body": "> [!tip] A fund's **Direct** plan is the *same portfolio* as its Regular plan, minus the distributor commission. Lower TER, faster-growing NAV, identical holdings.\n\nIf you don't need advice bundled into the product, the Direct plan is a risk-free saving that compounds for as long as you hold."
+    }
+  ],
+  "recap": "**TER compounds against you.**\n\n- It's charged on the whole balance, every year.\n- A 1% difference is not 1% of the story — it curves upward over time.\n- Prefer **Direct** plans; compare TER *within* a category; don't chase the lowest number blindly."
+}
