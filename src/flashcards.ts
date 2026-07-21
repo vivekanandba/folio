@@ -6,6 +6,7 @@ const MAX_BACK = 280
 function stripInline(s: string): string {
   return s
     .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
     .trim()
 }

@@ -59,7 +59,7 @@ export async function renderHub(root: HTMLElement): Promise<void> {
       ]),
     ]),
     el('div', { class: 'stat-row' }, [
-      statTile(String(streak), streak === 1 ? 'day streak' : 'day streak', streak > 0 ? 'tone-good' : ''),
+      statTile(String(streak), 'day streak', streak > 0 ? 'tone-good' : ''),
       statTile(String(reviewedToday), 'reviewed today'),
       statTile(retention == null ? '—' : `${Math.round(retention * 100)}%`, '30-day recall'),
       statTile(`${bands.solid}/${bands.solid + bands.developing + bands.shaky}`, 'concepts solid'),

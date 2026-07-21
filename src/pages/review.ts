@@ -95,7 +95,17 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         recordConceptReview(item.ref.packId, item.ref.conceptId, normalized)
         reviewed += 1
         pos += 1
-        void runNext()
+        // Surface a mid-queue failure instead of leaving an unhandled rejection.
+        runNext().catch((e) => {
+          root.replaceChildren(
+            header(),
+            el('div', { class: 'error' }, [
+              el('h1', {}, ['Review interrupted']),
+              el('p', {}, [e instanceof Error ? e.message : String(e)]),
+              el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to hub']),
+            ]),
+          )
+        })
       })
       return
     }

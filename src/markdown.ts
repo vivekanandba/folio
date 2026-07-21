@@ -26,7 +26,10 @@ export function renderMarkdown(md: string): string {
       .replace(/>/g, '&gt;')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text: string, url: string) => {
         const href = safeHref(url)
-        return href ? `<a href="${href}" rel="noopener">${text}</a>` : m
+        if (!href) return m
+        // Escape quotes so a URL can't break out of the href="" attribute.
+        const safe = href.replace(/"/g, '%22').replace(/'/g, '%27')
+        return `<a href="${safe}" rel="noopener">${text}</a>`
       })
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
