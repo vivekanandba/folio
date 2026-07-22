@@ -3,7 +3,6 @@ import { liveAnnounce, setLiveRegion } from './a11y'
 import { el } from './dom'
 import { initPalette } from './palette'
 import { onRoute } from './router'
-import { initThemeToggle } from './theme'
 import { renderConcept } from './pages/concept'
 import { renderHub } from './pages/hub'
 import { renderPack } from './pages/pack'
@@ -29,7 +28,7 @@ const shell = el('div', { class: 'app-shell' }, [
   skipLink,
   el('header', { class: 'topbar' }, [
     el('a', { class: 'brand', href: '#/' }, ['Folio']),
-    el('div', { class: 'topbar-actions' }, [searchBtn, initThemeToggle()]),
+    el('div', { class: 'topbar-actions' }, [searchBtn]),
   ]),
   el('main', { class: 'main', id: 'main', tabindex: '-1' }),
   liveRegion,
