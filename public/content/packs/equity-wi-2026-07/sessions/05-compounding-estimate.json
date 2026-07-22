@@ -1,0 +1,15 @@
+{
+  "id": "compounding-estimate",
+  "kind": "estimate",
+  "title": "The magic of a long runway",
+  "conceptIds": ["wealth-creators"],
+  "intro": "Eicher Motors was about ₹46 crore at the end of FY01. Feel what two decades of compounding does.",
+  "prompt": "If a ₹46 crore business compounded its value at ~25% a year for 20 years, roughly what would it be worth (₹ crore)?",
+  "unit": "₹ cr",
+  "min": 46,
+  "max": 8000,
+  "step": 1,
+  "answer": 3988,
+  "tolerance": 0.08,
+  "debrief": "₹46 cr × 1.25^20 ≈ ₹3,988 cr — an ~87x rise, from one unremarkable starting number. That is why the durable compounders looked so ordinary early: the outcome lives in the exponent (rate × years), which our intuition badly underestimates. Sustained earnings growth over a long runway is the whole game."
+}

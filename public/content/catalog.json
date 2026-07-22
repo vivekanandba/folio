@@ -3,6 +3,10 @@
     {
       "id": "finance-mfi-2026-07",
       "path": "packs/finance-mfi-2026-07"
+    },
+    {
+      "id": "equity-wi-2026-07",
+      "path": "packs/equity-wi-2026-07"
     }
   ]
 }
