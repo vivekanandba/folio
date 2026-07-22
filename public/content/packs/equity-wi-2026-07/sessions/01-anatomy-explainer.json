@@ -1,0 +1,27 @@
+{
+  "id": "anatomy-explainer",
+  "kind": "explainer",
+  "title": "Anatomy of a wealth creator",
+  "conceptIds": ["wealth-creators"],
+  "intro": "Four minutes on how an ordinary-looking small company becomes a decades-long compounder.",
+  "steps": [
+    {
+      "title": "It looks unremarkable at the start",
+      "body": "In FY01, **Eicher Motors** was worth ₹46 crore, **Marico** ₹41 crore, **Titan** ₹176 crore. Today they're giants.\n\nThe lesson isn't 'buy small caps' — it's that the eventual winners looked ordinary, and often *expensive*, precisely while they were building the thing that would make them great."
+    },
+    {
+      "title": "The build phase hides the moat",
+      "body": "First a company spends to **build** — distribution, a brand, a process, a platform. Return on capital can *dip*. It looks dull and costly, and impatient investors leave here.\n\n> [!warn] The most fragile, unexciting phase is often right before the moat forms. Leaving on the dip is leaving at the worst moment."
+    },
+    {
+      "title": "Earnings are the only growth that counts",
+      "body": "When the moat holds — pricing power, switching costs, brand trust — **return on capital rises and earnings compound**. Over years, returns track earnings almost exactly.\n\nWatch a small base compound. Drag the knobs:",
+      "viz": { "type": "what-if", "compute": "compound", "title": "A ₹cr base, compounded", "inputs": [ { "key": "principal", "label": "Start (₹ cr)", "min": 40, "max": 500, "step": 10, "value": 46 }, { "key": "rate", "label": "Earnings CAGR", "min": 10, "max": 35, "step": 1, "value": 25, "unit": "%" }, { "key": "years", "label": "Years", "min": 5, "max": 25, "step": 1, "value": 20 } ], "output": { "label": "Becomes (₹ cr)", "decimals": 0 } }
+    },
+    {
+      "title": "Capital allocation + runway decide the rest",
+      "body": "The finishers **reinvest** into deepening the advantage rather than paying out early or diversifying into unrelated bets — and they operate in a **large market still being organised** (the runway).\n\nDanger changes with size: small caps risk governance and leverage; large caps risk **complacency** as moats stop widening."
+    }
+  ],
+  "recap": "**A wealth creator compounds earnings, it doesn't just have a story.**\n\n- Build phase → ROCE dips → moat forms → ROCE rises → earnings compound.\n- Returns track **earnings**, not narratives.\n- Winners **reinvest** into the moat and have a long **runway**.\n\nTrack earnings and return on capital, not the price chart."
+}

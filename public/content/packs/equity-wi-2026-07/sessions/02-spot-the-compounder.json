@@ -1,0 +1,28 @@
+{
+  "id": "spot-the-compounder",
+  "kind": "detective",
+  "title": "Spot the compounder",
+  "conceptIds": ["wealth-creators"],
+  "intro": "Company X looks dull and a little expensive. Open the clues, then diagnose what you're really looking at.",
+  "facts": [
+    { "label": "Return on capital", "value": "Dipped 3 years ago during a big distribution build-out; has risen for 6 straight quarters since." },
+    { "label": "Earnings", "value": "Growing ~24% a year for 4 years; the share price has roughly tracked earnings, not run ahead of them." },
+    { "label": "Debt", "value": "Low and falling; interest easily covered by operating profit." },
+    { "label": "Capital allocation", "value": "~70% of profit reinvested into the core business; no unrelated acquisitions." },
+    { "label": "Market", "value": "Addressable market is large and still fragmented/unorganised — plenty of runway." }
+  ],
+  "composition": [
+    { "label": "Reinvested in core", "pct": 70, "revealAfter": 4, "color": "#0f766e" },
+    { "label": "Dividend", "pct": 22, "revealAfter": 4, "color": "#1d4ed8" },
+    { "label": "Other", "pct": 8, "revealAfter": 4, "color": "#a16207" }
+  ],
+  "question": "Best read on Company X?",
+  "choices": [
+    "A hype stock — price running on a story, not fundamentals",
+    "An emerging wealth creator — moat forming, earnings compounding, disciplined reinvestment",
+    "A value trap — cheap because the business is quietly deteriorating",
+    "A mature incumbent at risk of complacency"
+  ],
+  "answerIndex": 1,
+  "debrief": "The tell-tale pattern: ROCE dipped during a build phase then inflected upward (moat forming), earnings compound and the price tracks them (not a story), debt is low, profits are reinvested into the core, and there's a long runway. That's the anatomy of an emerging compounder — not hype, not a trap, and not yet a complacent incumbent."
+}
