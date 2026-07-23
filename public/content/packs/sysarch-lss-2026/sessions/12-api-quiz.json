@@ -1,0 +1,39 @@
+{
+  "id": "api-quiz",
+  "kind": "quiz",
+  "title": "API design — check what stuck",
+  "conceptIds": ["api-design"],
+  "intro": "Five checks on REST, idempotency, and evolvable contracts.",
+  "questions": [
+    {
+      "prompt": "Which pair of HTTP verbs is idempotent?",
+      "choices": ["POST and PATCH", "PUT and DELETE", "POST and GET", "PATCH and POST"],
+      "answerIndex": 1,
+      "explanation": "PUT (replace) and DELETE (remove) are idempotent — repeating them lands the same state. GET is also idempotent (and safe), but POST creates a new resource each time, so it is not."
+    },
+    {
+      "prompt": "Why does idempotency matter over an unreliable network?",
+      "choices": ["It makes responses smaller", "It lets a client safely retry after a dropped response without double-effects", "It encrypts the payload", "It removes the need for versioning"],
+      "answerIndex": 1,
+      "explanation": "If the response is lost, the client retries. An idempotent call can be replayed safely; for a non-idempotent POST like a payment, you pass an idempotency key so the server dedupes. This is the API-level link to time-redundancy retries."
+    },
+    {
+      "prompt": "The core difference between RPC and REST is…",
+      "choices": ["RPC is always faster and better", "RPC exposes actions to call; REST exposes resources via a uniform interface", "REST cannot use JSON", "RPC only works inside a browser"],
+      "answerIndex": 1,
+      "explanation": "RPC is action-centric (call a remote function); REST is resource-centric (manipulate resources through uniform HTTP verbs). Each fits different contexts — REST for public/evolvable APIs, gRPC for fast internal calls."
+    },
+    {
+      "prompt": "Why version an API (e.g. /v2/...)?",
+      "choices": ["To make it run faster", "So the contract can evolve without breaking existing clients", "Because REST requires it", "To reduce the number of endpoints"],
+      "answerIndex": 1,
+      "explanation": "Clients depend on today's response shape. Versioning lets you introduce breaking changes on a new version while existing clients keep working against the old one — you can add freely, but you can't silently change."
+    },
+    {
+      "prompt": "Where do a REST API's endpoints ultimately come from?",
+      "choices": ["Whatever the database tables are", "The messages that cross the system boundary in the use-case sequence diagrams", "The programming language chosen", "A fixed list defined by the HTTP spec"],
+      "answerIndex": 1,
+      "explanation": "Endpoints are derived, not guessed: every message crossing the system boundary in a sequence diagram becomes an endpoint. Grouping those messages by the resource they act on yields the resource model. API design is a translation of the requirements you already captured."
+    }
+  ]
+}

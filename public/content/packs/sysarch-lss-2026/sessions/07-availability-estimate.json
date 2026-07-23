@@ -1,0 +1,15 @@
+{
+  "id": "availability-estimate",
+  "kind": "estimate",
+  "title": "Three nines — how much downtime?",
+  "conceptIds": ["quality-attributes"],
+  "intro": "A year has 525,600 minutes. Your SLA promises 99.9% availability ('three nines').",
+  "prompt": "Roughly how many minutes of downtime per year does 99.9% availability allow?",
+  "unit": "min/yr",
+  "min": 0,
+  "max": 6000,
+  "step": 0.1,
+  "answer": 525.6,
+  "tolerance": 0.06,
+  "debrief": "Downtime = (1 − 0.999) × 525,600 = 0.001 × 525,600 = **525.6 minutes/year** (~8.76 hours). Each extra nine cuts this ~10×: 99.99% allows ~52.6 min, 99.999% only ~5.26 min. The jump from three to five nines is a huge increase in cost and complexity — set the target from the business cost of downtime, not vanity."
+}

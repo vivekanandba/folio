@@ -1,0 +1,27 @@
+{
+  "id": "api-design-explainer",
+  "kind": "explainer",
+  "title": "RPC vs REST, and contracts that last",
+  "conceptIds": ["api-design"],
+  "intro": "How to choose an API style and design a contract clients can depend on.",
+  "steps": [
+    {
+      "title": "Two styles: actions vs resources",
+      "body": "- **RPC** — call a remote *action* (`createUser`, `sendPayment`). Feels like local code; tight coupling. **gRPC** (HTTP/2 + protobuf) is the fast, binary, strongly-typed modern form.\n- **REST** — manipulate *resources* (`/users/42`) through a **uniform interface** of HTTP verbs. Stateless, cacheable, loosely coupled.\n\n> [!key] REST wins for public, evolvable, cacheable web APIs. RPC/gRPC wins for fast, strongly-typed internal service-to-service calls."
+    },
+    {
+      "title": "Pick the style by context",
+      "body": "There's no universal winner — match the style to the job:",
+      "viz": { "type": "annotated", "title": "Pick by context", "prompt": "Tap each style.", "points": [ { "label": "REST", "value": 3, "note": "Public web APIs. Resource-centric, stateless, cacheable, loosely coupled, human-readable JSON. Evolves gracefully." }, { "label": "gRPC", "value": 4, "note": "Internal service-to-service. Action-centric, HTTP/2 + protobuf, binary + fast, strongly typed, streaming. Tighter coupling." }, { "label": "GraphQL", "value": 2, "note": "Client-shaped queries — exactly the fields you need in one round-trip. Great for varied frontends; caching + complexity cost." } ] }
+    },
+    {
+      "title": "Idempotency makes retries safe",
+      "body": "**Safety** = no side effects; **idempotency** = repeating the call lands the same state.\n\n| Verb | Op | Safe | Idempotent |\n|---|---|---|---|\n| GET | Read | ✅ | ✅ |\n| POST | Create | ❌ | ❌ |\n| PUT | Replace | ❌ | ✅ |\n| DELETE | Remove | ❌ | ✅ |\n\n> [!tip] A dropped response makes the client retry. If the call is idempotent (PUT/DELETE), replaying it can't double-charge. For non-idempotent POST (payments), pass an **idempotency key** so the server dedupes. This is the link back to time-redundancy retries."
+    },
+    {
+      "title": "Design the contract to evolve",
+      "body": "An API is a promise — once clients depend on it, adding is easy, changing is hard.\n\n- **Model resources, not actions**: `POST /users/42/orders`, not `/createOrderForUser`.\n- **Pagination** — never return an unbounded list.\n- **Versioning** — `/v2/...` or headers, so you can evolve without breaking clients.\n- **Predictable errors** — consistent status codes + a stable error body."
+    }
+  ],
+  "recap": "**Default to REST for public APIs; reach for gRPC on hot internal paths.**\n\n- RPC = actions / tight coupling; REST = resources / uniform verbs / loose coupling.\n- Make writes **idempotent** (or add an idempotency key) so retries are safe.\n- Bake in **pagination, versioning, and stable errors** before the first client ships.\n- Endpoints come from the boundary-crossing messages in your sequence diagrams."
+}

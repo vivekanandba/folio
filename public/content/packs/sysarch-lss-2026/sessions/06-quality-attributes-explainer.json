@@ -1,0 +1,28 @@
+{
+  "id": "quality-attributes-explainer",
+  "kind": "explainer",
+  "title": "Performance, scalability, availability",
+  "conceptIds": ["quality-attributes"],
+  "intro": "The non-functional big four — and why you measure them at the tail, not the average.",
+  "steps": [
+    {
+      "title": "Response time has two parts",
+      "body": "**Response time = processing time + waiting time.**\n\nA request computed in 5 ms can still take 800 ms because it sat in a queue. Optimising the algorithm does nothing if **waiting** dominates — you fix that with concurrency, queuing and capacity, not faster code.\n\n**Throughput** (requests/sec) is a related but distinct goal from latency."
+    },
+    {
+      "title": "Percentiles beat averages",
+      "body": "An average hides the pain. If 99% of requests are fast and 1% take 10 s, the mean looks fine — but that 1% is often your most engaged users.\n\n**p99 = 200 ms** means '99% of requests finish within 200 ms' — a promise about the tail. SLA and alert on **p99**, never the average.",
+      "viz": { "type": "annotated", "title": "Read the latency distribution", "prompt": "Tap each marker.", "points": [ { "label": "avg", "value": 1, "note": "Mean. Hides outliers — do not SLA on this." }, { "label": "p50", "value": 1, "note": "Median. Says nothing about the worst experiences." }, { "label": "p95", "value": 2, "note": "95% finish within this. The tail begins to show." }, { "label": "p99", "value": 4, "note": "99% finish within this. THIS is what you promise — your heaviest users' experience." } ] }
+    },
+    {
+      "title": "Scale up vs scale out",
+      "body": "- **Vertical (up)** — a bigger machine. Simple, but bounded by the biggest box, and a single point of failure.\n- **Horizontal (out)** — more machines behind a load balancer. Effectively unbounded and doubles as redundancy, but forces **statelessness, data distribution, coordination**.\n\n> [!tip] Large-scale systems favour **horizontal** scaling — the only path past one machine's ceiling. The price is complexity."
+    },
+    {
+      "title": "Availability = tolerating failure",
+      "body": "**Availability = MTBF / (MTBF + MTTR)** — raise it by failing less *or* recovering faster. Each extra 'nine' cuts allowed downtime ~10× (99.9% ≈ 8.76 h/yr; 99.99% ≈ 53 min/yr).\n\nYou hit the target with **redundancy** — no single point of failure: spatial (copies across zones), time (retry idempotent ops), active-active (all serve) or active-passive (standby fails over).",
+      "viz": { "type": "what-if", "title": "Availability → downtime per year", "compute": "downtime", "inputs": [ { "key": "availability", "label": "Availability", "min": 90, "max": 99.999, "step": 0.001, "value": 99.9, "unit": "%", "decimals": 3 } ], "output": { "label": "Downtime / year", "unit": "min", "decimals": 1 } }
+    }
+  ],
+  "recap": "**Measure quality attributes at the tail; buy availability with redundancy.**\n\n- Response time = **processing + waiting**; often the wait dominates.\n- SLA on **p99**, not the average; stay left of the latency **knee**.\n- Prefer **horizontal** scaling; accept the statelessness cost.\n- Availability = MTBF/(MTBF+MTTR); each nine ≈ 10× less downtime, met by **redundancy**."
+}

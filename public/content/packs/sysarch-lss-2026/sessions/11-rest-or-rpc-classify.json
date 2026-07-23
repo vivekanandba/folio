@@ -1,0 +1,22 @@
+{
+  "id": "rest-or-rpc-classify",
+  "kind": "classify",
+  "title": "REST or RPC/gRPC?",
+  "conceptIds": ["api-design"],
+  "intro": "Sort each trait or scenario by the API style it points to.",
+  "buckets": [
+    { "id": "rest", "label": "REST", "hint": "Resources, public, evolvable", "tone": "cool" },
+    { "id": "rpc", "label": "RPC / gRPC", "hint": "Actions, internal, fast", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Resource-centric: nouns in the path, verbs as HTTP methods", "bucketId": "rest" },
+    { "id": "c2", "text": "Public API consumed by many unknown third-party clients", "bucketId": "rest" },
+    { "id": "c3", "text": "Responses are cacheable and human-readable JSON", "bucketId": "rest" },
+    { "id": "c4", "text": "HATEOAS links let clients discover related actions", "bucketId": "rest" },
+    { "id": "c5", "text": "Action-centric: the interface is a list of callable functions", "bucketId": "rpc" },
+    { "id": "c6", "text": "Low-latency internal call between two of your own microservices", "bucketId": "rpc" },
+    { "id": "c7", "text": "Binary protobuf over HTTP/2 with a strongly-typed contract", "bucketId": "rpc" },
+    { "id": "c8", "text": "Bidirectional streaming of audio frames between services", "bucketId": "rpc" }
+  ],
+  "debrief": "REST is resource/noun-centric, stateless, cacheable and loosely coupled — ideal for public, evolvable web APIs consumed by clients you don't control. RPC/gRPC is action-centric with tight, strongly-typed coupling and high performance (binary protobuf, HTTP/2, streaming) — ideal for internal service-to-service calls where both ends ship together. The rule of thumb: REST at the edge, gRPC between your own services."
+}

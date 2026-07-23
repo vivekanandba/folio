@@ -1,0 +1,39 @@
+{
+  "id": "quality-attributes-quiz",
+  "kind": "quiz",
+  "title": "Quality attributes — check what stuck",
+  "conceptIds": ["quality-attributes"],
+  "intro": "Five checks on performance, scaling, and availability.",
+  "questions": [
+    {
+      "prompt": "'p99 latency = 200 ms' means…",
+      "choices": ["The average request takes 200 ms", "99% of requests finish within 200 ms", "The system is up 99% of the time", "The slowest request ever was 200 ms"],
+      "answerIndex": 1,
+      "explanation": "A percentile is about the distribution of response times: p99 = 200 ms means 99% of requests complete within 200 ms. It's a promise about the tail, which the average hides."
+    },
+    {
+      "prompt": "Response time is best understood as…",
+      "choices": ["Only CPU processing time", "Processing time + waiting time", "Throughput divided by users", "The same thing as availability"],
+      "answerIndex": 1,
+      "explanation": "Response time = processing + waiting. A fast handler can still be slow if requests queue — often the wait dominates, and you fix it with capacity, not faster code."
+    },
+    {
+      "prompt": "The main advantage of horizontal scaling over vertical scaling is…",
+      "choices": ["It's always simpler to build", "It removes the need for a load balancer", "It's effectively unbounded and doubles as redundancy", "It keeps all state on one machine"],
+      "answerIndex": 2,
+      "explanation": "Vertical scaling is capped by the biggest single machine and is a single point of failure. Horizontal scaling adds machines behind a load balancer — effectively unbounded and fault-tolerant — at the cost of statelessness and coordination."
+    },
+    {
+      "prompt": "Availability is defined as…",
+      "choices": ["MTBF / (MTBF + MTTR)", "MTTR / MTBF", "Requests per second", "1 − error rate"],
+      "answerIndex": 0,
+      "explanation": "Availability = MTBF / (MTBF + MTTR). You raise it by failing less often (higher MTBF) or recovering faster (lower MTTR)."
+    },
+    {
+      "prompt": "In an active-passive redundancy setup…",
+      "choices": ["All replicas serve traffic simultaneously", "A standby takes over on failover; it's idle until then", "There is no redundancy at all", "Requests are retried on the same node"],
+      "answerIndex": 1,
+      "explanation": "Active-passive keeps a standby that takes over when the primary fails — simpler than active-active, but the standby sits idle and failover isn't instant. Active-active has all replicas serving, so a failure just removes capacity."
+    }
+  ]
+}

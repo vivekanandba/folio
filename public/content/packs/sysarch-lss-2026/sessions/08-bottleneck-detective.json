@@ -1,0 +1,27 @@
+{
+  "id": "bottleneck-detective",
+  "kind": "detective",
+  "title": "Diagnose the latency",
+  "conceptIds": ["quality-attributes"],
+  "intro": "An API's p99 latency spiked to 900 ms under load, even though the average looks fine. Open the clues, then diagnose the real bottleneck.",
+  "facts": [
+    { "label": "Average latency", "value": "Reassuring: mean is ~40 ms. But p99 is 900 ms and climbing with traffic." },
+    { "label": "CPU profile", "value": "The request handler itself computes in ~6 ms. CPU on each box sits at ~30%." },
+    { "label": "Under load", "value": "Latency was flat until ~7k req/s, then rose sharply — a clear knee." },
+    { "label": "Request queue", "value": "Time spent waiting in the queue before processing grows fast once traffic climbs." },
+    { "label": "Topology", "value": "One large vertically-scaled instance behind the load balancer; no horizontal replicas." }
+  ],
+  "composition": [
+    { "label": "Waiting in queue", "pct": 88, "revealAfter": 4, "color": "#b91c1c" },
+    { "label": "Actual processing", "pct": 12, "revealAfter": 4, "color": "#0f766e" }
+  ],
+  "question": "What's really causing the p99 spike?",
+  "choices": [
+    "The algorithm is too slow — optimise the handler's code",
+    "Waiting time dominates: the system is past its capacity knee and needs to scale out",
+    "The average proves performance is fine; the p99 alert is a false alarm",
+    "The database is the bottleneck — add an index"
+  ],
+  "answerIndex": 1,
+  "debrief": "Response time = processing + waiting. Processing is only ~6 ms and CPU is idle-ish, so the code isn't the problem — waiting time is ~88% of the latency. Traffic crossed the capacity knee, so requests pile up in the queue. The fix is capacity/concurrency — scale out horizontally with more replicas — not micro-optimising a handler that's already fast. And the low average is exactly why you SLA on p99: it hid the tail entirely."
+}

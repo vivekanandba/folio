@@ -1,0 +1,23 @@
+{
+  "id": "driver-classify",
+  "kind": "classify",
+  "title": "Feature, quality attribute, or constraint?",
+  "conceptIds": ["requirements-drivers"],
+  "intro": "Sort each requirement. The distinction decides what your architecture must be designed around.",
+  "buckets": [
+    { "id": "feature", "label": "Feature", "hint": "What the system does", "tone": "warm" },
+    { "id": "quality", "label": "Quality attribute", "hint": "How well — measurable", "tone": "cool" },
+    { "id": "constraint", "label": "Constraint", "hint": "Unnegotiable limit", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Users can reset their password by email", "bucketId": "feature" },
+    { "id": "c2", "text": "Show order history with filtering and search", "bucketId": "feature" },
+    { "id": "c3", "text": "Export a monthly PDF invoice", "bucketId": "feature" },
+    { "id": "c4", "text": "99.99% availability (≤ ~53 min downtime/year)", "bucketId": "quality" },
+    { "id": "c5", "text": "p99 API latency under 200 ms at 10k requests/sec", "bucketId": "quality" },
+    { "id": "c6", "text": "Handle a 10× traffic spike without manual intervention", "bucketId": "quality" },
+    { "id": "c7", "text": "EU user data must never leave EU data centres (GDPR)", "bucketId": "constraint" },
+    { "id": "c8", "text": "Must use the bank's mandated KYC vendor", "bucketId": "constraint" }
+  ],
+  "debrief": "Features describe *what* the system does — and almost any architecture can deliver them, so they don't drive design. Quality attributes are measurable *how-well* targets (availability, latency, scalability) — these are the primary architectural drivers. Constraints are external, unnegotiable limits (regulation, a mandated vendor) you must design around. Notice the quality attributes are all numbers — that's the test of a good one."
+}

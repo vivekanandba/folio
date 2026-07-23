@@ -1,0 +1,27 @@
+{
+  "id": "what-is-architecture-explainer",
+  "kind": "explainer",
+  "title": "What software architecture actually is",
+  "conceptIds": ["what-is-architecture"],
+  "intro": "Four minutes to separate architecture from the technologies people confuse it with.",
+  "steps": [
+    {
+      "title": "Structure is judged against intent",
+      "body": "A **theatre** and a **suburban home** are both good buildings — but only relative to what they're *for*. Acoustics and sightlines for one; daily living for the other.\n\nSoftware is the same. There is no universally 'correct' architecture — only one that fits an **explicit intent**. A CRUD web app and a real-time voice platform are both right, for different purposes.\n\n> [!key] Architecture is the **high-level description of a system's components and how they communicate** to meet its requirements and constraints."
+    },
+    {
+      "title": "Technologies are NOT architecture",
+      "body": "The single most common mistake: 'we're using React + Postgres + Kafka' is *not* an architecture — those are **implementation details**.\n\nDecide **topology and protocols first** (what the components are, how they talk). Defer language/framework/library choices to the **end**. A component is a **black box** defined by its interface, not its internal code."
+    },
+    {
+      "title": "Design at the Service level",
+      "body": "Complexity climbs a ladder — and global systems are reasoned about near the top:\n\nMethod → Class → Module → Library → Application → **System (services)**.\n\nMillions of users, high throughput and distributed data are orchestrated at the **Service** level, not the class level. Tap the top rung:",
+      "viz": { "type": "annotated", "title": "Levels of abstraction", "prompt": "Tap the level where you design for scale.", "points": [ { "label": "Method", "value": 1, "note": "A single function — far too fine-grained for a global system." }, { "label": "Class", "value": 2, "note": "Object-level design. Local, not architecture." }, { "label": "Module", "value": 3, "note": "Grouped behaviour inside one app." }, { "label": "App", "value": 4, "note": "One deployable application." }, { "label": "Service", "value": 6, "note": "Processes / deployable groups — THIS is the level of large-scale design." } ] }
+    },
+    {
+      "title": "Where it sits — and why it's risky",
+      "body": "Architecture lives in the **Design** phase, before Implementation → Testing → Deployment.\n\n> [!warn] A design can't be *proven* correct up front. Get it wrong and you face a brutal, expensive rewrite. Architects manage this risk with known patterns, organised processes, and decision records — not proofs."
+    }
+  ],
+  "recap": "**Architecture = components + how they communicate, chosen to fit an explicit intent.**\n\n- Structure is judged against **purpose**, not in the abstract.\n- **Technologies are implementation details** — decide topology/protocols first, tech last.\n- Design large systems at the **Service** level.\n- It's a **Design-phase** activity, and it's high-stakes: wrong choices are costly to undo."
+}
