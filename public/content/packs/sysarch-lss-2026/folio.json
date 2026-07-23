@@ -2,6 +2,7 @@
   "id": "sysarch-lss-2026",
   "title": "Software Architecture — Large-Scale Systems",
   "subject": "system-design",
+  "category": "Software",
   "type": "course",
   "source": "Personal study notes paraphrased from Michael Pogrebinsky's 'Software Architecture & Design of Large-Scale Systems' (Udemy, §1–4, own copy). Not affiliated; for personal revision only.",
   "summary": "What architecture really is, the quality attributes and constraints that drive it, how to measure performance/availability at the tail, and how to design REST vs RPC APIs that last.",

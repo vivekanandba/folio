@@ -23,6 +23,8 @@ export interface FolioPackMeta {
   id: string
   title: string
   subject: string
+  /** Broad umbrella for landing-page grouping (e.g. "Finance", "Software"). Falls back to a subject-derived label. */
+  category?: string
   type: 'magazine' | 'course' | 'book' | 'notes'
   source: string
   summary: string

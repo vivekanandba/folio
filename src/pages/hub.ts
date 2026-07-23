@@ -1,5 +1,6 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el } from '../dom'
+import type { FolioPackMeta } from '../types'
 import { getResume, loadProgress, packCompletion } from '../progress'
 import { href } from '../router'
 import {
@@ -13,6 +14,22 @@ import {
 
 function sessionIdFromFile(file: string): string {
   return file.replace(/\.json$/, '').replace(/^\d+-/, '')
+}
+
+/** Known subject → broad umbrella. Unmapped subjects fall back to a title-cased label. */
+const SUBJECT_CATEGORY: Record<string, string> = {
+  finance: 'Finance',
+  equity: 'Finance',
+  'system-design': 'Software',
+}
+
+/** Resolve a pack's landing-page category: explicit field, else subject map, else title-cased subject. */
+function packCategory(meta: { category?: string; subject: string }): string {
+  if (meta.category) return meta.category
+  return (
+    SUBJECT_CATEGORY[meta.subject] ??
+    meta.subject.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  )
 }
 
 function statTile(value: string, label: string, tone = ''): HTMLElement {
@@ -95,39 +112,61 @@ export async function renderHub(root: HTMLElement): Promise<void> {
     }
   }
 
-  // --- Pack grid ---
-  const cards = el('div', { class: 'pack-grid' })
+  // --- Pack browser: filter chips + category sections ---
+  // Group packs by category, preserving catalog order of first appearance.
+  const groups: { category: string; metas: typeof metas }[] = []
   for (const meta of metas) {
-    const sessionIds = meta.sessions.map(sessionIdFromFile)
-    const { done, total } = packCompletion(meta.id, sessionIds)
-    const pct = total ? Math.round((done / total) * 100) : 0
-    cards.append(
-      el('a', {
-        class: 'pack-card cinematic',
-        href: href({ name: 'pack', packId: meta.id }),
-      }, [
-        el('div', { class: 'pack-card-art', 'aria-hidden': 'true' }, [
-          el('div', { class: 'art-orb orb-1' }),
-          el('div', { class: 'art-orb orb-2' }),
-          el('div', { class: 'art-orb orb-3' }),
+    const category = packCategory(meta)
+    let group = groups.find((g) => g.category === category)
+    if (!group) {
+      group = { category, metas: [] }
+      groups.push(group)
+    }
+    group.metas.push(meta)
+  }
+
+  const sections = el('div', { class: 'cat-sections' })
+  for (const group of groups) {
+    const grid = el('div', { class: 'pack-grid' }, group.metas.map(packCard))
+    sections.append(
+      el('section', { class: 'cat-section', 'data-cat': group.category }, [
+        el('h3', { class: 'cat-heading' }, [
+          group.category,
+          el('span', { class: 'cat-count' }, [String(group.metas.length)]),
         ]),
-        el('div', { class: 'pack-card-body' }, [
-          el('div', { class: 'pack-card-top' }, [
-            el('span', { class: 'tag' }, [meta.subject]),
-            el('span', { class: 'pack-type' }, [meta.type]),
-          ]),
-          el('h2', {}, [meta.title]),
-          el('p', {}, [meta.summary]),
-          el('div', { class: 'pack-progress' }, [
-            el('div', { class: 'pack-progress-track' }, [
-              el('div', { class: 'pack-progress-fill', style: `width:${pct}%` }),
-            ]),
-            el('span', { class: 'muted small' }, [`${done}/${total} sessions`]),
-          ]),
-        ]),
+        grid,
       ]),
     )
   }
+
+  // Filter chips — "All" plus one per category. Clicking shows only matching sections.
+  const chipRow = el('div', { class: 'cat-filter', role: 'tablist', 'aria-label': 'Filter packs by category' })
+  const chipDefs = [{ label: 'All', cat: 'all' }, ...groups.map((g) => ({ label: g.category, cat: g.category }))]
+  const chips = chipDefs.map(({ label, cat }) => {
+    const isAll = cat === 'all'
+    const btn = el('button', {
+      class: `cat-chip${isAll ? ' active' : ''}`,
+      type: 'button',
+      role: 'tab',
+      'aria-selected': isAll ? 'true' : 'false',
+      'data-cat': cat,
+    }, [label])
+    btn.addEventListener('click', () => {
+      chips.forEach((c) => {
+        const on = c === btn
+        c.classList.toggle('active', on)
+        c.setAttribute('aria-selected', on ? 'true' : 'false')
+      })
+      sections.querySelectorAll<HTMLElement>('.cat-section').forEach((sec) => {
+        sec.hidden = cat !== 'all' && sec.getAttribute('data-cat') !== cat
+      })
+    })
+    return btn
+  })
+  chipRow.append(...chips)
+
+  // Only show the filter row when there's more than one category to filter by.
+  const packBrowser = el('div', { class: 'pack-browser' }, groups.length > 1 ? [chipRow, sections] : [sections])
 
   const children: (Node | string)[] = [
     el('header', { class: 'page-header hub-hero cinematic-hero' }, [
@@ -147,9 +186,40 @@ export async function renderHub(root: HTMLElement): Promise<void> {
     todayPanel,
   ]
   if (resumeCard) children.push(resumeCard)
-  children.push(el('h2', { class: 'section-title' }, ['Your packs']), cards)
+  children.push(el('h2', { class: 'section-title' }, ['Your packs']), packBrowser)
 
   root.replaceChildren(...children)
+}
+
+/** One pack card for the landing grid. */
+function packCard(meta: FolioPackMeta): HTMLElement {
+  const sessionIds = meta.sessions.map(sessionIdFromFile)
+  const { done, total } = packCompletion(meta.id, sessionIds)
+  const pct = total ? Math.round((done / total) * 100) : 0
+  return el('a', {
+    class: 'pack-card cinematic',
+    href: href({ name: 'pack', packId: meta.id }),
+  }, [
+    el('div', { class: 'pack-card-art', 'aria-hidden': 'true' }, [
+      el('div', { class: 'art-orb orb-1' }),
+      el('div', { class: 'art-orb orb-2' }),
+      el('div', { class: 'art-orb orb-3' }),
+    ]),
+    el('div', { class: 'pack-card-body' }, [
+      el('div', { class: 'pack-card-top' }, [
+        el('span', { class: 'tag' }, [meta.subject]),
+        el('span', { class: 'pack-type' }, [meta.type]),
+      ]),
+      el('h2', {}, [meta.title]),
+      el('p', {}, [meta.summary]),
+      el('div', { class: 'pack-progress' }, [
+        el('div', { class: 'pack-progress-track' }, [
+          el('div', { class: 'pack-progress-fill', style: `width:${pct}%` }),
+        ]),
+        el('span', { class: 'muted small' }, [`${done}/${total} sessions`]),
+      ]),
+    ]),
+  ])
 }
 
 function chip(label: string): HTMLElement {
