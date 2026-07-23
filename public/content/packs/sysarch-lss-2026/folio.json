@@ -1,0 +1,29 @@
+{
+  "id": "sysarch-lss-2026",
+  "title": "Software Architecture — Large-Scale Systems",
+  "subject": "system-design",
+  "type": "course",
+  "source": "Personal study notes paraphrased from Michael Pogrebinsky's 'Software Architecture & Design of Large-Scale Systems' (Udemy, §1–4, own copy). Not affiliated; for personal revision only.",
+  "summary": "What architecture really is, the quality attributes and constraints that drive it, how to measure performance/availability at the tail, and how to design REST vs RPC APIs that last.",
+  "tags": ["system-design", "software-architecture", "scalability", "availability", "api-design", "rest", "grpc"],
+  "concepts": [
+    "what-is-architecture",
+    "requirements-drivers",
+    "quality-attributes",
+    "api-design"
+  ],
+  "sessions": [
+    "01-what-is-architecture-explainer.json",
+    "02-architecture-or-detail-classify.json",
+    "03-requirements-explainer.json",
+    "04-driver-classify.json",
+    "05-discovery-sequence.json",
+    "06-quality-attributes-explainer.json",
+    "07-availability-estimate.json",
+    "08-bottleneck-detective.json",
+    "09-quality-attributes-quiz.json",
+    "10-api-design-explainer.json",
+    "11-rest-or-rpc-classify.json",
+    "12-api-quiz.json"
+  ]
+}

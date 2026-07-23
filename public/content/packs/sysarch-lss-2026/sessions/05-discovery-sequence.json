@@ -1,0 +1,16 @@
+{
+  "id": "discovery-sequence",
+  "kind": "sequence",
+  "title": "From requirements to API endpoints",
+  "conceptIds": ["requirements-drivers"],
+  "intro": "The disciplined path that turns fuzzy requirements into a concrete API contract.",
+  "prompt": "Drag into order — the earliest step first.",
+  "steps": [
+    { "id": "actors", "text": "Identify actors — every external person or system that interacts with it" },
+    { "id": "usecases", "text": "Enumerate use cases — the meaningful interactions, success and failure paths" },
+    { "id": "sequence", "text": "Model each use case as a UML sequence diagram over time" },
+    { "id": "boundary", "text": "Find the messages that cross the system boundary" },
+    { "id": "api", "text": "Turn each boundary-crossing message into a public API endpoint" }
+  ],
+  "debrief": "Actors bound the problem; use cases capture the interactions; sequence diagrams make the message flow explicit over time. The key move is the last two: every message that crosses the *system boundary* is exactly a public API endpoint. This is why API design isn't guesswork — it's a mechanical translation of the use cases you already modelled."
+}

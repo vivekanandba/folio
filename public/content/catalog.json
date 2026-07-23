@@ -7,6 +7,10 @@
     {
       "id": "equity-wi-2026-07",
       "path": "packs/equity-wi-2026-07"
+    },
+    {
+      "id": "sysarch-lss-2026",
+      "path": "packs/sysarch-lss-2026"
     }
   ]
 }

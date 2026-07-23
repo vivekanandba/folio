@@ -1,0 +1,22 @@
+{
+  "id": "architecture-or-detail-classify",
+  "kind": "classify",
+  "title": "Architecture, or implementation detail?",
+  "conceptIds": ["what-is-architecture"],
+  "intro": "The line that trips up most engineers: which decisions shape the architecture, and which are things you defer?",
+  "buckets": [
+    { "id": "arch", "label": "Architectural decision", "hint": "Topology, protocols, components, boundaries", "tone": "cool" },
+    { "id": "detail", "label": "Implementation detail", "hint": "How a black box is built inside", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Split the system into a payments service and an orders service", "bucketId": "arch" },
+    { "id": "c2", "text": "Services communicate over async message queues, not direct calls", "bucketId": "arch" },
+    { "id": "c3", "text": "The API is stateless so it can scale horizontally", "bucketId": "arch" },
+    { "id": "c4", "text": "Data is partitioned by customer region across three databases", "bucketId": "arch" },
+    { "id": "c5", "text": "The orders service is written in Go rather than Java", "bucketId": "detail" },
+    { "id": "c6", "text": "Use React instead of Vue for the admin dashboard", "bucketId": "detail" },
+    { "id": "c7", "text": "Sort the results with quicksort inside one handler", "bucketId": "detail" },
+    { "id": "c8", "text": "Name the ORM entity class 'UserRecord'", "bucketId": "detail" }
+  ],
+  "debrief": "Architecture is about **structure and communication**: service boundaries, protocols, statelessness, data distribution — the shape of the black boxes and how they talk. Language, framework, an internal algorithm, or a class name live *inside* a black box and can change without touching the architecture. Decide the topology first; defer the details."
+}

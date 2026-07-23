@@ -1,0 +1,27 @@
+{
+  "id": "requirements-explainer",
+  "kind": "explainer",
+  "title": "The three requirement types — and which one drives design",
+  "conceptIds": ["requirements-drivers"],
+  "intro": "Why the non-functional requirements — not the features — decide your architecture.",
+  "steps": [
+    {
+      "title": "Three kinds of requirement",
+      "body": "- **Features** (functional) — *what* the system does: login, checkout, search.\n- **Quality attributes** (non-functional) — *how well*: scalable, available, secure, fast.\n- **Constraints** — unnegotiable limits: a regulation like GDPR, a mandated vendor.\n\n> [!key] Features rarely drive architecture — almost any structure can be made to deliver a feature. **Quality attributes and constraints are the real architectural drivers.**"
+    },
+    {
+      "title": "Why features don't drive the structure",
+      "body": "Systems are almost never torn down and rewritten because a *feature* is missing — features can usually be bolted onto an existing structure.\n\nThey get rewritten when they're **too slow, insecure, or can't scale** — non-functional failures that mean the architecture itself is wrong. So you design around the non-functionals.\n\n> [!warn] 'Refactor it later' fails at system scale: infrastructure cost, months of work, rigid service contracts. The architect's highest-value work is **pre-code**."
+    },
+    {
+      "title": "Make every quality attribute measurable",
+      "body": "Three rules for a good quality attribute:\n\n1. **Testable & measurable** — numbers, not adjectives. 'Fast' is meaningless; 'p99 < 200 ms' is a spec.\n2. **Trade-offs** — you can't max everything; heavy encryption buys security at the cost of performance.\n3. **Feasibility** — respect economics and physics (the speed of light in fibre is a hard floor).",
+      "viz": { "type": "annotated", "title": "Which requirements drive architecture?", "prompt": "Tap each type.", "points": [ { "label": "Features", "value": 1, "note": "Functional — what it does. Do NOT drive architecture; most structures can deliver them." }, { "label": "Quality attrs", "value": 3, "note": "Non-functional — scalability, availability, security. DRIVE the architecture." }, { "label": "Constraints", "value": 2, "note": "Unnegotiable limits — regulation, mandated vendor. Pillars you design around." } ] }
+    },
+    {
+      "title": "From requirements to APIs",
+      "body": "Capture features systematically: **actors → use cases → UML sequence diagrams**.\n\nThen the payoff: every message that **crosses the system boundary** in a sequence diagram becomes a **public API endpoint**. Requirements-gathering is how you *derive* the API contract instead of guessing it."
+    }
+  ],
+  "recap": "**Design around quality attributes and constraints — not features.**\n\n- Separate features / quality attributes / constraints early.\n- Write every quality attribute as a **measurable number** with acknowledged trade-offs.\n- Run **actors → use cases → sequence diagrams**, then harvest endpoints at the system boundary."
+}
