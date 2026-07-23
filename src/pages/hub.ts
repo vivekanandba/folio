@@ -140,22 +140,21 @@ export async function renderHub(root: HTMLElement): Promise<void> {
   }
 
   // Filter chips — "All" plus one per category. Clicking shows only matching sections.
-  const chipRow = el('div', { class: 'cat-filter', role: 'tablist', 'aria-label': 'Filter packs by category' })
+  const chipRow = el('div', { class: 'cat-filter', role: 'group', 'aria-label': 'Filter packs by category' })
   const chipDefs = [{ label: 'All', cat: 'all' }, ...groups.map((g) => ({ label: g.category, cat: g.category }))]
   const chips = chipDefs.map(({ label, cat }) => {
     const isAll = cat === 'all'
     const btn = el('button', {
       class: `cat-chip${isAll ? ' active' : ''}`,
       type: 'button',
-      role: 'tab',
-      'aria-selected': isAll ? 'true' : 'false',
+      'aria-pressed': isAll ? 'true' : 'false',
       'data-cat': cat,
     }, [label])
     btn.addEventListener('click', () => {
       chips.forEach((c) => {
         const on = c === btn
         c.classList.toggle('active', on)
-        c.setAttribute('aria-selected', on ? 'true' : 'false')
+        c.setAttribute('aria-pressed', on ? 'true' : 'false')
       })
       sections.querySelectorAll<HTMLElement>('.cat-section').forEach((sec) => {
         sec.hidden = cat !== 'all' && sec.getAttribute('data-cat') !== cat
