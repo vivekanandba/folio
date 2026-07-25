@@ -2280,6 +2280,117 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
   animation-duration: 0.18s;
 }
 
+/* ============================================================
+   Simulation machines (sim engine + lab kind)
+   ============================================================ */
+
+.sim-machine { display: grid; gap: 0.7rem; }
+
+.sim-chart {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+  background: rgba(12, 18, 34, 0.45);
+  border: 1px solid var(--line);
+}
+
+.sim-legend { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+.sim-readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 0.5rem;
+}
+.sim-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.sim-readout-value {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+.sim-readout-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sim-knobs { display: grid; }
+.sim-knobs .knob-row { border-bottom-color: var(--line); }
+.sim-knobs input[type='range'] { accent-color: var(--accent); }
+
+.sim-transport { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sim-btn { font-size: 0.85rem; }
+.sim-action { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; }
+
+.sim-caption { margin: 0; }
+
+/* Sim exhibits on dark stage panels */
+.stage .sim-readout { background: rgba(15, 23, 42, 0.6); border-color: rgba(148, 163, 184, 0.25); }
+.stage .sim-readout-value { color: #5eead4; }
+.stage .sim-readout-label { color: #94a3b8; }
+.stage .sim-chart { border-color: rgba(148, 163, 184, 0.25); }
+.stage .sim-legend .viz-legend-item { color: #cbd5e1; }
+
+/* Lab (machine room) */
+.stage-lab .stage-glow {
+  background: radial-gradient(ellipse at 30% 0%, rgba(45, 212, 191, 0.3), transparent 55%),
+    radial-gradient(ellipse at 80% 10%, rgba(245, 158, 11, 0.22), transparent 50%);
+}
+.kind-icon.kind-lab { color: #4fd1c5; background: #16302d; }
+
+.lab-machine-room { display: grid; gap: 0.85rem; }
+.lab-sim {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 0.9rem;
+}
+.lab-goals h3 { margin: 0 0 0.5rem; }
+.lab-goal {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+.lab-goal-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.lab-goal.met .lab-goal-dot {
+  background: #5eead4;
+  box-shadow: 0 0 10px rgba(94, 234, 212, 0.7);
+}
+.lab-goal.met { color: #5eead4; }
+.lab-hold-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+  margin-top: 0.75rem;
+}
+.lab-hold-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2c8f86, #5eead4);
+  transition: width 0.2s linear;
+}
+.lab-hold-note { margin: 0.35rem 0 0; }
+
 /* Gallery colophon */
 .colophon {
   width: min(var(--max), calc(100% - 2rem));

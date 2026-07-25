@@ -4,6 +4,7 @@ import { deriveFlashcards } from '../flashcards'
 import { loadProgress, recordConceptReview } from '../progress'
 import { href } from '../router'
 import { mountFlashcards } from '../sessions/flashcard'
+import { mountSim } from '../sim/engine'
 import { buildToday, type ConceptRef } from '../srs'
 
 function header(): HTMLElement {
@@ -34,6 +35,14 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   const queue = buildToday(store.concepts, allConcepts)
 
   if (!queue.length) {
+    // The museum explains itself: a live forgetting curve while you wait.
+    const curveHost = el('div', { class: 'viz-slot' })
+    mountSim(curveHost, {
+      model: 'retention',
+      title: 'Why folio nags you — the forgetting curve, live',
+      caption: 'Memory decays; reviewing near the edge of forgetting multiplies stability. That timing is what the review queue computes.',
+    })
+    curveHost.classList.add('widget-mounted')
     root.replaceChildren(
       header(),
       el('header', { class: 'page-header' }, [
@@ -43,6 +52,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         ]),
         el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to hub']),
       ]),
+      curveHost,
     )
     return
   }

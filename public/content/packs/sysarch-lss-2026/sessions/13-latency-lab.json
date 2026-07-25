@@ -1,0 +1,16 @@
+{
+  "id": "latency-lab",
+  "kind": "lab",
+  "title": "Tame the p99",
+  "conceptIds": ["quality-attributes"],
+  "intro": "A live request queue under real traffic. Your SLA is on the tail, not the average.",
+  "model": "queue",
+  "params": { "rps": 900, "servers": 2, "serviceMs": 10 },
+  "briefing": "Traffic just spiked to 900 req/s and the queue is drowning — watch p99 run away. Finance says you get at most 6 servers. Get p99 under 200 ms and hold it. Remember: response time = waiting + processing, and you have TWO levers.",
+  "goals": [
+    { "metric": "p99", "op": "<", "value": 200, "label": "p99 latency under 200 ms" },
+    { "metric": "servers", "op": "<=", "value": 6, "label": "at most 6 servers (budget cap)" }
+  ],
+  "holdSeconds": 5,
+  "debrief": "Adding servers alone can't save you inside the budget: 6 servers × (1000/10 ms) = 600 req/s < 900 — still past the knee, so the queue (waiting time) keeps growing. The winning move is to also cut SERVICE TIME: at 6 ms, six servers absorb 1,000 req/s and the queue drains; p99 falls back toward the service time. That's the two-lever lesson — capacity handles waiting, optimisation handles processing — and notice how p99 lags after the fix while the bad tail flushes out of the window. Systems recover on percentile-time, not wall-time."
+}

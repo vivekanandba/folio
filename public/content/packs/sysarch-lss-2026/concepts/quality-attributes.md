@@ -20,6 +20,12 @@ An average hides the pain. If 99% of requests are fast and 1% take 10 s, the mea
 
 > [!warn] Systems don't slow down gracefully. As load rises, latency is flat — then hits a **knee** and degrades sharply. Plan capacity to stay left of the knee; past it, small load increases cause large latency spikes.
 
+Feel the knee yourself — push traffic past what the servers absorb and watch p99 run away while p50 barely moves at first:
+
+```viz
+{"type":"sim","model":"queue","title":"The latency knee — a live request queue","caption":"Capacity = servers × (1000 / service ms). Cross it and waiting time takes over."}
+```
+
 ## Scalability: up vs out
 
 - **Vertical (scale up)** — a bigger machine. Simple, but bounded by the largest box money can buy, and it's a single point of failure.
@@ -50,6 +56,12 @@ Availability targets are met by tolerating failure, and the mechanism is **redun
 - **Time redundancy** — retry the operation (safe only when it's [idempotent](#/pack/sysarch-lss-2026/concept/api-design)).
 - **Active-active** — all replicas serve traffic; failure just removes capacity.
 - **Active-passive** — a standby takes over on failover; simpler, but the standby sits idle and failover isn't instant.
+
+Run the fleet — kill a node with your own hands and watch redundancy absorb it:
+
+```viz
+{"type":"sim","model":"failover","title":"Replica fleet — redundancy live","caption":"Design nines come from unavailability^replicas. Watch what one extra replica buys."}
+```
 
 > [!more] Trade-offs are unavoidable
 > Every nine costs money and complexity (more regions, more replication, harder consistency). Five nines is right for a payments core and wildly over-engineered for an internal dashboard. Set the target from the **business cost of downtime**, then buy exactly the redundancy that hits it — no more.

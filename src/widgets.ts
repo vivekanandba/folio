@@ -2,6 +2,7 @@ import { prefersReducedMotion } from './a11y'
 import { el } from './dom'
 import { burst, donut } from './fx'
 import { renderMarkdown } from './markdown'
+import { mountSim } from './sim/engine'
 import { PALETTE, gauge, radarChart, twinBars } from './visuals'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -47,7 +48,7 @@ function figure(caption: string | undefined, body: HTMLElement): HTMLElement {
 }
 
 /** Widget types the learner manipulates directly (they earn the "please touch" cue). */
-const TOUCHABLE = new Set(['what-if', 'annotated'])
+const TOUCHABLE = new Set(['what-if', 'annotated', 'sim'])
 
 /** Render markdown into `host` and mount any inline ```viz interactive figures. */
 export function renderRichInto(host: HTMLElement, md: string): void {
@@ -101,6 +102,13 @@ function build(spec: Spec): HTMLElement {
       return buildWhatIf(spec)
     case 'annotated':
       return buildAnnotated(spec)
+    case 'sim': {
+      // Full simulation exhibit inline on a concept page.
+      const host = el('div', { class: 'sim-embed' })
+      const handle = mountSim(host, { model: spec.model, params: spec.params, title: spec.title, caption: spec.caption })
+      if (!handle) throw new Error('unknown sim model')
+      return host
+    }
     default:
       throw new Error('unknown widget type')
   }

@@ -9,6 +9,7 @@ export type SessionKind =
   | 'estimate'
   | 'hotspot'
   | 'explainer'
+  | 'lab'
 
 export interface CatalogPackRef {
   id: string
@@ -226,6 +227,32 @@ export interface ExplainerSession {
   recap: string
 }
 
+/** One target the learner must reach (and hold) in a lab. */
+export interface LabGoal {
+  /** Readout scalar (e.g. "p99") or knob key (e.g. "servers") to test. */
+  metric: string
+  op: '<' | '<=' | '>' | '>='
+  value: number
+  label: string
+}
+
+export interface LabSession {
+  id: string
+  kind: 'lab'
+  title: string
+  conceptIds: string[]
+  intro?: string
+  /** Simulation model id from src/sim/models.ts (whitelisted, no eval). */
+  model: string
+  /** Starting knob values (merged over the model's defaults). */
+  params?: Record<string, number>
+  briefing: string
+  goals: LabGoal[]
+  /** Seconds all goals must hold simultaneously to win. Default 4. */
+  holdSeconds?: number
+  debrief: string
+}
+
 export type Session =
   | QuizSession
   | ClassifySession
@@ -237,6 +264,7 @@ export type Session =
   | EstimateSession
   | HotspotSession
   | ExplainerSession
+  | LabSession
 
 export interface SessionResult {
   packId: string
