@@ -1,4 +1,4 @@
-import { loadConcept, loadPackMeta, loadSession } from '../content'
+import { loadCatalog, loadConcept, loadPackMeta, loadSession } from '../content'
 import { el, prettyId } from '../dom'
 import { getConceptState, getSessionResult, markConceptLearned } from '../progress'
 import { href } from '../router'
@@ -23,11 +23,14 @@ export async function renderConcept(
 ): Promise<void> {
   root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
   const packPath = await resolvePackPath(packId)
-  const [meta, md] = await Promise.all([
+  const [catalog, meta, md] = await Promise.all([
+    loadCatalog(),
     loadPackMeta(packPath),
     loadConcept(packPath, conceptId),
   ])
   const title = titleFromMarkdown(md, prettyId(conceptId))
+  const hall = String(catalog.packs.findIndex((p) => p.id === packId) + 1).padStart(2, '0')
+  const exhibitNum = `${hall}.${meta.concepts.indexOf(conceptId) + 1}`
 
   // Deep explainer body (with inline interactive figures mounted).
   const article = el('article', { class: 'concept-body' })
@@ -95,6 +98,12 @@ export async function renderConcept(
       el('a', { href: href({ name: 'pack', packId }) }, [meta.title]),
       el('span', {}, [' / ']),
       el('span', {}, [title]),
+    ]),
+    el('p', {}, [
+      el('span', { class: 'plaque' }, [
+        'Exhibit ',
+        el('span', { class: 'plaque-num' }, [exhibitNum]),
+      ]),
     ]),
     rail,
     article,

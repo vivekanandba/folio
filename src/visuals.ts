@@ -1,7 +1,7 @@
 import { el } from './dom'
 
-/** Single source of truth for categorical chart colors. */
-export const PALETTE = ['#0f766e', '#c2410c', '#1d4ed8', '#a16207', '#7c3aed', '#be123c']
+/** Single source of truth for categorical chart colors (bright variants for the night gallery). */
+export const PALETTE = ['#4fd1c5', '#f4a26b', '#8ab4f8', '#e5b567', '#c4b5fd', '#f490a8']
 
 /** Paired horizontal bars: fund vs index for each holding. */
 export function twinBars(

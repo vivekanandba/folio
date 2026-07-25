@@ -46,6 +46,9 @@ function figure(caption: string | undefined, body: HTMLElement): HTMLElement {
   return fig
 }
 
+/** Widget types the learner manipulates directly (they earn the "please touch" cue). */
+const TOUCHABLE = new Set(['what-if', 'annotated'])
+
 /** Render markdown into `host` and mount any inline ```viz interactive figures. */
 export function renderRichInto(host: HTMLElement, md: string): void {
   host.innerHTML = renderMarkdown(md)
@@ -53,7 +56,11 @@ export function renderRichInto(host: HTMLElement, md: string): void {
     const raw = slot.getAttribute('data-viz')
     if (!raw) return
     try {
-      mountWidget(slot, JSON.parse(raw))
+      const spec = JSON.parse(raw)
+      mountWidget(slot, spec)
+      if (TOUCHABLE.has(spec?.type)) {
+        slot.prepend(el('div', { class: 'touch-chip', 'aria-hidden': 'true' }, ['Interactive — please touch']))
+      }
     } catch {
       slot.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
     }
