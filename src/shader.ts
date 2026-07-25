@@ -130,6 +130,7 @@ export function mountAurora(host: HTMLElement, opts: AuroraOptions): AuroraHandl
     let inView = true
     let destroyed = false
     let firstFrame = true
+    let everConnected = false
     let last = 0
     const t0 = performance.now()
 
@@ -146,7 +147,17 @@ export function mountAurora(host: HTMLElement, opts: AuroraOptions): AuroraHandl
     const frame = (now: number) => {
       raf = 0
       if (destroyed) return
-      if (!canvas.isConnected) { destroy(); return }
+      if (!canvas.isConnected) {
+        // Callers build stages before attaching them: only a canvas that has
+        // BEEN in the document and left it is dead. Pre-attach, just wait.
+        if (everConnected) { destroy(); return }
+        raf = requestAnimationFrame(frame)
+        return
+      }
+      if (!everConnected) {
+        everConnected = true
+        resize() // now the host has real dimensions
+      }
       if (!running || !inView || document.hidden) return
       if (now - last >= 32) { // ~30fps
         last = now
