@@ -2104,6 +2104,13 @@ details.deeper[open] > summary { border-bottom: 1px solid var(--line); margin-bo
 .kind-icon.kind-explainer { color: #4fd1c5; background: #16302d; }
 
 /* Widgets rendered on the dark explainer stage */
+.stage .viz-slot.widget-mounted {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(148, 163, 184, 0.25);
+  box-shadow: none;
+}
+.stage .touch-chip { color: #5eead4; }
+.stage .touch-chip::before { background: #5eead4; box-shadow: 0 0 8px rgba(94, 234, 212, 0.8); }
 .stage .widget-readout { color: #5eead4; }
 .stage .annotated-note, .stage details.deeper, .stage .callout { background: rgba(15,23,42,0.55); border-color: rgba(148,163,184,0.25); color: #e2e8f0; }
 .stage details.deeper > summary { color: #5eead4; }
