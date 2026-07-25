@@ -6,7 +6,15 @@
   "type": "course",
   "source": "Personal study notes paraphrased from Michael Pogrebinsky's 'Software Architecture & Design of Large-Scale Systems' (Udemy, §1–4, own copy). Not affiliated; for personal revision only.",
   "summary": "What architecture really is, the quality attributes and constraints that drive it, how to measure performance/availability at the tail, and how to design REST vs RPC APIs that last.",
-  "tags": ["system-design", "software-architecture", "scalability", "availability", "api-design", "rest", "grpc"],
+  "tags": [
+    "system-design",
+    "software-architecture",
+    "scalability",
+    "availability",
+    "api-design",
+    "rest",
+    "grpc"
+  ],
   "concepts": [
     "what-is-architecture",
     "requirements-drivers",
@@ -27,6 +35,8 @@
     "11-rest-or-rpc-classify.json",
     "12-api-quiz.json",
     "13-latency-lab.json",
-    "14-availability-lab.json"
+    "14-availability-lab.json",
+    "15-fault-tolerant-blueprint.json",
+    "16-api-edge-blueprint.json"
   ]
 }

@@ -2391,6 +2391,108 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
 }
 .lab-hold-note { margin: 0.35rem 0 0; }
 
+/* ============================================================
+   Blueprint (drafting table) — build-and-wire construction
+   ============================================================ */
+
+.stage-blueprint .stage-glow {
+  background: radial-gradient(ellipse at 25% 0%, rgba(96, 165, 250, 0.3), transparent 55%),
+    radial-gradient(ellipse at 75% 10%, rgba(45, 212, 191, 0.2), transparent 50%);
+}
+.kind-icon.kind-blueprint { color: #8ab4f8; background: #182236; }
+
+.bp-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+.bp-tray h3 { margin: 0 0.35rem 0 0; font-size: 0.95rem; color: #e2e8f0; }
+.bp-part { font-size: 0.88rem; }
+.bp-part:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bp-board {
+  position: relative;
+  min-height: 220px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  /* drafting grid */
+  background:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    rgba(12, 18, 34, 0.6);
+  background-size: 24px 24px, 24px 24px, auto;
+  padding: 1rem;
+}
+.bp-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.bp-wires line {
+  stroke: rgba(94, 234, 212, 0.65);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.bp-nodes {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem 1.4rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 190px;
+}
+.bp-node {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: var(--shadow-1);
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.bp-node:hover { transform: translateY(-2px); }
+.bp-node.fixed { border-style: double; border-color: rgba(227, 200, 141, 0.6); }
+.bp-node.armed {
+  border-color: #5eead4;
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.35), var(--shadow-1);
+}
+.bp-node.offender {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.35);
+}
+.bp-node-label {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+}
+.bp-remove {
+  font: inherit;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  padding: 0.35rem 0.55rem 0.35rem 0;
+  cursor: pointer;
+}
+.bp-remove:hover { color: #fb7185; }
+
+.bp-hint { margin: 0.5rem 0 0; }
+.bp-wire-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+.bp-wire-chip { font-size: 0.8rem; }
+.bp-rules h3 { margin: 0 0 0.5rem; }
+.lab-goal.broken { color: #fda4af; }
+.lab-goal.broken .lab-goal-dot { background: #fb7185; box-shadow: 0 0 10px rgba(251, 113, 133, 0.6); }
+
 /* Gallery colophon */
 .colophon {
   width: min(var(--max), calc(100% - 2rem));

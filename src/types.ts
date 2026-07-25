@@ -10,6 +10,7 @@ export type SessionKind =
   | 'hotspot'
   | 'explainer'
   | 'lab'
+  | 'blueprint'
 
 export interface CatalogPackRef {
   id: string
@@ -253,6 +254,38 @@ export interface LabSession {
   debrief: string
 }
 
+/** A component type available in the blueprint parts tray. */
+export interface BlueprintPart {
+  id: string
+  label: string
+  /** Max placeable instances (default 1). */
+  max?: number
+  /** Pre-placed and unremovable (one instance). */
+  fixed?: boolean
+}
+
+/** Declarative rules the built topology must satisfy. */
+export type BlueprintRule =
+  | { rule: 'minCount'; part: string; count: number; label: string }
+  | { rule: 'maxCount'; part: string; count: number; label: string }
+  | { rule: 'connected'; a: string; b: string; label: string }
+  | { rule: 'noDirect'; a: string; b: string; label: string }
+  | { rule: 'pathExists'; from: string; to: string; label: string }
+  /** Killing ANY single node not of `from`/`to` type must leave a from→to path. */
+  | { rule: 'survivesKill'; from: string; to: string; label: string }
+
+export interface BlueprintSession {
+  id: string
+  kind: 'blueprint'
+  title: string
+  conceptIds: string[]
+  intro?: string
+  briefing: string
+  parts: BlueprintPart[]
+  rules: BlueprintRule[]
+  debrief: string
+}
+
 export type Session =
   | QuizSession
   | ClassifySession
@@ -265,6 +298,7 @@ export type Session =
   | HotspotSession
   | ExplainerSession
   | LabSession
+  | BlueprintSession
 
 export interface SessionResult {
   packId: string

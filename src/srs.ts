@@ -20,6 +20,7 @@ const KIND_WEIGHT: Record<SessionKind, number> = {
   hotspot: 1,
   explainer: 0.3, // teaching, not assessment — weak mastery signal
   lab: 1.1, // reaching + holding a goal state is strong evidence of understanding
+  blueprint: 1.1, // constructing a valid topology is recall-by-doing
 }
 
 // --- date helpers (yyyy-mm-dd in UTC) ------------------------------------

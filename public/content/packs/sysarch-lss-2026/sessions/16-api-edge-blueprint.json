@@ -1,0 +1,23 @@
+{
+  "id": "api-edge-blueprint",
+  "kind": "blueprint",
+  "title": "Design the API edge",
+  "conceptIds": ["api-design"],
+  "intro": "REST at the boundary, gRPC on the hot paths inside — now wire it.",
+  "briefing": "A public mobile app must place orders, which requires a payment check on every order (a hot internal path). Third-party clients never see your internal services — everything public enters through the REST gateway.",
+  "parts": [
+    { "id": "public-client", "label": "Public client", "fixed": true },
+    { "id": "rest-gateway", "label": "REST gateway", "max": 1 },
+    { "id": "orders-svc", "label": "Orders service (gRPC)", "max": 1 },
+    { "id": "payments-svc", "label": "Payments service (gRPC)", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "public-client", "b": "rest-gateway", "label": "Public traffic enters via the REST gateway" },
+    { "rule": "noDirect", "a": "public-client", "b": "orders-svc", "label": "No public client calls Orders directly" },
+    { "rule": "noDirect", "a": "public-client", "b": "payments-svc", "label": "No public client calls Payments directly" },
+    { "rule": "connected", "a": "rest-gateway", "b": "orders-svc", "label": "The gateway routes order requests inside" },
+    { "rule": "connected", "a": "orders-svc", "b": "payments-svc", "label": "Orders ↔ Payments: the internal gRPC hot path" },
+    { "rule": "pathExists", "from": "public-client", "to": "payments-svc", "label": "An order can actually reach the payment check" }
+  ],
+  "debrief": "The edge is REST because public clients are many, unknown, and long-lived: they need a stateless, cacheable, loosely-coupled contract that can evolve behind a versioned gateway. Inside, Orders → Payments runs on every order — a latency-critical call between two services YOU own and deploy together, which is exactly where gRPC's binary protobuf + strongly-typed contract pays. The rule of thumb you just wired: REST at the boundary, RPC between your own services, and nothing internal ever exposed directly to the public."
+}
