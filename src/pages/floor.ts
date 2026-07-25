@@ -317,6 +317,9 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
       if (hit) location.hash = href({ name: 'concept', packId: hit.packId, conceptId: hit.conceptId }).slice(1)
     }
   })
+  canvas.addEventListener('pointercancel', () => {
+    dragging = false
+  })
   canvas.addEventListener('pointerleave', () => {
     hovered = null
     tip.setAttribute('hidden', 'true')
