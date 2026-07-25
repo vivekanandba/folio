@@ -1,0 +1,16 @@
+{
+  "id": "runway-lab",
+  "kind": "lab",
+  "title": "Ride the runway to ₹1 crore",
+  "conceptIds": ["wealth-creators"],
+  "intro": "Compounding is an exponent with two enemies: a short runway and a slow leak.",
+  "model": "compound",
+  "params": { "monthly": 15000, "rate": 14, "fee": 1.5 },
+  "briefing": "You're compounding at a 1.5% annual drag — fees, churn, taxes quietly eating the exponent. Reach a ₹1 crore corpus while keeping the total lost to drag under 8% of the gross. Time runs at a year per second; the drag knob is the lever most investors never touch.",
+  "goals": [
+    { "metric": "netL", "op": ">=", "value": 100, "label": "corpus ≥ ₹1 crore" },
+    { "metric": "lostPct", "op": "<", "value": 8, "label": "lost to drag < 8% of gross" }
+  ],
+  "holdSeconds": 4,
+  "debrief": "The outcome lives in the exponent — rate × years — and drag attacks the rate itself, so its cost COMPOUNDS with the runway: the longer you ride, the more an innocuous 1.5% steals. Cutting drag to ~0.5% clears the goal on the same SIP and the same market. That's the wealth-creator's discipline applied to your own portfolio: protect the exponent (stay invested, keep costs and churn near zero) and let the runway do the work our intuition can't."
+}

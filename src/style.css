@@ -2534,14 +2534,33 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
 }
 .floor-tip[hidden] { display: none; }
 
-.floor-controls { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; }
+.floor-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
 .floor-zoom { min-width: 2.4rem; }
+
+/* One-viewport home: compact header + action strip */
+.floor-head { margin-bottom: 0.25rem; }
+.floor-head h1 { margin: 0.1rem 0 0.2rem; }
+.floor-sub { margin: 0; font-size: 0.9rem; }
+.floor-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0.25rem;
+}
+.floor-halls-link { text-decoration: none; }
 
 .floor-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 0.85rem;
-  margin: 0.4rem 0 1rem;
+  margin-left: auto;
 }
 .floor-due-swatch {
   background: transparent;

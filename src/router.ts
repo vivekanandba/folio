@@ -10,7 +10,9 @@ export type Route =
 export function parseHash(): Route {
   const raw = location.hash.replace(/^#\/?/, '')
   const parts = raw.split('/').filter(Boolean)
-  if (parts.length === 0) return { name: 'hub' }
+  // The museum floor IS the front door; the halls (browse view) live at #/halls.
+  if (parts.length === 0) return { name: 'floor' }
+  if (parts[0] === 'halls') return { name: 'hub' }
   if (parts[0] === 'today') return { name: 'today' }
   if (parts[0] === 'floor') return { name: 'floor' }
   if (parts[0] === 'pack' && parts[1]) {
@@ -28,11 +30,11 @@ export function parseHash(): Route {
 export function href(route: Route): string {
   switch (route.name) {
     case 'hub':
-      return '#/'
+      return '#/halls'
     case 'today':
       return '#/today'
     case 'floor':
-      return '#/floor'
+      return '#/'
     case 'pack':
       return `#/pack/${route.packId}`
     case 'concept':

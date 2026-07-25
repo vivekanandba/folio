@@ -1,9 +1,9 @@
 import { prefersReducedMotion } from '../a11y'
 import { loadCatalog, loadConcept, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
-import { getConceptState } from '../progress'
+import { getConceptState, loadProgress } from '../progress'
 import { href } from '../router'
-import { masteryBand, today } from '../srs'
+import { buildToday, masteryBand, today, type ConceptRef } from '../srs'
 
 /**
  * The museum floor — navigation as space. Every concept across every pack is
@@ -374,18 +374,34 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     ]),
   ])
 
+  // --- the home strip: due count + ways deeper into the museum ------------
+  const store = loadProgress()
+  const allRefs: ConceptRef[] = metas.flatMap((m) => m.concepts.map((cid) => ({ packId: m.id, conceptId: cid })))
+  const queue = buildToday(store.concepts, allRefs)
+  const dueCount = queue.filter((q) => q.status !== 'new').length
+  const homeStrip = el('div', { class: 'floor-strip' }, [
+    el('a', { class: 'primary', href: href({ name: 'today' }) }, [
+      dueCount > 0 ? `Review ${dueCount} due concept${dueCount === 1 ? '' : 's'}` : 'Start a review',
+    ]),
+    el('a', { class: 'ghost floor-halls-link', href: href({ name: 'hub' }) }, ['Browse the halls →']),
+  ])
+
   wrap.append(canvas, tip)
   root.replaceChildren(
-    el('header', { class: 'page-header' }, [
-      el('p', {}, [el('span', { class: 'plaque' }, ['Floor plan — after hours'])]),
-      el('h1', {}, ['The museum floor']),
-      el('p', { class: 'lead' }, [
-        'Every concept is a lamp. Dark rooms are unvisited; pulsing lamps are due for review. Drag to walk, scroll to lean in, tap a lamp to enter.',
+    el('header', { class: 'page-header floor-head' }, [
+      el('h1', {}, ['The Folio Museum']),
+      el('p', { class: 'muted floor-sub' }, [
+        'Every concept is a lamp — dark is unvisited, pulsing is due. Drag to walk, scroll to lean in, tap to enter.',
       ]),
     ]),
+    homeStrip,
     wrap,
-    el('div', { class: 'floor-controls' }, [zoomBtn('+', 1.25), zoomBtn('−', 0.8), zoomBtn('Fit', 0)]),
-    legend,
+    el('div', { class: 'floor-controls' }, [
+      zoomBtn('+', 1.25),
+      zoomBtn('−', 0.8),
+      zoomBtn('Fit', 0),
+      legend,
+    ]),
     el('details', { class: 'deeper floor-mirror' }, [
       el('summary', {}, ['Every exhibit, as a list']),
       ...listSections,

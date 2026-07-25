@@ -16,6 +16,12 @@ Same fund, same gross return — see what the expense ratio alone removes over t
 {"type":"what-if","compute":"feeImpact","title":"Money lost to fees","inputs":[{"key":"principal","label":"Invested","min":100000,"max":2000000,"step":100000,"value":1000000,"unit":"₹"},{"key":"grossReturn","label":"Gross return","min":6,"max":16,"step":0.5,"value":12,"unit":"%"},{"key":"expenseRatio","label":"Expense ratio","min":0.2,"max":2.5,"step":0.1,"value":1.5,"unit":"%"},{"key":"years","label":"Years","min":5,"max":30,"step":1,"value":20}],"output":{"label":"Lost to fees","unit":"₹","decimals":0},"caption":"₹10L at 12% for 20 years: a 1.5% TER quietly removes several lakh — money that was compounding for you."}
 ```
 
+Now watch the same drag as a *living* process — the gap between the curves opens slowly, then alarmingly:
+
+```viz
+{"type":"sim","model":"compound","title":"Fee drag, running live","params":{"monthly":10000,"rate":12,"fee":1.5},"caption":"Each second is a year. Nudge the drag knob to a direct plan's ~0.5% and watch the gap stop growing."}
+```
+
 ## Direct vs regular plans
 
 > [!tip] The **Direct** plan of a fund is the *same portfolio* as the Regular plan, minus the distributor commission — so its TER is lower and its NAV grows faster. Over decades the gap is pure, risk-free saving.

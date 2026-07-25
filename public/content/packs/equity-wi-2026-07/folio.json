@@ -6,7 +6,13 @@
   "type": "magazine",
   "source": "Personal study notes paraphrased from Value Research Wealth Insight, July 2026 (subscription copy). Not affiliated with Value Research; not investment advice.",
   "summary": "How ordinary small companies become decade-long compounders — the moat J-curve, earnings that track returns, capital allocation, and runway.",
-  "tags": ["equity", "stocks", "india", "value-research", "compounding"],
+  "tags": [
+    "equity",
+    "stocks",
+    "india",
+    "value-research",
+    "compounding"
+  ],
   "concepts": [
     "wealth-creators"
   ],
@@ -15,6 +21,8 @@
     "02-spot-the-compounder.json",
     "03-lifecycle-sequence.json",
     "04-moat-or-hype-classify.json",
-    "05-compounding-estimate.json"
+    "05-compounding-estimate.json",
+    "06-runway-lab.json",
+    "07-compounder-blueprint.json"
   ]
 }

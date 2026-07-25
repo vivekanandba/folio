@@ -26,6 +26,12 @@ Peter Lynch's line, tested on Indian data: companies with steady **earnings grow
 
 The companies that complete the journey have leadership that **reinvests returns into deepening the advantage** — not distributing prematurely, not diversifying into unrelated businesses. Deciding where each rupee goes, the unglamorous work of capital allocation, is what separates the ones that reach the next stage.
 
+Run the machine yourself — set the growth rate to a compounder's ~25% and watch what the runway does. The drag knob is every cost that eats the exponent: fees, churn, taxes:
+
+```viz
+{"type":"sim","model":"compound","title":"The runway machine","params":{"rate":25,"monthly":10000,"fee":1},"caption":"Each second is a year. The gap between the curves is the cost of drag on a long runway — small leaks, compounded."}
+```
+
 ## Runway
 
 A moat needs a large, still-unorganised market to grow into — the **runway**. "Digital India," for instance, is no longer about adding users; it's about more of household spending, borrowing and investing moving through organised channels. Big opportunity — but growth alone doesn't create wealth; it has to convert into durable earnings.

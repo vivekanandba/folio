@@ -14,6 +14,12 @@
 {"type":"what-if","compute":"sipFuture","title":"Future value of a monthly SIP","inputs":[{"key":"monthly","label":"Monthly SIP","min":1000,"max":50000,"step":1000,"value":10000,"unit":"₹"},{"key":"rate","label":"Return","min":6,"max":16,"step":0.5,"value":12,"unit":"%"},{"key":"years","label":"Years","min":3,"max":30,"step":1,"value":10}],"output":{"label":"Corpus","unit":"₹","decimals":0},"caption":"₹10k/month at 12% for 10 years ≈ ₹23L on ₹12L invested — the extra ₹11L is compounding."}
 ```
 
+The number above is an endpoint — this is the journey. Watch how flat the early years feel, and where the curve starts to bend:
+
+```viz
+{"type":"sim","model":"compound","title":"A SIP's life, a year per second","params":{"monthly":10000,"rate":12,"fee":0.5},"caption":"The boring first decade is the price of the exciting third one. Most SIPs are cancelled somewhere on the flat part."}
+```
+
 ## Which, when?
 
 | Situation | Usually better | Why |
