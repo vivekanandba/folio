@@ -1,5 +1,6 @@
 import { loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
+import { ceremony } from '../fx'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
 import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
@@ -62,10 +63,16 @@ export async function renderSession(
       },
       session.conceptIds,
     )
+    // The room celebrates: bloom + bursts + a brass stamp on the exhibit.
+    const stageEl = shell.querySelector<HTMLElement>('.stage')
+    if (stageEl) ceremony(stageEl, { perfect: maxScore > 0 && score === maxScore })
     shell.append(
-      el('p', { class: 'saved-note' }, [
-        'Progress saved on this device. ',
-        el('a', { href: href({ name: 'pack', packId }) }, ['Back to pack']),
+      el('div', { class: 'saved-note plaque-card' }, [
+        el('span', { class: 'plaque' }, ['Progress saved']),
+        el('p', {}, [
+          'Recorded on this device. ',
+          el('a', { href: href({ name: 'pack', packId }) }, ['Back to the hall →']),
+        ]),
       ]),
     )
   })

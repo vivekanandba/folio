@@ -2055,6 +2055,8 @@ dialog.cmdk::backdrop { background: rgba(2, 6, 23, 0.5); backdrop-filter: blur(2
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  /* Belt-and-braces second gate: JS already refuses to mount the aurora. */
+  .aurora-canvas { display: none !important; }
 }
 
 /* ============================================================
@@ -2194,6 +2196,88 @@ details.deeper[open] > summary { border-bottom: 1px solid var(--line); margin-bo
   background: linear-gradient(180deg, #232019 0%, var(--surface) 40%);
   box-shadow: var(--shadow-1);
   padding: 0.9rem 1rem;
+}
+
+/* ============================================================
+   Life layer — aurora, hero vitrine, ceremony, springy touch
+   ============================================================ */
+
+/* Aurora canvas: always above the CSS glow, never above content */
+.aurora-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+/* Hero becomes a framed marquee with the aurora living inside */
+.cinematic-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(31, 79, 73, 0.35), transparent 55%),
+    linear-gradient(180deg, #191613, #141210);
+  padding: 2rem 1.6rem 1.8rem;
+  box-shadow: var(--shadow-2);
+}
+.cinematic-hero > * { position: relative; z-index: 1; }
+.cinematic-hero > .aurora-canvas { z-index: 0; }
+
+/* Completion ceremony */
+.stage-bloom .stage-glow {
+  filter: brightness(1.7) saturate(1.25);
+  transition: filter 0.9s ease;
+}
+.exhibit-stamp {
+  display: inline-block;
+  margin-top: 1.1rem;
+  padding: 0.5rem 1.05rem;
+  border: 3px double var(--brass-bright);
+  border-radius: 6px;
+  color: var(--brass-bright);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+  animation: stamp-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.exhibit-stamp.mastered {
+  color: #5eead4;
+  border-color: #5eead4;
+  box-shadow: 0 0 24px rgba(94, 234, 212, 0.25);
+}
+@keyframes stamp-in {
+  from { opacity: 0; transform: rotate(-14deg) scale(1.7); }
+  to { opacity: 1; transform: rotate(-4deg) scale(1); }
+}
+
+/* Saved-note plaque card */
+.saved-note.plaque-card {
+  display: grid;
+  gap: 0.35rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.saved-note.plaque-card p { margin: 0; }
+
+/* Springy range thumbs — knobs that feel physical */
+input[type='range']::-webkit-slider-thumb { transition: transform 0.12s ease; }
+input[type='range']:active::-webkit-slider-thumb { transform: scale(1.35); }
+input[type='range']::-moz-range-thumb { transition: transform 0.12s ease; }
+input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
+
+/* Page cross-fade (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.18s;
 }
 
 /* Gallery colophon */

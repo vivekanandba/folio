@@ -54,37 +54,48 @@ function notFound(): void {
 }
 
 onRoute(async (route) => {
-  main.classList.remove('main-wide')
-  main.replaceChildren(el('p', { class: 'muted', role: 'status' }, ['Loading…']))
-  try {
-    switch (route.name) {
-      case 'hub':
-        await renderHub(main)
-        break
-      case 'today':
-        await renderReview(main)
-        break
-      case 'pack':
-        await renderPack(main, route.packId)
-        break
-      case 'concept':
-        await renderConcept(main, route.packId, route.conceptId)
-        break
-      case 'session':
-        await renderSession(main, route.packId, route.sessionId)
-        break
-      case 'notfound':
-        notFound()
-        break
+  const render = async (): Promise<void> => {
+    main.classList.remove('main-wide')
+    main.replaceChildren(el('p', { class: 'muted', role: 'status' }, ['Loading…']))
+    try {
+      switch (route.name) {
+        case 'hub':
+          await renderHub(main)
+          break
+        case 'today':
+          await renderReview(main)
+          break
+        case 'pack':
+          await renderPack(main, route.packId)
+          break
+        case 'concept':
+          await renderConcept(main, route.packId, route.conceptId)
+          break
+        case 'session':
+          await renderSession(main, route.packId, route.sessionId)
+          break
+        case 'notfound':
+          notFound()
+          break
+      }
+    } catch (err) {
+      main.replaceChildren(
+        el('div', { class: 'error' }, [
+          el('h1', {}, ['Something broke']),
+          el('p', {}, [err instanceof Error ? err.message : String(err)]),
+          el('a', { href: '#/' }, ['Back home']),
+        ]),
+      )
     }
-  } catch (err) {
-    main.replaceChildren(
-      el('div', { class: 'error' }, [
-        el('h1', {}, ['Something broke']),
-        el('p', {}, [err instanceof Error ? err.message : String(err)]),
-        el('a', { href: '#/' }, ['Back home']),
-      ]),
-    )
+  }
+
+  // Cross-fade page changes via the View Transitions API where available
+  // (progressive enhancement; skipped under reduced motion).
+  const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> } }
+  if (doc.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    await doc.startViewTransition(() => render()).finished.catch(() => {})
+  } else {
+    await render()
   }
 
   // Central focus + document.title management on every route change.

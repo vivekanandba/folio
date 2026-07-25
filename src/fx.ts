@@ -1,5 +1,20 @@
 import { prefersReducedMotion } from './a11y'
 import { el } from './dom'
+import { mountAurora } from './shader'
+
+/** Per-kind aurora palettes, transcribed from the .stage-{kind} CSS glow gradients. */
+const STAGE_COLORS: Record<string, [string, string, string]> = {
+  detective: ['#3b82f6', '#0ea5e9', '#101c33'],
+  classify: ['#fb923c', '#3b82f6', '#1a1426'],
+  calculator: ['#14b8a6', '#0d9488', '#0f1f2b'],
+  audit: ['#a78bfa', '#7c3aed', '#191430'],
+  decision: ['#f59e0b', '#6366f1', '#1c1526'],
+  sequence: ['#38bdf8', '#0284c7', '#0f1d2e'],
+  estimate: ['#f59e0b', '#b45309', '#201622'],
+  hotspot: ['#a855f7', '#7c3aed', '#180f26'],
+  explainer: ['#2dd4bf', '#0d9488', '#0f1f2b'],
+}
+const STAGE_DEFAULT: [string, string, string] = ['#2dd4bf', '#0e7490', '#14203a']
 
 /** Burst of colored dots from a point (correct answer / reveal). */
 export function burst(at: HTMLElement, colors = ['#14b8a6', '#f59e0b', '#3b82f6', '#f43f5e']): void {
@@ -95,12 +110,41 @@ export function stage(
   title: string,
   children: (Node | string)[],
 ): HTMLElement {
+  const glow = el('div', { class: 'stage-glow', 'aria-hidden': 'true' })
+  // Living aurora over the CSS glow; degrades silently (null) to the gradient.
+  mountAurora(glow, { colors: STAGE_COLORS[kind] ?? STAGE_DEFAULT, intensity: 0.5 })
   return el('div', { class: `stage stage-${kind}` }, [
-    el('div', { class: 'stage-glow', 'aria-hidden': 'true' }),
+    glow,
     el('div', { class: 'stage-inner' }, [
       el('div', { class: 'stage-kicker' }, [kicker]),
       el('h2', { class: 'stage-title' }, [title]),
       el('div', { class: 'stage-body' }, children as Node[]),
     ]),
   ])
+}
+
+/**
+ * Completion ceremony: the room's light blooms, bursts cascade, and a brass
+ * stamp lands on the exhibit. Under reduced motion the stamp still renders
+ * (it's information) — only the motion is dropped.
+ */
+export function ceremony(stageEl: HTMLElement, opts: { perfect: boolean }): void {
+  stageEl.classList.add('stage-bloom')
+  const stamp = el('div', { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}`, role: 'status' }, [
+    opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited',
+  ])
+  const inner = stageEl.querySelector('.stage-inner') ?? stageEl
+  inner.append(stamp)
+  if (!prefersReducedMotion()) {
+    const palettes = [
+      ['#e3c88d', '#4fd1c5', '#c9a86a'],
+      undefined,
+      ['#e3c88d', '#4fd1c5', '#c9a86a'],
+    ]
+    palettes.forEach((colors, i) => {
+      window.setTimeout(() => {
+        if (stamp.isConnected) burst(stamp, colors)
+      }, i * 220)
+    })
+  }
 }
