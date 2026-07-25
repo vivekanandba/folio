@@ -127,7 +127,7 @@ export async function renderHub(root: HTMLElement): Promise<void> {
 
   const sections = el('div', { class: 'cat-sections' })
   for (const group of groups) {
-    const grid = el('div', { class: 'pack-grid' }, group.metas.map(packCard))
+    const grid = el('div', { class: 'pack-grid' }, group.metas.map((m) => packCard(m, metas.indexOf(m))))
     sections.append(
       el('section', { class: 'cat-section', 'data-cat': group.category }, [
         el('h3', { class: 'cat-heading' }, [
@@ -190,8 +190,13 @@ export async function renderHub(root: HTMLElement): Promise<void> {
   root.replaceChildren(...children)
 }
 
-/** One pack card for the landing grid. */
-function packCard(meta: FolioPackMeta): HTMLElement {
+/** Zero-padded museum numbering: 0 → "01". */
+export function museumNum(index: number): string {
+  return String(index + 1).padStart(2, '0')
+}
+
+/** One pack card for the landing grid. `hallIndex` is the catalog position. */
+function packCard(meta: FolioPackMeta, hallIndex: number): HTMLElement {
   const sessionIds = meta.sessions.map(sessionIdFromFile)
   const { done, total } = packCompletion(meta.id, sessionIds)
   const pct = total ? Math.round((done / total) * 100) : 0
@@ -203,6 +208,10 @@ function packCard(meta: FolioPackMeta): HTMLElement {
       el('div', { class: 'art-orb orb-1' }),
       el('div', { class: 'art-orb orb-2' }),
       el('div', { class: 'art-orb orb-3' }),
+      el('span', { class: 'plaque' }, [
+        'Hall ',
+        el('span', { class: 'plaque-num' }, [museumNum(hallIndex)]),
+      ]),
     ]),
     el('div', { class: 'pack-card-body' }, [
       el('div', { class: 'pack-card-top' }, [

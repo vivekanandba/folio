@@ -31,6 +31,7 @@ const shell = el('div', { class: 'app-shell' }, [
     el('div', { class: 'topbar-actions' }, [searchBtn]),
   ]),
   el('main', { class: 'main', id: 'main', tabindex: '-1' }),
+  el('footer', { class: 'colophon' }, ['Folio · a private museum of things worth remembering']),
   liveRegion,
 ])
 app.append(shell)

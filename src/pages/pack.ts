@@ -21,16 +21,23 @@ async function resolvePackPath(packId: string): Promise<string> {
   return ref.path
 }
 
+/** Zero-padded museum numbering: 0 → "01". */
+function museumNum(index: number): string {
+  return String(index + 1).padStart(2, '0')
+}
+
 export async function renderPack(
   root: HTMLElement,
   packId: string,
 ): Promise<void> {
   root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
+  const catalog = await loadCatalog()
+  const hall = museumNum(catalog.packs.findIndex((p) => p.id === packId))
   const packPath = await resolvePackPath(packId)
   const meta = await loadPackMeta(packPath)
 
   const conceptList = el('div', { class: 'item-list concept-grid' })
-  for (const cid of meta.concepts) {
+  for (const [i, cid] of meta.concepts.entries()) {
     const st = getConceptState(packId, cid)
     const done = st && st.mastery >= 0.8
     conceptList.append(
@@ -38,7 +45,10 @@ export async function renderPack(
         class: `item-card concept-card${done ? ' done' : ''}`,
         href: href({ name: 'concept', packId, conceptId: cid }),
       }, [
-        el('span', { class: 'tag' }, ['Concept']),
+        el('span', { class: 'plaque' }, [
+          'Exhibit ',
+          el('span', { class: 'plaque-num' }, [`${hall}.${i + 1}`]),
+        ]),
         el('h3', {}, [prettyId(cid)]),
         el('p', { class: 'muted small status-line' }, [conceptStatus(packId, cid)]),
       ]),
@@ -75,7 +85,13 @@ export async function renderPack(
       el('span', {}, [meta.title]),
     ]),
     el('header', { class: 'page-header pack-hero' }, [
-      el('p', { class: 'eyebrow' }, [meta.subject]),
+      el('p', {}, [
+        el('span', { class: 'plaque' }, [
+          'Hall ',
+          el('span', { class: 'plaque-num' }, [hall]),
+          ` — ${meta.subject}`,
+        ]),
+      ]),
       el('h1', {}, [meta.title]),
       el('p', { class: 'lead' }, [meta.summary]),
       el('p', { class: 'muted small' }, [meta.source]),
