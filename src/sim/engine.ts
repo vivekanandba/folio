@@ -194,7 +194,7 @@ export function mountSim(
       ctx.beginPath()
       const n = arr.length
       for (let i = 0; i < n; i++) {
-        const x = (i / (MAX_POINTS - 1)) * W + (1 - n / MAX_POINTS) * 0 // left-anchored while filling
+        const x = (i / (MAX_POINTS - 1)) * W // left-anchored; fills rightward
         const y = H - (arr[i] / max) * (H * 0.92) - H * 0.04
         if (i === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
