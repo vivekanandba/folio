@@ -1,5 +1,7 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el } from '../dom'
+import { mountAurora } from '../shader'
+import { attachTilt } from '../tilt'
 import type { FolioPackMeta } from '../types'
 import { getResume, loadProgress, packCompletion } from '../progress'
 import { href } from '../router'
@@ -109,6 +111,7 @@ export async function renderHub(root: HTMLElement): Promise<void> {
         ]),
         el('span', { class: 'resume-arrow', 'aria-hidden': 'true' }, ['→']),
       ])
+      attachTilt(resumeCard)
     }
   }
 
@@ -167,23 +170,24 @@ export async function renderHub(root: HTMLElement): Promise<void> {
   // Only show the filter row when there's more than one category to filter by.
   const packBrowser = el('div', { class: 'pack-browser' }, groups.length > 1 ? [chipRow, sections] : [sections])
 
-  const children: (Node | string)[] = [
-    el('header', { class: 'page-header hub-hero cinematic-hero' }, [
-      el('p', { class: 'eyebrow' }, ['Folio']),
-      el('h1', {}, ['Learn it once. Play it back.']),
-      el('p', { class: 'lead' }, [
-        'Revision as interactive stages — peel clues, drag cards, twist knobs, walk decision forks.',
-      ]),
-      el('div', { class: 'kind-strip' }, [
-        chip('Detective'),
-        chip('Lab'),
-        chip('Audit map'),
-        chip('Decision forks'),
-        chip('Sort bench'),
-      ]),
+  const hero = el('header', { class: 'page-header hub-hero cinematic-hero' }, [
+    el('p', {}, [el('span', { class: 'plaque' }, ['The Folio Museum — open all night'])]),
+    el('h1', {}, ['Learn it once. Play it back.']),
+    el('p', { class: 'lead' }, [
+      'Revision as interactive stages — peel clues, drag cards, twist knobs, walk decision forks.',
     ]),
-    todayPanel,
-  ]
+    el('div', { class: 'kind-strip' }, [
+      chip('Detective'),
+      chip('Lab'),
+      chip('Audit map'),
+      chip('Decision forks'),
+      chip('Sort bench'),
+    ]),
+  ])
+  // Ambient aurora behind the hero copy (degrades to the CSS gradient).
+  mountAurora(hero, { colors: ['#1f4f49', '#233052', '#3b2412'], intensity: 0.55, speed: 0.8 })
+
+  const children: (Node | string)[] = [hero, todayPanel]
   if (resumeCard) children.push(resumeCard)
   children.push(el('h2', { class: 'section-title' }, ['Your packs']), packBrowser)
 
@@ -200,7 +204,7 @@ function packCard(meta: FolioPackMeta, hallIndex: number): HTMLElement {
   const sessionIds = meta.sessions.map(sessionIdFromFile)
   const { done, total } = packCompletion(meta.id, sessionIds)
   const pct = total ? Math.round((done / total) * 100) : 0
-  return el('a', {
+  const card = el('a', {
     class: 'pack-card cinematic',
     href: href({ name: 'pack', packId: meta.id }),
   }, [
@@ -228,6 +232,8 @@ function packCard(meta: FolioPackMeta, hallIndex: number): HTMLElement {
       ]),
     ]),
   ])
+  attachTilt(card)
+  return card
 }
 
 function chip(label: string): HTMLElement {
