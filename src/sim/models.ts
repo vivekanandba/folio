@@ -233,8 +233,8 @@ const compound: SimModel = {
   title: 'Compounding engine',
   params: [
     { key: 'monthly', label: 'Monthly SIP', min: 1000, max: 100000, step: 1000, value: 10000, unit: '₹' },
-    { key: 'rate', label: 'Return', min: 4, max: 18, step: 0.5, value: 12, unit: '%' },
-    { key: 'fee', label: 'Fee (TER)', min: 0, max: 2.5, step: 0.05, value: 1, unit: '%' },
+    { key: 'rate', label: 'Return', min: 4, max: 30, step: 0.5, value: 12, unit: '%' },
+    { key: 'fee', label: 'Drag (fees/churn)', min: 0, max: 2.5, step: 0.05, value: 1, unit: '%' },
   ],
   series: [
     { key: 'gross', label: 'Before fees (₹ L)', color: '#4fd1c5' },

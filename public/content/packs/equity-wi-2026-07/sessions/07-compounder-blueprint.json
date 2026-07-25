@@ -1,0 +1,25 @@
+{
+  "id": "compounder-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the compounding loop",
+  "conceptIds": ["wealth-creators"],
+  "intro": "A wealth creator is a loop, not a list of traits. Build the loop — and resist the tempting parts that break it.",
+  "briefing": "Wire profits into the flywheel that makes a decades-long compounder: reinvestment deepens the moat, the moat protects earnings growth, and growth feeds back into profits. The tray also holds two parts that FEEL like growth — the inspector rejects any blueprint that uses them.",
+  "parts": [
+    { "id": "profits", "label": "Profits", "fixed": true },
+    { "id": "reinvest", "label": "Reinvestment in the core", "max": 1 },
+    { "id": "moat", "label": "Widening moat", "max": 1 },
+    { "id": "earnings", "label": "Earnings growth", "max": 1 },
+    { "id": "unrelated", "label": "Unrelated diversification", "max": 1 },
+    { "id": "leverage", "label": "Debt-fuelled expansion", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "profits", "b": "reinvest", "label": "Profits are reinvested, not scattered" },
+    { "rule": "connected", "a": "reinvest", "b": "moat", "label": "Reinvestment deepens the moat" },
+    { "rule": "connected", "a": "moat", "b": "earnings", "label": "The moat protects earnings growth" },
+    { "rule": "connected", "a": "earnings", "b": "profits", "label": "Growth feeds back into profits — the loop closes" },
+    { "rule": "maxCount", "part": "unrelated", "count": 0, "label": "No unrelated diversification in the core loop" },
+    { "rule": "maxCount", "part": "leverage", "count": 0, "label": "No debt-fuelled growth propping up the flywheel" }
+  ],
+  "debrief": "The structure you wired is the moat J-curve as a machine: profits → reinvestment → moat → earnings → profits, going around for years. The two forbidden parts are the classic loop-breakers — unrelated diversification scatters the reinvestment that should deepen the advantage, and debt-fuelled expansion fakes the growth leg until interest overwhelms earnings (the Reliance Naval pattern: ROCE turns negative and the stock follows). Capital allocation isn't a virtue on the side; it IS the wiring."
+}
