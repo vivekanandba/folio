@@ -22,8 +22,12 @@ export interface PackInput {
 
 const KNOWN_KINDS = new Set([
   'quiz', 'classify', 'detective', 'calculator', 'audit', 'decision',
-  'sequence', 'estimate', 'hotspot', 'explainer',
+  'sequence', 'estimate', 'hotspot', 'explainer', 'lab',
 ])
+
+/** Whitelisted simulation models — keep in sync with src/sim/models.ts. */
+const SIM_MODELS = new Set(['queue', 'failover', 'compound', 'retention'])
+const LAB_OPS = new Set(['<', '<=', '>', '>='])
 
 export function lintCatalog(catalog: Json, packPaths: string[]): LintIssue[] {
   const issues: LintIssue[] = []
@@ -188,6 +192,25 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
         if (!st.title || !st.body) err(`steps[${i}] needs title and body`)
       })
       if (!s.recap) err('explainer needs a recap')
+      break
+    case 'lab':
+      if (!SIM_MODELS.has(s.model)) err(`unknown sim model "${s.model}"`)
+      if (!s.briefing) err('lab needs a briefing')
+      if (!s.debrief) err('lab needs a debrief')
+      if (!Array.isArray(s.goals) || !s.goals.length) err('lab needs goals[]')
+      else s.goals.forEach((g: Json, i: number) => {
+        if (!g.metric || typeof g.metric !== 'string') err(`goals[${i}] needs a metric`)
+        if (!LAB_OPS.has(g.op)) err(`goals[${i}].op "${g.op}" not one of < <= > >=`)
+        if (typeof g.value !== 'number') err(`goals[${i}].value must be a number`)
+        if (!g.label) err(`goals[${i}] needs a label`)
+      })
+      if (s.params != null && (typeof s.params !== 'object' || Array.isArray(s.params))) err('params must be an object of numbers')
+      else if (s.params) {
+        for (const [k, v] of Object.entries(s.params)) {
+          if (typeof v !== 'number') err(`params.${k} must be a number`)
+        }
+      }
+      if (s.holdSeconds != null && (typeof s.holdSeconds !== 'number' || s.holdSeconds <= 0)) err('holdSeconds must be > 0')
       break
   }
   return issues

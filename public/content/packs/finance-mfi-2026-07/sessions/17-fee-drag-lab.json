@@ -1,0 +1,16 @@
+{
+  "id": "fee-drag-lab",
+  "kind": "lab",
+  "title": "Outrun the fee drag",
+  "conceptIds": ["expense-ratio-ter"],
+  "intro": "A compounding engine where each second is a year — and the fee meter never sleeps.",
+  "model": "compound",
+  "params": { "monthly": 10000, "rate": 12, "fee": 1.5 },
+  "briefing": "Your SIP is running at a 1.5% expense ratio. Watch the gap between the gross and net curves open — that gap is yours, leaking away. Build a ₹95 lakh corpus while keeping the total lost to fees under 8% of the gross. The market rate isn't yours to control in real life; the FEE and the SIP amount are.",
+  "goals": [
+    { "metric": "netL", "op": ">=", "value": 95, "label": "corpus ≥ ₹95 lakh" },
+    { "metric": "lostPct", "op": "<", "value": 8, "label": "lost to fees < 8% of gross" }
+  ],
+  "holdSeconds": 4,
+  "debrief": "At 1.5% TER the drag crosses 8% within your investing lifetime — the shortfall compounds because the fee cuts your GROWTH RATE, not your balance. Drop to a ~0.5% direct plan and the same SIP clears ₹95L with the drag still under control. And notice the trap: even a low fee drags MORE the longer you run (watch lostPct keep climbing) — which is exactly why fee discipline matters most for the longest-horizon money you have."
+}

@@ -6,7 +6,12 @@
   "type": "magazine",
   "source": "Personal study notes paraphrased from Value Research Mutual Fund Insight, July 2026 (Vol. XXIII, No. 10). Not affiliated with Value Research; not investment advice.",
   "summary": "Learn then revise: deep explainers plus interactive sessions on fund categories, fees, returns, planning, and debt-fund risk.",
-  "tags": ["mutual-funds", "india", "sebi", "value-research"],
+  "tags": [
+    "mutual-funds",
+    "india",
+    "sebi",
+    "value-research"
+  ],
   "concepts": [
     "flexi-cap-vs-multi-cap",
     "style-drift-flexi-tax",
@@ -35,6 +40,7 @@
     "13-ter-quiz.json",
     "14-real-return-estimate.json",
     "15-debt-ladder-sequence.json",
-    "16-debt-risk-classify.json"
+    "16-debt-risk-classify.json",
+    "17-fee-drag-lab.json"
   ]
 }

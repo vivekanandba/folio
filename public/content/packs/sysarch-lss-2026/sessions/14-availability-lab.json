@@ -1,0 +1,16 @@
+{
+  "id": "availability-lab",
+  "kind": "lab",
+  "title": "Buy three nines",
+  "conceptIds": ["quality-attributes"],
+  "intro": "A replica fleet failing and healing in accelerated time. Redundancy is the only thing between you and the pager.",
+  "model": "failover",
+  "params": { "replicas": 1, "mtbfH": 20, "mttrM": 90 },
+  "briefing": "One fragile node: it fails every ~20 hours and takes 90 minutes to repair. The business demands THREE NINES (99.9%) by design, but each replica costs real money — you get at most 3. Kill a node yourself and watch what redundancy does. Design nines = what your configuration guarantees; observed availability = the life this particular fleet is living.",
+  "goals": [
+    { "metric": "predNines", "op": ">=", "value": 3, "label": "design availability ≥ three nines" },
+    { "metric": "replicas", "op": "<=", "value": 3, "label": "at most 3 replicas (cost cap)" }
+  ],
+  "holdSeconds": 4,
+  "debrief": "One node gives u = MTTR/(MTBF+MTTR) ≈ 7% downtime — barely one nine. Because active-active replicas fail independently, the service is only down when ALL are: unavailability u^n. Two replicas → 99.5%; THREE → 99.97% — past your target without touching the hardware's reliability. You can also buy nines by shrinking MTTR (faster repair), which is often cheaper than more replicas: availability = MTBF/(MTBF+MTTR) rewards recovering fast just as much as failing rarely. Redundancy turns unreliable parts into a reliable system."
+}
