@@ -4,6 +4,7 @@ import { el } from './dom'
 import { initPalette } from './palette'
 import { onRoute } from './router'
 import { renderConcept } from './pages/concept'
+import { renderFloor } from './pages/floor'
 import { renderHub } from './pages/hub'
 import { renderPack } from './pages/pack'
 import { renderReview } from './pages/review'
@@ -64,6 +65,9 @@ onRoute(async (route) => {
           break
         case 'today':
           await renderReview(main)
+          break
+        case 'floor':
+          await renderFloor(main)
           break
         case 'pack':
           await renderPack(main, route.packId)

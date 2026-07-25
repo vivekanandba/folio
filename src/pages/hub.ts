@@ -178,10 +178,13 @@ export async function renderHub(root: HTMLElement): Promise<void> {
     ]),
     el('div', { class: 'kind-strip' }, [
       chip('Detective'),
-      chip('Lab'),
-      chip('Audit map'),
+      chip('Machine room'),
+      chip('Drafting table'),
       chip('Decision forks'),
       chip('Sort bench'),
+    ]),
+    el('div', { class: 'hero-actions' }, [
+      el('a', { class: 'primary', href: href({ name: 'floor' }) }, ['🏛 Walk the museum floor']),
     ]),
   ])
   // Ambient aurora behind the hero copy (degrades to the CSS gradient).

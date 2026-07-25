@@ -2493,6 +2493,66 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
 .lab-goal.broken { color: #fda4af; }
 .lab-goal.broken .lab-goal-dot { background: #fb7185; box-shadow: 0 0 10px rgba(251, 113, 133, 0.6); }
 
+/* ============================================================
+   Museum floor — the concept constellation
+   ============================================================ */
+
+.hero-actions { margin-top: 1.1rem; }
+
+.floor-wrap {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse at 30% 10%, rgba(26, 43, 38, 0.8), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(42, 33, 24, 0.7), transparent 55%),
+    #0e0d0b;
+  box-shadow: var(--shadow-2);
+  margin: 1rem 0 0.6rem;
+}
+.floor-canvas {
+  display: block;
+  width: 100%;
+  cursor: grab;
+  touch-action: none; /* pan/zoom handled by the canvas itself */
+}
+.floor-canvas:active { cursor: grabbing; }
+
+.floor-tip {
+  position: absolute;
+  transform: translateX(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--brass);
+  color: var(--ink);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-1);
+}
+.floor-tip[hidden] { display: none; }
+
+.floor-controls { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; }
+.floor-zoom { min-width: 2.4rem; }
+
+.floor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin: 0.4rem 0 1rem;
+}
+.floor-due-swatch {
+  background: transparent;
+  border: 2px solid #f4a26b;
+  border-radius: 999px;
+}
+
+.floor-mirror h3 { font-size: 0.95rem; margin: 0.75rem 0 0.25rem; }
+.floor-list { margin: 0.25rem 0; padding-left: 1.2rem; }
+.floor-list li { margin: 0.2rem 0; }
+
 /* Gallery colophon */
 .colophon {
   width: min(var(--max), calc(100% - 2rem));
