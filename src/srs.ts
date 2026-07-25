@@ -19,6 +19,7 @@ const KIND_WEIGHT: Record<SessionKind, number> = {
   estimate: 1,
   hotspot: 1,
   explainer: 0.3, // teaching, not assessment — weak mastery signal
+  lab: 1.1, // reaching + holding a goal state is strong evidence of understanding
 }
 
 // --- date helpers (yyyy-mm-dd in UTC) ------------------------------------
