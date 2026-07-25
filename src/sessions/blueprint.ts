@@ -29,7 +29,7 @@ function mountBlueprint(
   wires.setAttribute('class', 'bp-wires')
   wires.setAttribute('aria-hidden', 'true')
   const nodesHost = el('div', { class: 'bp-nodes' })
-  const board = el('div', { class: 'bp-board' }, [wires as unknown as HTMLElement, nodesHost])
+  const board = el('div', { class: 'bp-board' }, [wires, nodesHost])
   const wireHint = el('p', { class: 'muted small bp-hint' }, [
     'Wire: tap one component, then another. Tap a wire in the list to cut it.',
   ])
