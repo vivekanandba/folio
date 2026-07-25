@@ -22,8 +22,10 @@ export interface PackInput {
 
 const KNOWN_KINDS = new Set([
   'quiz', 'classify', 'detective', 'calculator', 'audit', 'decision',
-  'sequence', 'estimate', 'hotspot', 'explainer', 'lab',
+  'sequence', 'estimate', 'hotspot', 'explainer', 'lab', 'blueprint',
 ])
+
+const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect', 'pathExists', 'survivesKill'])
 
 /** Whitelisted simulation models — keep in sync with src/sim/models.ts. */
 const SIM_MODELS = new Set(['queue', 'failover', 'compound', 'retention'])
@@ -212,6 +214,34 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
       }
       if (s.holdSeconds != null && (typeof s.holdSeconds !== 'number' || s.holdSeconds <= 0)) err('holdSeconds must be > 0')
       break
+    case 'blueprint': {
+      if (!s.briefing) err('blueprint needs a briefing')
+      if (!s.debrief) err('blueprint needs a debrief')
+      const partIds = new Set<string>()
+      if (!Array.isArray(s.parts) || !s.parts.length) err('blueprint needs parts[]')
+      else s.parts.forEach((p: Json, i: number) => {
+        if (!p.id || !p.label) err(`parts[${i}] needs id and label`)
+        if (partIds.has(p.id)) err(`parts[${i}].id "${p.id}" duplicated`)
+        partIds.add(p.id)
+        if (p.max != null && (typeof p.max !== 'number' || p.max < 1)) err(`parts[${i}].max must be ≥ 1`)
+      })
+      if (!Array.isArray(s.rules) || !s.rules.length) err('blueprint needs rules[]')
+      else s.rules.forEach((r: Json, i: number) => {
+        if (!BLUEPRINT_RULES.has(r.rule)) { err(`rules[${i}].rule "${r.rule}" unknown`); return }
+        if (!r.label) err(`rules[${i}] needs a label`)
+        const refs: string[] =
+          r.rule === 'minCount' || r.rule === 'maxCount' ? [r.part]
+          : r.rule === 'connected' || r.rule === 'noDirect' ? [r.a, r.b]
+          : [r.from, r.to]
+        for (const ref of refs) {
+          if (!partIds.has(ref)) err(`rules[${i}] references unknown part "${ref}"`)
+        }
+        if ((r.rule === 'minCount' || r.rule === 'maxCount') && typeof r.count !== 'number') {
+          err(`rules[${i}].count must be a number`)
+        }
+      })
+      break
+    }
   }
   return issues
 }

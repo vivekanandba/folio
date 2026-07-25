@@ -1,0 +1,24 @@
+{
+  "id": "four-pillar-blueprint",
+  "kind": "blueprint",
+  "title": "Assemble the four-pillar plan",
+  "conceptIds": ["four-pillars-planning"],
+  "intro": "A financial plan isn't a list of products — it's a structure. Build it.",
+  "briefing": "Route your income into a plan that survives a shock: protection before growth, a liquidity buffer so emergencies never touch long-term money, and every growth rupee aimed at a named goal.",
+  "parts": [
+    { "id": "income", "label": "Income", "fixed": true },
+    { "id": "protection", "label": "Term + health cover", "max": 1 },
+    { "id": "emergency", "label": "Emergency fund", "max": 1 },
+    { "id": "sip", "label": "Growth SIPs", "max": 2 },
+    { "id": "goal", "label": "Named goal", "max": 2 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "income", "b": "protection", "label": "Income funds protection first" },
+    { "rule": "connected", "a": "income", "b": "emergency", "label": "A liquidity buffer is funded directly" },
+    { "rule": "connected", "a": "income", "b": "sip", "label": "A monthly SIP runs from income" },
+    { "rule": "connected", "a": "sip", "b": "goal", "label": "Every SIP is aimed at a named goal" },
+    { "rule": "noDirect", "a": "emergency", "b": "goal", "label": "Emergency money is never goal money" },
+    { "rule": "minCount", "part": "goal", "count": 1, "label": "At least one goal has a name and a number" }
+  ],
+  "debrief": "The structure you wired is the whole point: protection and liquidity hang directly off income — funded first, not from what's left over — while growth flows only through SIPs that point at NAMED goals. The one wire the inspector forbids is emergency → goal: the moment your buffer doubles as goal money, one hospital bill liquidates your long-term compounding at the worst possible time. Growth without protection and liquidity is a plan that only works when life cooperates."
+}
