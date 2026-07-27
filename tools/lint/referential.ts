@@ -233,6 +233,13 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
         if (!s.live.label) err('live needs a label')
         if (s.live.inputs != null && (typeof s.live.inputs !== 'object' || Array.isArray(s.live.inputs))) {
           err('live.inputs must be an object of numbers')
+        } else if (s.live.inputs) {
+          for (const [k, v] of Object.entries(s.live.inputs)) {
+            if (typeof v !== 'number') err(`live.inputs.${k} must be a number`)
+          }
+        }
+        if (s.live.max != null && (typeof s.live.max !== 'number' || s.live.max <= 0)) {
+          err('live.max must be > 0')
         }
       }
       break
