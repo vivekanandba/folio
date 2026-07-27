@@ -9,23 +9,28 @@
   "facts": [
     {
       "label": "Return on capital",
-      "value": "Dipped 3 years ago during a big distribution build-out; has risen for 6 straight quarters since."
+      "value": "Dipped 3 years ago during a big distribution build-out; has risen for 6 straight quarters since.",
+      "signal": 3
     },
     {
       "label": "Earnings",
-      "value": "Growing ~24% a year for 4 years; the share price has roughly tracked earnings, not run ahead of them."
+      "value": "Growing ~24% a year for 4 years; the share price has roughly tracked earnings, not run ahead of them.",
+      "signal": 3
     },
     {
       "label": "Debt",
-      "value": "Low and falling; interest easily covered by operating profit."
+      "value": "Low and falling; interest easily covered by operating profit.",
+      "signal": 2
     },
     {
       "label": "Capital allocation",
-      "value": "~70% of profit reinvested into the core business; no unrelated acquisitions."
+      "value": "~70% of profit reinvested into the core business; no unrelated acquisitions.",
+      "signal": 2
     },
     {
       "label": "Market",
-      "value": "Addressable market is large and still fragmented/unorganised — plenty of runway."
+      "value": "Addressable market is large and still fragmented/unorganised — plenty of runway.",
+      "signal": 2
     }
   ],
   "composition": [
@@ -56,5 +61,6 @@
     "A mature incumbent at risk of complacency"
   ],
   "answerIndex": 1,
-  "debrief": "The tell-tale pattern: ROCE dipped during a build phase then inflected upward (moat forming), earnings compound and the price tracks them (not a story), debt is low, profits are reinvested into the core, and there's a long runway. That's the anatomy of an emerging compounder — not hype, not a trap, and not yet a complacent incumbent.\n\n```viz\n{\"type\": \"sim\", \"model\": \"compound\", \"title\": \"What that anatomy becomes over time\", \"caption\": \"Set the growth rate an emerging moat can sustain and let the years run.\"}\n```"
+  "debrief": "The tell-tale pattern: ROCE dipped during a build phase then inflected upward (moat forming), earnings compound and the price tracks them (not a story), debt is low, profits are reinvested into the core, and there's a long runway. That's the anatomy of an emerging compounder — not hype, not a trap, and not yet a complacent incumbent.\n\n```viz\n{\"type\": \"sim\", \"model\": \"compound\", \"title\": \"What that anatomy becomes over time\", \"caption\": \"Set the growth rate an emerging moat can sustain and let the years run.\"}\n```",
+  "meterLabel": "Compounder anatomy assembled"
 }

@@ -79,6 +79,10 @@ export interface ClassifySession {
 export interface DetectiveFact {
   label: string
   value: string
+  /** Diagnostic weight of this clue (≥0). When any fact has one, a live
+   * evidence meter fills as clues open — and early diagnosis shows how much
+   * evidence you left on the table. */
+  signal?: number
 }
 
 export interface AllocationSegment {
@@ -95,6 +99,8 @@ export interface DetectiveSession {
   title: string
   conceptIds: string[]
   intro?: string
+  /** Label for the evidence meter (default "Evidence gathered"). */
+  meterLabel?: string
   facts: DetectiveFact[]
   /** Optional live allocation chart that builds as clues appear */
   composition?: AllocationSegment[]
@@ -140,11 +146,31 @@ export interface AuditSession {
   debrief: string
 }
 
+export interface DecisionChoice {
+  label: string
+  next: string
+  note?: string
+  /** Shift this choice applies to the session meter (needs session.meter). */
+  effect?: number
+  /** One-line projected consequence, shown live on hover/focus before committing. */
+  preview?: string
+}
+
 export interface DecisionNode {
   id: string
   text?: string
-  choices?: { label: string; next: string; note?: string }[]
+  choices?: DecisionChoice[]
   ending?: { principle: string; debrief: string; score: number }
+}
+
+/** A quantity the decision journey pushes around (e.g. "Investor trust").
+ * Hovering a choice previews the shift; committing applies it. */
+export interface DecisionMeter {
+  label: string
+  min: number
+  max: number
+  start: number
+  unit?: string
 }
 
 export interface DecisionSession {
@@ -153,6 +179,7 @@ export interface DecisionSession {
   title: string
   conceptIds: string[]
   intro?: string
+  meter?: DecisionMeter
   startId: string
   nodes: DecisionNode[]
 }

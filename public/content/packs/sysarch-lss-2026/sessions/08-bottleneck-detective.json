@@ -9,23 +9,28 @@
   "facts": [
     {
       "label": "Average latency",
-      "value": "Reassuring: mean is ~40 ms. But p99 is 900 ms and climbing with traffic."
+      "value": "Reassuring: mean is ~40 ms. But p99 is 900 ms and climbing with traffic.",
+      "signal": 1
     },
     {
       "label": "CPU profile",
-      "value": "The request handler itself computes in ~6 ms. CPU on each box sits at ~30%."
+      "value": "The request handler itself computes in ~6 ms. CPU on each box sits at ~30%.",
+      "signal": 3
     },
     {
       "label": "Under load",
-      "value": "Latency was flat until ~7k req/s, then rose sharply — a clear knee."
+      "value": "Latency was flat until ~7k req/s, then rose sharply — a clear knee.",
+      "signal": 3
     },
     {
       "label": "Request queue",
-      "value": "Time spent waiting in the queue before processing grows fast once traffic climbs."
+      "value": "Time spent waiting in the queue before processing grows fast once traffic climbs.",
+      "signal": 3
     },
     {
       "label": "Topology",
-      "value": "One large vertically-scaled instance behind the load balancer; no horizontal replicas."
+      "value": "One large vertically-scaled instance behind the load balancer; no horizontal replicas.",
+      "signal": 2
     }
   ],
   "composition": [
@@ -50,5 +55,6 @@
     "The database is the bottleneck — add an index"
   ],
   "answerIndex": 1,
-  "debrief": "Response time = processing + waiting. Processing is only ~6 ms and CPU is idle-ish, so the code isn't the problem — waiting time is ~88% of the latency. Traffic crossed the capacity knee, so requests pile up in the queue. The fix is capacity/concurrency — scale out horizontally with more replicas — not micro-optimising a handler that's already fast. And the low average is exactly why you SLA on p99: it hid the tail entirely.\n\n```viz\n{\"type\": \"sim\", \"model\": \"queue\", \"title\": \"Drive the queue past its knee\", \"caption\": \"Push arrivals up and watch waiting dwarf processing — then add servers and watch p99 collapse.\"}\n```"
+  "debrief": "Response time = processing + waiting. Processing is only ~6 ms and CPU is idle-ish, so the code isn't the problem — waiting time is ~88% of the latency. Traffic crossed the capacity knee, so requests pile up in the queue. The fix is capacity/concurrency — scale out horizontally with more replicas — not micro-optimising a handler that's already fast. And the low average is exactly why you SLA on p99: it hid the tail entirely.\n\n```viz\n{\"type\": \"sim\", \"model\": \"queue\", \"title\": \"Drive the queue past its knee\", \"caption\": \"Push arrivals up and watch waiting dwarf processing — then add servers and watch p99 collapse.\"}\n```",
+  "meterLabel": "Evidence for a capacity problem"
 }

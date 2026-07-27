@@ -2,7 +2,9 @@
   "id": "act-or-leave-alone",
   "kind": "decision",
   "title": "Act or Leave Alone",
-  "conceptIds": ["style-drift-flexi-tax"],
+  "conceptIds": [
+    "style-drift-flexi-tax"
+  ],
   "intro": "You hold a flexi-cap SIP for years. A fresh analysis shows it has quietly behaved like a large-cap fund. What now?",
   "startId": "news",
   "nodes": [
@@ -13,17 +15,23 @@
         {
           "label": "Sell everything tomorrow and switch to a hot multi-cap",
           "next": "churn",
-          "note": "Chose restless exit."
+          "note": "Chose restless exit.",
+          "effect": -25,
+          "preview": "STCG, exit loads and timing risk all bite at once — certainty of cost, uncertainty of benefit."
         },
         {
           "label": "Pause and verify: tax, goals, and whether the drift is real for MY folio",
           "next": "verify",
-          "note": "Chose careful verification."
+          "note": "Chose careful verification.",
+          "effect": 10,
+          "preview": "Costs nothing, reveals everything — optionality preserved."
         },
         {
           "label": "Ignore forever — analysis always causes harm",
           "next": "ignore",
-          "note": "Chose total inaction."
+          "note": "Chose total inaction.",
+          "effect": -10,
+          "preview": "Peace now; the mismatch compounds quietly in the background."
         }
       ]
     },
@@ -34,7 +42,9 @@
         {
           "label": "Back up — verify first, then adjust on the margin",
           "next": "verify",
-          "note": "Recovered to the careful path."
+          "note": "Recovered to the careful path.",
+          "effect": 15,
+          "preview": "Stop the bleeding — gather facts before the next move."
         }
       ]
     },
@@ -45,7 +55,9 @@
         {
           "label": "Verify holdings vs my intent, then decide",
           "next": "verify",
-          "note": "Moved to verification."
+          "note": "Moved to verification.",
+          "effect": 10,
+          "preview": "Better late: check the fund against the job you hired it for."
         }
       ]
     },
@@ -56,12 +68,16 @@
         {
           "label": "Redirect new SIPs / fresh money toward a fund that matches the job; leave old units unless tax/plan says otherwise",
           "next": "end-good",
-          "note": "Patient course-correction."
+          "note": "Patient course-correction.",
+          "effect": 15,
+          "preview": "Fix the mismatch with new money — zero tax, zero churn."
         },
         {
           "label": "Day-trade the switch across five funds this week based on last quarter’s winners",
           "next": "end-bad",
-          "note": "Churn disguised as optimisation."
+          "note": "Churn disguised as optimisation.",
+          "effect": -30,
+          "preview": "Five funds, five taxable events, chasing last quarter's winners."
         }
       ]
     },
@@ -81,5 +97,11 @@
         "score": 0
       }
     }
-  ]
+  ],
+  "meter": {
+    "label": "Portfolio health",
+    "min": 0,
+    "max": 100,
+    "start": 70
+  }
 }

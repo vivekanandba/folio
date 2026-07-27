@@ -170,6 +170,11 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
     }
     case 'detective':
       if (!Array.isArray(s.facts) || !s.facts.length) err('detective needs facts[]')
+      else s.facts.forEach((f: Json, i: number) => {
+        if (f.signal != null && (typeof f.signal !== 'number' || f.signal < 0)) {
+          err(`facts[${i}].signal must be a number ≥ 0`)
+        }
+      })
       if (!Array.isArray(s.choices) || s.choices.length < 2) err('detective needs choices[] (≥2)')
       else inRange(s.answerIndex, s.choices.length, 'answerIndex')
       ;(s.composition ?? []).forEach((c: Json, i: number) => {
@@ -199,6 +204,14 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
       const referenced = new Set<string>([s.startId])
       let endings = 0
       if (!ids.has(s.startId)) err(`startId "${s.startId}" has no node`)
+      if (s.meter != null) {
+        if (typeof s.meter.min !== 'number' || typeof s.meter.max !== 'number' || s.meter.min >= s.meter.max) {
+          err('meter needs numeric min < max')
+        } else if (typeof s.meter.start !== 'number' || s.meter.start < s.meter.min || s.meter.start > s.meter.max) {
+          err('meter.start must be within [min, max]')
+        }
+        if (!s.meter.label) err('meter needs a label')
+      }
       nodes.forEach((n) => {
         const hasChoices = Array.isArray(n.choices) && n.choices.length > 0
         const hasEnding = !!n.ending
@@ -208,6 +221,8 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
         ;(n.choices ?? []).forEach((c: Json) => {
           referenced.add(c.next)
           if (!ids.has(c.next)) err(`node "${n.id}" → unknown node "${c.next}"`)
+          if (c.effect != null && typeof c.effect !== 'number') err(`node "${n.id}" choice.effect must be a number`)
+          if (c.effect != null && s.meter == null) err(`node "${n.id}" choice has effect but session has no meter`)
         })
       })
       if (!endings) err('decision has no ending node')
