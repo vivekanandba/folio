@@ -596,7 +596,8 @@ const marketCycle: SimModel = {
 
     const mood = swing * Math.sin((2 * Math.PI * years) / cycle) + shock
       + swing * 0.1 * (Math.random() * 2 - 1)
-    const price = earnings * (1 + mood)
+    // Max swing + a panic can push mood below −1; a price floor keeps it sane.
+    const price = earnings * Math.max(0.05, 1 + mood)
 
     state.scalars.years = years
     state.scalars.mood = mood * 100
