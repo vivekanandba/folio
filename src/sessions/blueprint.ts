@@ -1,10 +1,15 @@
 import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
-import { edgeKey, evalRule, nodesOf, type BpNode, type Edge, type RuleResult } from './blueprint-rules'
+import {
+  connectivityAvailability, edgeKey, evalRule, nodesOf, shortestHops,
+  type BpNode, type Edge, type RuleResult,
+} from './blueprint-rules'
 import type { BlueprintRule, BlueprintSession } from '../types'
 import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
+
+const PER_NODE_AVAIL = 0.99 // each middle component is assumed 99% available
 
 const BLUEPRINT_SVG = `<svg viewBox="0 0 40 40" fill="none"><rect x="8" y="8" width="10" height="8" rx="2" stroke="currentColor" stroke-width="2"/><rect x="24" y="12" width="8" height="8" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="26" width="9" height="7" rx="2" stroke="currentColor" stroke-width="2"/><path d="M18 13h6M28 20v4l-5 4M14 16l3 10" stroke="currentColor" stroke-width="1.6"/></svg>`
 
@@ -38,6 +43,47 @@ function mountBlueprint(
   const wireList = el('div', { class: 'bp-wire-list' })
   const tray = el('div', { class: 'bp-tray' })
   const rulesHost = el('div', { class: 'bp-rules result-card' })
+
+  // Live physics: derive endpoints from the first path-shaped rule, so the
+  // board doubles as a machine — every part placed moves the readouts.
+  const pathRule = session.rules.find(
+    (r): r is Extract<BlueprintRule, { from: string; to: string }> =>
+      r.rule === 'pathExists' || r.rule === 'survivesKill',
+  )
+  const physicsTiles = new Map<string, HTMLElement>()
+  let physics: HTMLElement | null = null
+  if (pathRule) {
+    const tile = (key: string, label: string) => {
+      const value = el('span', { class: 'sim-readout-value' }, ['—'])
+      physicsTiles.set(key, value)
+      return el('div', { class: 'sim-readout' }, [value, el('span', { class: 'sim-readout-label' }, [label])])
+    }
+    physics = el('div', { class: 'bp-physics' }, [
+      el('div', { class: 'sim-readouts' }, [
+        tile('avail', 'Path availability (%)'),
+        tile('down', 'Downtime (min/yr)'),
+        tile('hops', 'Request hops'),
+        tile('parts', 'Parts placed'),
+      ]),
+      el('p', { class: 'muted small' }, [
+        `Live: every middle part is assumed ${PER_NODE_AVAIL * 100}% available — watch redundancy move the nines.`,
+      ]),
+    ])
+  }
+
+  function renderPhysics(): void {
+    if (!pathRule) return
+    const set = (key: string, text: string) => {
+      const tag = physicsTiles.get(key)
+      if (tag) tag.textContent = text
+    }
+    const avail = connectivityAvailability(nodes, edges, pathRule.from, pathRule.to, PER_NODE_AVAIL)
+    const hops = shortestHops(nodes, edges, pathRule.from, pathRule.to)
+    set('avail', avail == null || hops == null ? '—' : (avail * 100).toFixed(3))
+    set('down', avail == null || hops == null ? '—' : String(Math.round((1 - avail) * 525600)))
+    set('hops', hops == null ? 'no path' : String(hops))
+    set('parts', String(nodes.length))
+  }
   const inspect = el('button', { class: 'primary pulse', type: 'button' }, ['🔍 Inspect blueprint'])
   const giveUp = el('button', { class: 'ghost', type: 'button' }, ['Show me the debrief'])
 
@@ -169,6 +215,9 @@ function mountBlueprint(
     renderTray()
     renderNodes()
     renderWireList()
+    renderPhysics()
+    // The spec judges live — every placement or wire lights rules up or breaks them.
+    renderRules(session.rules.map((r) => evalRule(r, nodes, edges)))
   }
 
   inspect.addEventListener('click', () => {
@@ -210,7 +259,6 @@ function mountBlueprint(
   }
 
   renderAll()
-  renderRules()
   new ResizeObserver(() => drawWires()).observe(board)
 
   root.replaceChildren(
@@ -220,6 +268,7 @@ function mountBlueprint(
       board,
       wireHint,
       wireList,
+      ...(physics ? [physics] : []),
       rulesHost,
       el('div', { class: 'session-actions' }, [inspect, giveUp]),
     ]),

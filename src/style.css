@@ -1894,6 +1894,10 @@ input[type='range'] {
 .estimate-scale { display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.8rem; }
 .estimate-result { margin-top: 1.1rem; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
 
+/* Blueprint — live physics readouts under the board */
+.bp-physics { margin: 0.9rem 0; }
+.bp-physics > p { margin: 0.4rem 0 0; }
+
 /* Decision — consequence meter (hover a door to preview, commit to apply) */
 .decision-meter {
   margin: 0.4rem 0 0.9rem;

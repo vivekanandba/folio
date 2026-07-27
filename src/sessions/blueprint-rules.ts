@@ -49,6 +49,60 @@ export function pathExists(nodes: BpNode[], edges: Edge[], from: string, to: str
   return false
 }
 
+/** Hop count of the shortest from→to path, or null when unreachable. */
+export function shortestHops(nodes: BpNode[], edges: Edge[], from: string, to: string): number | null {
+  const targets = new Set(nodesOf(nodes, to).map((n) => n.uid))
+  if (!targets.size) return null
+  const seen = new Set<number>()
+  let frontier = nodesOf(nodes, from).map((n) => n.uid)
+  if (!frontier.length) return null
+  let depth = 0
+  while (frontier.length) {
+    const next: number[] = []
+    for (const uid of frontier) {
+      if (seen.has(uid)) continue
+      seen.add(uid)
+      if (targets.has(uid)) return depth
+      for (const nb of neighbors(uid, edges)) if (!seen.has(nb)) next.push(nb)
+    }
+    frontier = next
+    depth += 1
+  }
+  return null
+}
+
+/**
+ * Probability that a from→to path exists when every MIDDLE node (any part
+ * other than the endpoints') is independently up with `perNodeAvail`.
+ * Exact subset enumeration — boards are small (guarded at 14 middles).
+ */
+export function connectivityAvailability(
+  nodes: BpNode[],
+  edges: Edge[],
+  from: string,
+  to: string,
+  perNodeAvail = 0.99,
+): number | null {
+  const middles = nodes.filter((n) => n.part !== from && n.part !== to)
+  const k = middles.length
+  if (k > 14) return null // 2^14 subsets is the sanity ceiling for a toy board
+  let total = 0
+  for (let mask = 0; mask < 1 << k; mask++) {
+    let p = 1
+    const dead = new Set<number>()
+    for (let i = 0; i < k; i++) {
+      if (mask & (1 << i)) {
+        dead.add(middles[i].uid)
+        p *= 1 - perNodeAvail
+      } else {
+        p *= perNodeAvail
+      }
+    }
+    if (p > 0 && pathExists(nodes, edges, from, to, dead)) total += p
+  }
+  return total
+}
+
 export interface RuleResult {
   ok: boolean
   /** uids implicated in a failure (lit red on the board). */
