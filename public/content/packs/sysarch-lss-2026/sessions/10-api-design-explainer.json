@@ -2,7 +2,9 @@
   "id": "api-design-explainer",
   "kind": "explainer",
   "title": "RPC vs REST, and contracts that last",
-  "conceptIds": ["api-design"],
+  "conceptIds": [
+    "api-design"
+  ],
   "intro": "How to choose an API style and design a contract clients can depend on.",
   "steps": [
     {
@@ -12,16 +14,43 @@
     {
       "title": "Pick the style by context",
       "body": "There's no universal winner — match the style to the job:",
-      "viz": { "type": "annotated", "title": "Pick by context", "prompt": "Tap each style.", "points": [ { "label": "REST", "value": 3, "note": "Public web APIs. Resource-centric, stateless, cacheable, loosely coupled, human-readable JSON. Evolves gracefully." }, { "label": "gRPC", "value": 4, "note": "Internal service-to-service. Action-centric, HTTP/2 + protobuf, binary + fast, strongly typed, streaming. Tighter coupling." }, { "label": "GraphQL", "value": 2, "note": "Client-shaped queries — exactly the fields you need in one round-trip. Great for varied frontends; caching + complexity cost." } ] }
+      "viz": {
+        "type": "annotated",
+        "title": "Pick by context",
+        "prompt": "Tap each style.",
+        "points": [
+          {
+            "label": "REST",
+            "value": 3,
+            "note": "Public web APIs. Resource-centric, stateless, cacheable, loosely coupled, human-readable JSON. Evolves gracefully."
+          },
+          {
+            "label": "gRPC",
+            "value": 4,
+            "note": "Internal service-to-service. Action-centric, HTTP/2 + protobuf, binary + fast, strongly typed, streaming. Tighter coupling."
+          },
+          {
+            "label": "GraphQL",
+            "value": 2,
+            "note": "Client-shaped queries — exactly the fields you need in one round-trip. Great for varied frontends; caching + complexity cost."
+          }
+        ]
+      }
     },
     {
       "title": "Idempotency makes retries safe",
-      "body": "**Safety** = no side effects; **idempotency** = repeating the call lands the same state.\n\n| Verb | Op | Safe | Idempotent |\n|---|---|---|---|\n| GET | Read | ✅ | ✅ |\n| POST | Create | ❌ | ❌ |\n| PUT | Replace | ❌ | ✅ |\n| DELETE | Remove | ❌ | ✅ |\n\n> [!tip] A dropped response makes the client retry. If the call is idempotent (PUT/DELETE), replaying it can't double-charge. For non-idempotent POST (payments), pass an **idempotency key** so the server dedupes. This is the link back to time-redundancy retries."
+      "body": "**Safety** = no side effects; **idempotency** = repeating the call lands the same state.\n\n| Verb | Op | Safe | Idempotent |\n|---|---|---|---|\n| GET | Read | ✅ | ✅ |\n| POST | Create | ❌ | ❌ |\n| PUT | Replace | ❌ | ✅ |\n| DELETE | Remove | ❌ | ✅ |\n\n> [!tip] A dropped response makes the client retry. If the call is idempotent (PUT/DELETE), replaying it can't double-charge. For non-idempotent POST (payments), pass an **idempotency key** so the server dedupes. This is the link back to time-redundancy retries.",
+      "viz": {
+        "type": "sim",
+        "model": "retryStorm",
+        "title": "Retries under stress",
+        "caption": "Cause an outage and compare retry budgets — safe when healthy, amplifying at the worst moment."
+      }
     },
     {
       "title": "Design the contract to evolve",
       "body": "An API is a promise — once clients depend on it, adding is easy, changing is hard.\n\n- **Model resources, not actions**: `POST /users/42/orders`, not `/createOrderForUser`.\n- **Pagination** — never return an unbounded list.\n- **Versioning** — `/v2/...` or headers, so you can evolve without breaking clients.\n- **Predictable errors** — consistent status codes + a stable error body."
     }
   ],
-  "recap": "**Default to REST for public APIs; reach for gRPC on hot internal paths.**\n\n- RPC = actions / tight coupling; REST = resources / uniform verbs / loose coupling.\n- Make writes **idempotent** (or add an idempotency key) so retries are safe.\n- Bake in **pagination, versioning, and stable errors** before the first client ships.\n- Endpoints come from the boundary-crossing messages in your sequence diagrams."
+  "recap": "**Default to REST for public APIs; reach for gRPC on hot internal paths.**\n\n- RPC = actions / tight coupling; REST = resources / uniform verbs / loose coupling.\n- Make writes **idempotent** (or add an idempotency key) so retries are safe.\n- Bake in **pagination, versioning, and stable errors** before the first client ships.\n- Endpoints come from the boundary-crossing messages in your sequence diagrams.\n\n```viz\n{\"type\": \"sim\", \"model\": \"fanout\", \"title\": \"Composition has a tail price\", \"caption\": \"Call more backends per request and watch the slow tail become your median.\"}\n```"
 }

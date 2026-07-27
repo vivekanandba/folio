@@ -339,9 +339,283 @@ const retention: SimModel = {
   },
 }
 
+/* ------------------------------------------------------------- sipVsLump --
+ * ₹12 L deployed all at once vs spread as monthly SIP instalments into a
+ * noisy market. Rupee-cost averaging made touchable: crash the market during
+ * the SIP window and watch the average cost drop below the lump's.          */
+const CORPUS = 1200000
+const sipVsLump: SimModel = {
+  id: 'sipVsLump',
+  title: 'SIP vs lumpsum race',
+  params: [
+    { key: 'spreadM', label: 'SIP spread', min: 3, max: 36, step: 1, value: 12, unit: 'months' },
+    { key: 'drift', label: 'Market drift', min: -5, max: 20, step: 1, value: 10, unit: '%/yr' },
+    { key: 'vol', label: 'Volatility', min: 0, max: 40, step: 2, value: 16, unit: '%' },
+  ],
+  series: [
+    { key: 'lump', label: 'Lumpsum (₹ L)', color: '#f4a26b' },
+    { key: 'sip', label: 'SIP (₹ L)', color: '#4fd1c5' },
+  ],
+  readouts: [
+    { key: 'years', label: 'Years', decimals: 1 },
+    { key: 'lumpL', label: 'Lumpsum', unit: '₹ L', decimals: 1 },
+    { key: 'sipL', label: 'SIP', unit: '₹ L', decimals: 1 },
+    { key: 'sipCost', label: 'SIP avg cost', decimals: 1 },
+  ],
+  actions: [
+    {
+      id: 'crash',
+      label: 'Crash −20%',
+      apply(state) {
+        state.scratch.price = (state.scratch.price as number) * 0.8
+      },
+    },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.price = 100 // lump buys everything here, at t=0
+    s.scratch.months = 0
+    s.scratch.sipUnits = 0
+    s.scratch.sipSpent = 0
+    s.scratch.monthFrac = 0
+    return s
+  },
+  step(state, params, dt) {
+    // 1 real second ≈ 1 year, integrated monthly.
+    const spreadM = Math.round(params.spreadM ?? 12)
+    const drift = (params.drift ?? 10) / 100 / 12
+    const vol = ((params.vol ?? 16) / 100) / Math.sqrt(12)
+    let price = state.scratch.price as number
+    let months = state.scratch.months as number
+    let units = state.scratch.sipUnits as number
+    let spent = state.scratch.sipSpent as number
+
+    const frac = (state.scratch.monthFrac as number) + dt * 12
+    const whole = Math.floor(frac)
+    state.scratch.monthFrac = frac - whole
+    for (let i = 0; i < whole; i++) {
+      price = Math.max(5, price * (1 + drift + vol * (Math.random() * 2 - 1)))
+      if (months < spreadM) {
+        const instalment = (CORPUS - spent) / (spreadM - months) // remaining spread evenly
+        units += instalment / price
+        spent += instalment
+      }
+      months += 1
+    }
+    state.scratch.price = price
+    state.scratch.months = months
+    state.scratch.sipUnits = units
+    state.scratch.sipSpent = spent
+
+    const L = 100000
+    const lumpVal = CORPUS * (price / 100) // all units bought at 100
+    const sipVal = units * price + (CORPUS - spent) // uninvested cash idles at 0%
+    state.scalars.years = months / 12
+    state.scalars.lumpL = lumpVal / L
+    state.scalars.sipL = sipVal / L
+    state.scalars.sipCost = units > 0 ? spent / units : 100
+    state.scalars.price = price
+    push(state, 'lump', lumpVal / L)
+    push(state, 'sip', sipVal / L)
+    state.t += dt
+  },
+}
+
+/* ------------------------------------------------------------- retryStorm --
+ * Clients that retry on failure amplify load exactly when the system can
+ * least afford it. Below capacity retries are invisible; knock the service
+ * over and watch offered load spike — then take ages to drain at high retry
+ * budgets. The death-spiral made touchable.                                  */
+const retryStorm: SimModel = {
+  id: 'retryStorm',
+  title: 'Retry storm',
+  params: [
+    { key: 'rps', label: 'Client traffic', min: 50, max: 1000, step: 10, value: 400, unit: 'req/s' },
+    { key: 'capacity', label: 'Capacity', min: 100, max: 1500, step: 25, value: 600, unit: 'req/s' },
+    { key: 'retries', label: 'Retry budget', min: 0, max: 4, step: 1, value: 2 },
+  ],
+  series: [
+    { key: 'offered', label: 'Offered load (req/s)', color: '#f4a26b' },
+    { key: 'success', label: 'Success (%)', color: '#4fd1c5' },
+  ],
+  readouts: [
+    { key: 'offered', label: 'Offered', unit: 'req/s', decimals: 0 },
+    { key: 'success', label: 'Success', unit: '%', decimals: 0 },
+    { key: 'amp', label: 'Amplification', unit: '×', decimals: 2 },
+    { key: 'backlog', label: 'Retry backlog', decimals: 0 },
+  ],
+  actions: [
+    {
+      id: 'outage',
+      label: 'Cause an outage',
+      apply(state) {
+        state.scratch.outage = 6 // seconds of sim time at zero capacity
+      },
+    },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.pending = 0 // failed attempts waiting to retry
+    s.scratch.outage = 0
+    return s
+  },
+  step(state, params, dt) {
+    const rps = params.rps ?? 400
+    const capacity = params.capacity ?? 600
+    const retries = Math.round(params.retries ?? 2)
+    let outage = state.scratch.outage as number
+    const capEff = outage > 0 ? 0 : capacity
+    if (outage > 0) state.scratch.outage = Math.max(0, outage - dt)
+
+    // Attempts this tick: fresh traffic + retry backlog (with light jitter).
+    const backlog = state.scratch.pending as number
+    const offered = rps * dt * (0.95 + Math.random() * 0.1) + backlog
+    const served = Math.min(offered, capEff * dt)
+    const failed = offered - served
+    // Of failed attempts, the fraction that still has retry budget respawns.
+    const respawn = retries > 0 ? retries / (retries + 1) : 0
+    state.scratch.pending = failed * respawn
+
+    const offeredRate = offered / dt
+    state.scalars.offered = offeredRate
+    state.scalars.success = offered > 0 ? (served / offered) * 100 : 100
+    state.scalars.amp = rps > 0 ? offeredRate / rps : 1
+    state.scalars.backlog = Math.round(state.scratch.pending as number)
+    push(state, 'offered', offeredRate)
+    push(state, 'success', state.scalars.success)
+    state.t += dt
+  },
+}
+
+/* ----------------------------------------------------------------- fanout --
+ * Tail latency at scale: a request that fans out to N backends is as slow as
+ * the SLOWEST of the N. Even with fast medians, p99 climbs as fanout grows —
+ * the reason tail SLOs get harder the more services you compose.             */
+const fanout: SimModel = {
+  id: 'fanout',
+  title: 'Fan-out tail latency',
+  params: [
+    { key: 'fanout', label: 'Backends called', min: 1, max: 50, step: 1, value: 10 },
+    { key: 'p50', label: 'Backend median', min: 5, max: 100, step: 5, value: 20, unit: 'ms' },
+    { key: 'slowPct', label: 'Slow-call chance', min: 1, max: 20, step: 1, value: 5, unit: '%' },
+  ],
+  series: [
+    { key: 'p99', label: 'Overall p99 (ms)', color: '#f4a26b' },
+    { key: 'p50', label: 'Overall p50 (ms)', color: '#4fd1c5' },
+  ],
+  readouts: [
+    { key: 'p99', label: 'Overall p99', unit: 'ms', decimals: 0 },
+    { key: 'p50', label: 'Overall p50', unit: 'ms', decimals: 0 },
+    { key: 'hitSlow', label: '≥1 slow call', unit: '%', decimals: 1 },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.lat = [] as number[]
+    return s
+  },
+  step(state, params, dt) {
+    const n = Math.round(params.fanout ?? 10)
+    const p50 = params.p50 ?? 20
+    const pSlow = (params.slowPct ?? 5) / 100
+    const lat = state.scratch.lat as number[]
+
+    // Sample a few whole requests per tick; each = max of n backend calls.
+    // Slow calls land anywhere from 3× to 8× the median — a real long tail.
+    for (let r = 0; r < 3; r++) {
+      let worst = 0
+      for (let i = 0; i < n; i++) {
+        const call = Math.random() < pSlow
+          ? p50 * (3 + Math.random() * 5)
+          : p50 * (0.7 + Math.random() * 0.6)
+        if (call > worst) worst = call
+      }
+      lat.push(worst)
+    }
+    if (lat.length > 240) lat.splice(0, lat.length - 240)
+
+    const sorted = [...lat].sort((a, b) => a - b)
+    state.scalars.p50 = percentile(sorted, 50)
+    state.scalars.p99 = percentile(sorted, 99)
+    state.scalars.hitSlow = (1 - Math.pow(1 - pSlow, n)) * 100
+    push(state, 'p50', state.scalars.p50)
+    push(state, 'p99', state.scalars.p99)
+    state.t += dt
+  },
+}
+
+/* ------------------------------------------------------------ marketCycle --
+ * Price is earnings times a mood. Earnings compound quietly; the P/E mood
+ * swings through bull/bear cycles (and panics on demand) — yet over a long
+ * runway price CAGR converges to earnings CAGR. Wealth tracks earnings.      */
+const marketCycle: SimModel = {
+  id: 'marketCycle',
+  title: 'Price vs earnings',
+  params: [
+    { key: 'growth', label: 'Earnings growth', min: 5, max: 30, step: 1, value: 18, unit: '%/yr' },
+    { key: 'cycleYears', label: 'Mood cycle', min: 2, max: 10, step: 1, value: 5, unit: 'yrs' },
+    { key: 'swing', label: 'Mood swing', min: 10, max: 80, step: 5, value: 40, unit: '%' },
+  ],
+  series: [
+    { key: 'price', label: 'Price (indexed)', color: '#f4a26b' },
+    { key: 'earnings', label: 'Earnings (indexed)', color: '#4fd1c5' },
+  ],
+  readouts: [
+    { key: 'years', label: 'Years', decimals: 1 },
+    { key: 'priceCagr', label: 'Price CAGR', unit: '%', decimals: 1 },
+    { key: 'earnCagr', label: 'Earnings CAGR', unit: '%', decimals: 1 },
+    { key: 'mood', label: 'Mood premium', unit: '%', decimals: 0 },
+  ],
+  actions: [
+    {
+      id: 'panic',
+      label: 'Panic crash',
+      apply(state) {
+        state.scratch.shock = -0.35 // decays back to 0 in step()
+      },
+    },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.earnings = 100
+    s.scratch.years = 0
+    s.scratch.shock = 0
+    return s
+  },
+  step(state, params, dt) {
+    // 1 real second ≈ 1 year.
+    const growth = (params.growth ?? 18) / 100
+    const cycle = Math.max(0.5, params.cycleYears ?? 5)
+    const swing = (params.swing ?? 40) / 100
+    const years = (state.scratch.years as number) + dt
+    const earnings = (state.scratch.earnings as number) * Math.pow(1 + growth, dt)
+    // Panic shocks decay with a ~1-year half-life.
+    const shock = (state.scratch.shock as number) * Math.pow(0.5, dt)
+    state.scratch.years = years
+    state.scratch.earnings = earnings
+    state.scratch.shock = shock
+
+    const mood = swing * Math.sin((2 * Math.PI * years) / cycle) + shock
+      + swing * 0.1 * (Math.random() * 2 - 1)
+    const price = earnings * (1 + mood)
+
+    state.scalars.years = years
+    state.scalars.mood = mood * 100
+    state.scalars.earnCagr = years > 0.5 ? (Math.pow(earnings / 100, 1 / years) - 1) * 100 : growth * 100
+    state.scalars.priceCagr = years > 0.5 ? (Math.pow(Math.max(1, price) / 100, 1 / years) - 1) * 100 : growth * 100
+    state.scalars.price = price
+    push(state, 'price', price)
+    push(state, 'earnings', earnings)
+    state.t += dt
+  },
+}
+
 export const SIM_MODELS: Record<string, SimModel> = {
   queue,
   failover,
   compound,
   retention,
+  sipVsLump,
+  retryStorm,
+  fanout,
+  marketCycle,
 }
