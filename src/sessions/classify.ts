@@ -2,6 +2,7 @@ import { liveAnnounce } from '../a11y'
 import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
 import type { ClassifySession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -22,7 +23,7 @@ function mountClassify(
 
   const render = () => {
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
 
     body.push(
       el('div', { class: 'classify-progress' }, [
@@ -123,7 +124,7 @@ function mountClassify(
         stage('classify', 'Sort bench', 'Bench cleared', [
           el('div', { class: 'result-card pop-in' }, [
             el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
-            el('p', {}, [session.debrief]),
+            richBlock(session.debrief),
             review,
           ]),
         ]),

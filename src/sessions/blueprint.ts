@@ -2,6 +2,7 @@ import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
 import { edgeKey, evalRule, nodesOf, type BpNode, type Edge, type RuleResult } from './blueprint-rules'
 import type { BlueprintRule, BlueprintSession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -201,7 +202,7 @@ function mountBlueprint(
       stage('blueprint', 'Drafting table', passed === session.rules.length ? 'Blueprint approved' : 'Back to the drawing board', [
         el('div', { class: 'result-card pop-in' }, [
           el('p', { class: 'score-hero' }, [`${passed} / ${session.rules.length}`]),
-          el('p', {}, [session.debrief]),
+          richBlock(session.debrief),
         ]),
       ]),
     )
@@ -214,7 +215,7 @@ function mountBlueprint(
 
   root.replaceChildren(
     stage('blueprint', 'Drafting table', session.title, [
-      el('p', { class: 'stage-lead' }, [session.briefing]),
+      richBlock(session.briefing, 'stage-lead rich-block'),
       tray,
       board,
       wireHint,

@@ -1,4 +1,5 @@
 import { prefersReducedMotion } from './a11y'
+import { COMPUTES } from './computes'
 import { el } from './dom'
 import { burst, donut } from './fx'
 import { renderMarkdown } from './markdown'
@@ -8,34 +9,7 @@ import { PALETTE, gauge, radarChart, twinBars } from './visuals'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Spec = any
 
-/**
- * Whitelisted finance computations for `what-if` widgets. No eval / arbitrary
- * expressions — a spec picks one `compute` by name; inputs are read by key.
- */
-const COMPUTES: Record<string, (v: Record<string, number>) => number> = {
-  // Future value of a lump sum: principal grown at rate% for years.
-  compound: (v) => (v.principal ?? 0) * Math.pow(1 + (v.rate ?? 0) / 100, v.years ?? 0),
-  // Future value of a monthly SIP at annual rate% over years (end-of-month).
-  sipFuture: (v) => {
-    const i = (v.rate ?? 0) / 1200
-    const n = (v.years ?? 0) * 12
-    return i ? (v.monthly ?? 0) * ((Math.pow(1 + i, n) - 1) / i) * (1 + i) : (v.monthly ?? 0) * n
-  },
-  // Inflation-adjusted (real) return, in %.
-  realReturn: (v) => ((1 + (v.nominal ?? 0) / 100) / (1 + (v.inflation ?? 0) / 100) - 1) * 100,
-  // Income-like yield after stripping return-of-capital, in %.
-  weightedYield: (v) => (v.yield ?? 0) * (1 - (v.returnOfCapital ?? 0) / 100),
-  // Availability % → downtime minutes per year ((1 - a/100) × 525,600).
-  downtime: (v) => (1 - (v.availability ?? 0) / 100) * 525600,
-  // Money lost to fees: gross FV minus net FV over `years` on `principal`.
-  feeImpact: (v) => {
-    const gross = (v.principal ?? 0) * Math.pow(1 + (v.grossReturn ?? 0) / 100, v.years ?? 0)
-    const net = (v.principal ?? 0) * Math.pow(1 + ((v.grossReturn ?? 0) - (v.expenseRatio ?? 0)) / 100, v.years ?? 0)
-    return gross - net
-  },
-}
-
-function fmtNum(n: number, unit?: string, decimals = 2): string {
+export function fmtNum(n: number, unit?: string, decimals = 2): string {
   if (!Number.isFinite(n)) return '—'
   const rounded = Math.abs(n) >= 1000 ? Math.round(n).toLocaleString() : n.toFixed(decimals)
   return unit === '%' ? `${rounded}%` : unit ? `${rounded} ${unit}` : rounded
@@ -66,6 +40,17 @@ export function renderRichInto(host: HTMLElement, md: string): void {
       slot.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
     }
   })
+}
+
+/**
+ * A block of narrative markdown as an element — the standard way every session
+ * kind renders intros / debriefs / briefings, so any of them can carry inline
+ * ```viz interactive figures. Plain sentences stay plain paragraphs.
+ */
+export function richBlock(md: string, className = 'rich-block'): HTMLElement {
+  const host = el('div', { class: className })
+  renderRichInto(host, md)
+  return host
 }
 
 /** Mount an interactive figure into `host` from a JSON spec. Defensive: bad specs degrade gracefully. */

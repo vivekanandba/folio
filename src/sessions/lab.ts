@@ -3,6 +3,7 @@ import { stage } from '../fx'
 import { mountSim } from '../sim/engine'
 import { SIM_MODELS, type SimState } from '../sim/models'
 import type { LabGoal, LabSession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -47,7 +48,7 @@ function mountLab(
   const giveUp = el('button', { class: 'ghost', type: 'button' }, ['I give up — show the debrief'])
 
   const body = el('div', { class: 'lab-machine-room' }, [
-    el('p', { class: 'stage-lead' }, [session.briefing]),
+    richBlock(session.briefing, 'stage-lead rich-block'),
     simHost,
     el('div', { class: 'lab-goals result-card' }, [
       el('h3', {}, ['Targets']),
@@ -66,7 +67,7 @@ function mountLab(
       stage('lab', 'Machine room', score === session.goals.length ? 'Machine mastered' : 'Machine survives you — for now', [
         el('div', { class: 'result-card pop-in' }, [
           el('p', { class: 'score-hero' }, [`${score} / ${session.goals.length}`]),
-          el('p', {}, [session.debrief]),
+          richBlock(session.debrief),
         ]),
       ]),
     )

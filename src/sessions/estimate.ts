@@ -1,7 +1,10 @@
+import { liveAnnounce } from '../a11y'
+import { COMPUTES } from '../computes'
 import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
 import type { EstimateSession } from '../types'
 import { gauge } from '../visuals'
+import { fmtNum, richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -10,6 +13,26 @@ const ESTIMATE_SVG = `<svg viewBox="0 0 40 40" fill="none"><path d="M8 26a12 12 
 function fmt(n: number, unit?: string): string {
   const s = Number.isInteger(n) ? String(n) : n.toFixed(2)
   return unit ? `${s} ${unit}` : s
+}
+
+/** Post-reveal band: min→max track with the tolerance zone, truth and guess marked. */
+function revealBand(session: EstimateSession, guess: number): HTMLElement {
+  const span = session.max - session.min
+  const pct = (x: number) => Math.max(0, Math.min(100, ((x - session.min) / span) * 100))
+  const tol = (session.tolerance ?? 0.1) * span
+  const left = pct(session.answer - tol)
+  return el('div', { class: 'estimate-band', 'aria-hidden': 'true' }, [
+    el('div', { class: 'band-track' }, [
+      el('div', { class: 'band-tol', style: `left:${left}%;width:${pct(session.answer + tol) - left}%` }),
+      el('div', { class: 'band-marker band-truth', style: `left:${pct(session.answer)}%` }),
+      el('div', { class: 'band-marker band-guess', style: `left:${pct(guess)}%` }),
+    ]),
+    el('div', { class: 'band-legend' }, [
+      el('span', { class: 'band-key key-guess' }, ['your call']),
+      el('span', { class: 'band-key key-truth' }, ['truth']),
+      el('span', { class: 'band-key key-tol' }, ['close enough']),
+    ]),
+  ])
 }
 
 function mountEstimate(
@@ -32,9 +55,39 @@ function mountEstimate(
     input.value = String(guess)
     input.className = 'estimate-slider'
     input.setAttribute('aria-label', session.prompt)
+
+    // Live consequence tile — the guess drives a whitelisted compute while dragging,
+    // so the learner reasons in outcome-space, not just number-space.
+    const live = session.live
+    const fn = live ? COMPUTES[live.compute] : undefined
+    let liveTile: HTMLElement | null = null
+    let updateLive: (() => void) | null = null
+    if (live && fn) {
+      const value = el('span', { class: 'live-consequence-value' }, ['—'])
+      const meterFill = live.max ? el('div', { class: 'live-meter-fill' }) : null
+      updateLive = () => {
+        const n = fn({ ...(live.inputs ?? {}), [live.inputKey]: guess })
+        value.textContent = fmtNum(n, live.unit, live.decimals ?? 1)
+        if (meterFill && live.max) {
+          meterFill.style.width = `${Math.max(0, Math.min(100, (n / live.max) * 100))}%`
+        }
+      }
+      liveTile = el('div', { class: 'live-consequence' }, [
+        el('span', { class: 'live-consequence-label' }, [live.label]),
+        value,
+        ...(meterFill ? [el('div', { class: 'live-meter', 'aria-hidden': 'true' }, [meterFill])] : []),
+      ])
+      updateLive()
+      // Announce the consequence on release (not every drag tick — too chatty).
+      input.addEventListener('change', () => {
+        if (!done) liveAnnounce(`${live.label}: ${value.textContent}`)
+      })
+    }
+
     input.addEventListener('input', () => {
       guess = Number(input.value)
       readout.textContent = fmt(guess, session.unit)
+      updateLive?.()
     })
 
     const scale = el('div', { class: 'estimate-scale' }, [
@@ -55,10 +108,11 @@ function mountEstimate(
       const correct = err <= tolerance * range
       result.append(
         gauge(accuracy, 'Accuracy', correct ? 'Within range — nice.' : 'Outside the tolerance band.'),
+        revealBand(session, guess),
         el('p', { class: correct ? 'ok' : 'bad' }, [
           `Your estimate: ${fmt(guess, session.unit)} · True value: ${fmt(session.answer, session.unit)}`,
         ]),
-        el('p', {}, [session.debrief]),
+        richBlock(session.debrief),
       )
       if (correct) burst(reveal)
       else shake(reveal)
@@ -66,15 +120,15 @@ function mountEstimate(
     })
 
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
     body.push(
       el('h3', {}, [session.prompt]),
       el('div', { class: 'estimate-readout' }, [readout]),
       input,
       scale,
-      reveal,
-      result,
     )
+    if (liveTile) body.push(liveTile)
+    body.push(reveal, result)
     root.replaceChildren(stage('estimate', 'Make the call', session.title, body))
   }
 
@@ -92,6 +146,7 @@ export const estimateModule: SessionModule<EstimateSession> = {
     if (s.min >= s.max) errs.push('min must be < max')
     if (s.answer < s.min || s.answer > s.max) errs.push('answer must be within [min, max]')
     if (s.tolerance != null && (s.tolerance <= 0 || s.tolerance > 1)) errs.push('tolerance must be in (0, 1]')
+    if (s.live && !(s.live.compute in COMPUTES)) errs.push(`unknown live compute "${s.live.compute}"`)
     return errs
   },
 }

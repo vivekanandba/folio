@@ -31,6 +31,43 @@ const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect'
 const SIM_MODELS = new Set(['queue', 'failover', 'compound', 'retention'])
 const LAB_OPS = new Set(['<', '<=', '>', '>='])
 
+/** Whitelisted compute names — keep in sync with src/computes.ts. */
+const COMPUTES = new Set([
+  'compound', 'sipFuture', 'realReturn', 'weightedYield', 'downtime', 'feeImpact',
+  'impliedCagr', 'simpleIncome', 'availabilityPct',
+])
+
+/** Widget spec types — keep in sync with build() in src/widgets.ts. */
+const WIDGET_TYPES = new Set(['donut', 'gauge', 'radar', 'twinBars', 'what-if', 'annotated', 'sim'])
+
+/** Validate one parsed widget spec (an explainer step.viz or a ```viz fence). */
+function checkVizSpec(spec: Json, label: string, err: (m: string) => void): void {
+  if (!spec || typeof spec !== 'object') { err(`${label}: viz spec must be an object`); return }
+  if (!WIDGET_TYPES.has(spec.type)) { err(`${label}: unknown viz type "${spec.type}"`); return }
+  if (spec.type === 'what-if') {
+    if (!COMPUTES.has(spec.compute)) err(`${label}: unknown what-if compute "${spec.compute}"`)
+    if (!Array.isArray(spec.inputs) || !spec.inputs.length) err(`${label}: what-if needs inputs[]`)
+  }
+  if (spec.type === 'sim' && !SIM_MODELS.has(spec.model)) {
+    err(`${label}: unknown sim model "${spec.model}"`)
+  }
+}
+
+/** Narrative markdown fields may embed ```viz fences — parse and validate each. */
+function checkRichField(text: unknown, label: string, err: (m: string) => void): void {
+  if (typeof text !== 'string') return
+  const fences = text.matchAll(/```viz\s*\n([\s\S]*?)```/g)
+  let i = 0
+  for (const m of fences) {
+    i += 1
+    try {
+      checkVizSpec(JSON.parse(m[1]), `${label} viz[${i}]`, err)
+    } catch {
+      err(`${label} viz[${i}]: fence is not valid JSON`)
+    }
+  }
+}
+
 export function lintCatalog(catalog: Json, packPaths: string[]): LintIssue[] {
   const issues: LintIssue[] = []
   const file = 'content/catalog.json'
@@ -105,12 +142,18 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
     if (typeof idx !== 'number' || idx < 0 || idx >= len) err(`${label} out of range`)
   }
 
+  // Narrative fields render as rich markdown — validate any embedded ```viz fences.
+  checkRichField(s.intro, 'intro', err)
+  checkRichField(s.debrief, 'debrief', err)
+  checkRichField(s.briefing, 'briefing', err)
+
   switch (s.kind) {
     case 'quiz':
       if (!Array.isArray(s.questions) || !s.questions.length) err('quiz needs questions[]')
       else s.questions.forEach((q: Json, i: number) => {
         if (!Array.isArray(q.choices) || q.choices.length < 2) err(`questions[${i}].choices needs ≥2`)
         else inRange(q.answerIndex, q.choices.length, `questions[${i}].answerIndex`)
+        checkRichField(q.explanation, `questions[${i}].explanation`, err)
       })
       break
     case 'classify': {
@@ -158,6 +201,7 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
         const hasEnding = !!n.ending
         if (hasChoices === hasEnding) err(`node "${n.id}" must have choices XOR ending`)
         if (hasEnding) endings += 1
+        checkRichField(n.ending?.debrief, `node "${n.id}" ending.debrief`, err)
         ;(n.choices ?? []).forEach((c: Json) => {
           referenced.add(c.next)
           if (!ids.has(c.next)) err(`node "${n.id}" → unknown node "${c.next}"`)
@@ -183,6 +227,14 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
       if (typeof s.min !== 'number' || typeof s.max !== 'number' || s.min >= s.max) err('estimate needs min < max')
       if (typeof s.answer !== 'number' || s.answer < s.min || s.answer > s.max) err('answer must be within [min, max]')
       if (s.tolerance != null && (s.tolerance <= 0 || s.tolerance > 1)) err('tolerance must be in (0, 1]')
+      if (s.live != null) {
+        if (!COMPUTES.has(s.live.compute)) err(`live.compute "${s.live.compute}" unknown`)
+        if (!s.live.inputKey || typeof s.live.inputKey !== 'string') err('live.inputKey must be a string')
+        if (!s.live.label) err('live needs a label')
+        if (s.live.inputs != null && (typeof s.live.inputs !== 'object' || Array.isArray(s.live.inputs))) {
+          err('live.inputs must be an object of numbers')
+        }
+      }
       break
     case 'hotspot':
       if (!Array.isArray(s.series) || !s.series.length) err('hotspot needs series[]')
@@ -192,8 +244,11 @@ function lintSession(file: string, s: Json, conceptSet: Set<string>): LintIssue[
       if (!Array.isArray(s.steps) || !s.steps.length) err('explainer needs steps[]')
       else s.steps.forEach((st: Json, i: number) => {
         if (!st.title || !st.body) err(`steps[${i}] needs title and body`)
+        checkRichField(st.body, `steps[${i}].body`, err)
+        if (st.viz != null) checkVizSpec(st.viz, `steps[${i}].viz`, err)
       })
       if (!s.recap) err('explainer needs a recap')
+      checkRichField(s.recap, 'recap', err)
       break
     case 'lab':
       if (!SIM_MODELS.has(s.model)) err(`unknown sim model "${s.model}"`)

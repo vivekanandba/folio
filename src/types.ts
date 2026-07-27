@@ -174,6 +174,21 @@ export interface SequenceSession {
   debrief: string
 }
 
+/** Live consequence of the current guess, recomputed while the slider moves. */
+export interface EstimateLive {
+  /** Whitelisted compute name (src/computes.ts). */
+  compute: string
+  /** Which compute input the slider guess feeds. */
+  inputKey: string
+  /** Fixed values for the compute's other inputs. */
+  inputs?: Record<string, number>
+  label: string
+  unit?: string
+  decimals?: number
+  /** If set, a meter under the readout fills as value/max. */
+  max?: number
+}
+
 export interface EstimateSession {
   id: string
   kind: 'estimate'
@@ -189,6 +204,8 @@ export interface EstimateSession {
   answer: number
   /** Fraction of the range counted as correct; default 0.1. */
   tolerance?: number
+  /** Optional live readout that responds while the slider is dragged. */
+  live?: EstimateLive
   debrief: string
 }
 

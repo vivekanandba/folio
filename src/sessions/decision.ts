@@ -2,6 +2,7 @@ import { el } from '../dom'
 import { burst, stage } from '../fx'
 import type { DecisionSession } from '../types'
 import { pathTrail } from '../visuals'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -37,7 +38,7 @@ function mountDecision(
         el('div', { class: 'result-card ending-card pop-in' }, [
           el('p', { class: 'eyebrow' }, ['Principle']),
           el('h2', {}, [node.ending.principle]),
-          el('p', {}, [node.ending.debrief]),
+          richBlock(node.ending.debrief),
         ]),
       )
       layout.append(scene)
@@ -72,7 +73,7 @@ function mountDecision(
 
     const body: (Node | string)[] = []
     if (session.intro && current === session.startId) {
-      body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+      body.push(richBlock(session.intro, 'stage-lead rich-block'))
     }
     body.push(layout)
     root.replaceChildren(stage('decision', `Fork ${depth + 1}`, session.title, body))

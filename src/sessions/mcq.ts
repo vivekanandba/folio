@@ -1,10 +1,12 @@
 import { el } from '../dom'
 import { burst, shake } from '../fx'
+import { richBlock } from '../widgets'
 
 export interface MCQOptions {
   prompt?: string
   choices: string[]
   answerIndex: number
+  /** Markdown; may embed ```viz interactive figures (src/widgets.ts). */
   explanation?: string
   /** 'list' = stacked .choice-btn (quiz); 'grid' = lettered .choice-tile (detective/lab). */
   layout?: 'list' | 'grid'
@@ -46,7 +48,7 @@ export function mountMCQ(opts: MCQOptions): HTMLElement {
         el('p', { class: correct ? 'ok' : 'bad' }, [
           correct ? (opts.okText ?? 'Correct.') : (opts.badText ?? 'Not quite.'),
         ]),
-        ...(opts.explanation ? [el('p', {}, [opts.explanation])] : []),
+        ...(opts.explanation ? [richBlock(opts.explanation)] : []),
       )
       opts.onResolve?.(correct, feedback)
     })

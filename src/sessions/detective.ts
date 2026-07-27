@@ -2,6 +2,7 @@ import { el } from '../dom'
 import { burst, donut, stage } from '../fx'
 import type { DetectiveSession } from '../types'
 import { stepPills } from '../visuals'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { mountMCQ } from './mcq'
 import { register, type SessionModule } from './registry'
@@ -26,7 +27,7 @@ function mountDetective(
   const render = () => {
     diagnosing = false
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
     body.push(stepPills(Math.max(revealed, 1), session.facts.length))
 
     const layout = el('div', { class: 'detective-layout' })

@@ -2,21 +2,65 @@
   "id": "moat-or-hype-classify",
   "kind": "classify",
   "title": "Moat evidence, or just a story?",
-  "conceptIds": ["wealth-creators"],
+  "conceptIds": [
+    "wealth-creators"
+  ],
   "intro": "Sort each signal into hard evidence of a forming moat vs a narrative that may not convert to wealth.",
   "buckets": [
-    { "id": "moat", "label": "Real moat evidence", "hint": "Shows up in the financials", "tone": "cool" },
-    { "id": "hype", "label": "Just a story", "hint": "Narrative, not yet earnings", "tone": "warm" }
+    {
+      "id": "moat",
+      "label": "Real moat evidence",
+      "hint": "Shows up in the financials",
+      "tone": "cool"
+    },
+    {
+      "id": "hype",
+      "label": "Just a story",
+      "hint": "Narrative, not yet earnings",
+      "tone": "warm"
+    }
   ],
   "cards": [
-    { "id": "c1", "text": "Return on capital rising for several quarters after a build-out", "bucketId": "moat" },
-    { "id": "c2", "text": "Earnings compounding ~20%+ with the price roughly tracking them", "bucketId": "moat" },
-    { "id": "c3", "text": "Profits consistently reinvested into the core business", "bucketId": "moat" },
-    { "id": "c4", "text": "Low, well-covered debt", "bucketId": "moat" },
-    { "id": "c5", "text": "Share price up 3x while earnings stayed flat", "bucketId": "hype" },
-    { "id": "c6", "text": "A huge total-addressable-market slide, but little earnings conversion", "bucketId": "hype" },
-    { "id": "c7", "text": "Management diversifying into unrelated hot sectors", "bucketId": "hype" },
-    { "id": "c8", "text": "Growth funded mostly by rising debt", "bucketId": "hype" }
+    {
+      "id": "c1",
+      "text": "Return on capital rising for several quarters after a build-out",
+      "bucketId": "moat"
+    },
+    {
+      "id": "c2",
+      "text": "Earnings compounding ~20%+ with the price roughly tracking them",
+      "bucketId": "moat"
+    },
+    {
+      "id": "c3",
+      "text": "Profits consistently reinvested into the core business",
+      "bucketId": "moat"
+    },
+    {
+      "id": "c4",
+      "text": "Low, well-covered debt",
+      "bucketId": "moat"
+    },
+    {
+      "id": "c5",
+      "text": "Share price up 3x while earnings stayed flat",
+      "bucketId": "hype"
+    },
+    {
+      "id": "c6",
+      "text": "A huge total-addressable-market slide, but little earnings conversion",
+      "bucketId": "hype"
+    },
+    {
+      "id": "c7",
+      "text": "Management diversifying into unrelated hot sectors",
+      "bucketId": "hype"
+    },
+    {
+      "id": "c8",
+      "text": "Growth funded mostly by rising debt",
+      "bucketId": "hype"
+    }
   ],
-  "debrief": "Moat evidence is financial and durable: rising ROCE, compounding earnings that the price tracks, disciplined reinvestment, low debt. Stories are narratives that haven't (yet) become earnings — big-TAM decks, price without profit, debt-fuelled growth, and unrelated diversification. Wealth tracks earnings, not narratives."
+  "debrief": "Moat evidence is financial and durable: rising ROCE, compounding earnings that the price tracks, disciplined reinvestment, low debt. Stories are narratives that haven't (yet) become earnings — big-TAM decks, price without profit, debt-fuelled growth, and unrelated diversification. Wealth tracks earnings, not narratives.\n\n```viz\n{\"type\": \"what-if\", \"compute\": \"compound\", \"title\": \"Durability beats drama\", \"inputs\": [{\"key\": \"principal\", \"label\": \"Starting value\", \"min\": 10, \"max\": 500, \"step\": 10, \"value\": 100, \"unit\": \"cr\"}, {\"key\": \"rate\", \"label\": \"Growth rate\", \"min\": 5, \"max\": 40, \"step\": 1, \"value\": 22, \"unit\": \"%\"}, {\"key\": \"years\", \"label\": \"Years it lasts\", \"min\": 1, \"max\": 25, \"step\": 1, \"value\": 20}], \"output\": {\"label\": \"Ends at\", \"unit\": \"cr\", \"decimals\": 0}, \"caption\": \"Try 35% for 4 years (hype) vs 22% for 20 (moat) — durability wins by a mile.\"}\n```"
 }

@@ -2,30 +2,52 @@
   "id": "ter-quiz",
   "kind": "quiz",
   "title": "Expense ratio — check what stuck",
-  "conceptIds": ["expense-ratio-ter"],
+  "conceptIds": [
+    "expense-ratio-ter"
+  ],
   "intro": "Four quick checks on how fees really work.",
   "questions": [
     {
       "prompt": "The Total Expense Ratio is charged…",
-      "choices": ["Only on your profits", "Once, when you buy", "On your entire balance, every year", "Only if the fund beats its benchmark"],
+      "choices": [
+        "Only on your profits",
+        "Once, when you buy",
+        "On your entire balance, every year",
+        "Only if the fund beats its benchmark"
+      ],
       "answerIndex": 2,
       "explanation": "TER is skimmed daily from NAV on the whole balance, every year — regardless of whether the fund wins or loses."
     },
     {
       "prompt": "A Direct plan vs the Regular plan of the same fund holds…",
-      "choices": ["A safer portfolio", "The same portfolio, minus distributor commission", "More cash", "A different benchmark"],
+      "choices": [
+        "A safer portfolio",
+        "The same portfolio, minus distributor commission",
+        "More cash",
+        "A different benchmark"
+      ],
       "answerIndex": 1,
       "explanation": "Direct and Regular are the identical portfolio; Direct just strips the distributor trail, so its TER is lower and NAV grows faster."
     },
     {
       "prompt": "Why does a 1% higher TER cost far more than 1% of your money over 20 years?",
-      "choices": ["Because fees are taxed", "Because it lowers your growth rate, so the shortfall compounds", "Because it is charged twice", "It doesn't — 1% is always 1%"],
+      "choices": [
+        "Because fees are taxed",
+        "Because it lowers your growth rate, so the shortfall compounds",
+        "Because it is charged twice",
+        "It doesn't — 1% is always 1%"
+      ],
       "answerIndex": 1,
-      "explanation": "A fee reduces the compounding rate, so the gap grows geometrically year on year — the 'lost to fees' curve bends upward."
+      "explanation": "A fee reduces the compounding rate, so the gap grows geometrically year on year — the 'lost to fees' curve bends upward.\n\n```viz\n{\"type\": \"what-if\", \"compute\": \"feeImpact\", \"title\": \"Feel the fee drag\", \"inputs\": [{\"key\": \"principal\", \"label\": \"Invested\", \"min\": 100000, \"max\": 2000000, \"step\": 50000, \"value\": 1000000, \"unit\": \"₹\"}, {\"key\": \"grossReturn\", \"label\": \"Gross return\", \"min\": 6, \"max\": 16, \"step\": 0.5, \"value\": 12, \"unit\": \"%\", \"decimals\": 1}, {\"key\": \"expenseRatio\", \"label\": \"Expense ratio\", \"min\": 0.1, \"max\": 2.5, \"step\": 0.1, \"value\": 1, \"unit\": \"%\", \"decimals\": 1}, {\"key\": \"years\", \"label\": \"Years\", \"min\": 1, \"max\": 30, \"step\": 1, \"value\": 20}], \"output\": {\"label\": \"Lost to fees\", \"unit\": \"₹\", \"decimals\": 0}, \"caption\": \"Drag the expense ratio — the loss doesn't tick up linearly, it bends.\"}\n```"
     },
     {
       "prompt": "Best way to compare two funds' expense ratios?",
-      "choices": ["Always pick the lowest TER anywhere", "Compare within the same category and job", "Ignore TER; only returns matter", "Compare a Direct plan to a Regular plan"],
+      "choices": [
+        "Always pick the lowest TER anywhere",
+        "Compare within the same category and job",
+        "Ignore TER; only returns matter",
+        "Compare a Direct plan to a Regular plan"
+      ],
       "answerIndex": 1,
       "explanation": "An index fund and an active mid-cap do different jobs — compare TER within a category, and weigh it as one input, not the whole verdict."
     }

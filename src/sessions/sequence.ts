@@ -1,6 +1,7 @@
 import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
 import type { SequenceSession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -99,14 +100,14 @@ function mountSequence(
         stage('sequence', 'Put it in order', 'Order locked', [
           el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
           review,
-          el('p', {}, [session.debrief]),
+          richBlock(session.debrief),
         ]),
       )
       onComplete(score, max)
     })
 
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
     body.push(el('h3', {}, [session.prompt]), list, check)
     root.replaceChildren(stage('sequence', 'Put it in order', session.title, body))
   }

@@ -1,6 +1,7 @@
 import { el } from '../dom'
 import { burst, shake, stage } from '../fx'
 import type { HotspotSession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -42,7 +43,7 @@ function mountHotspot(
           el('p', { class: correct ? 'ok' : 'bad' }, [
             correct ? 'Spotted it — that point is out of line.' : 'Not the anomaly. Highlighted the real ones.',
           ]),
-          el('p', {}, [session.debrief]),
+          richBlock(session.debrief),
         )
         onComplete(correct ? 1 : 0, 1)
       })
@@ -52,7 +53,7 @@ function mountHotspot(
 
     const feedback = el('div', { class: 'feedback' })
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
     body.push(el('h3', {}, [session.prompt]), chart, feedback)
     root.replaceChildren(stage('hotspot', 'Spot the anomaly', session.title, body))
   }

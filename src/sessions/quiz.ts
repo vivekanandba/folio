@@ -1,6 +1,7 @@
 import { el } from '../dom'
 import { stage } from '../fx'
 import type { QuizSession } from '../types'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { mountMCQ } from './mcq'
 import { register, type SessionModule } from './registry'
@@ -36,7 +37,7 @@ function mountQuiz(
     const q = session.questions[index]
     const body: (Node | string)[] = []
     if (session.intro && index === 0) {
-      body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+      body.push(richBlock(session.intro, 'stage-lead rich-block'))
     }
     body.push(el('p', { class: 'step-meta' }, [`Question ${index + 1} of ${max}`]))
     body.push(
