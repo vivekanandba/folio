@@ -11,6 +11,11 @@ function stripInline(s: string): string {
     .trim()
 }
 
+/** Drop fenced blocks (```viz interactive specs, code) — cards are text-only. */
+function stripFences(s: string): string {
+  return s.replace(/```[a-zA-Z-]*\n[\s\S]*?```/g, '').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 function clip(s: string): string {
   return s.length > MAX_BACK ? s.slice(0, MAX_BACK - 1).trimEnd() + '…' : s
 }
@@ -44,9 +49,19 @@ export function cardsFromNotes(md: string, packId: string, conceptId: string): F
     }
     const heading = stripInline(m[1])
     const body: string[] = []
+    let inFence = false
     i += 1
     while (i < lines.length && !/^#/.test(lines[i])) {
       const raw = lines[i].trim()
+      if (raw.startsWith('```')) {
+        inFence = !inFence
+        i += 1
+        continue
+      }
+      if (inFence) {
+        i += 1
+        continue
+      }
       if (raw) {
         if (raw.startsWith('|')) {
           if (!/^\|[-| ]+\|$/.test(raw)) {
@@ -82,7 +97,7 @@ export function cardsFromQuiz(session: QuizSession, packId: string, conceptId: s
     packId,
     conceptId,
     front: q.prompt,
-    back: clip(`${q.choices[q.answerIndex]} — ${q.explanation}`),
+    back: clip(`${q.choices[q.answerIndex]} — ${stripFences(q.explanation)}`),
     origin: 'quiz' as const,
   }))
 }

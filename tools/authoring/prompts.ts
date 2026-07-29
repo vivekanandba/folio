@@ -41,5 +41,10 @@ Author ONE "${kind}" session as structured data via the provided tool. Requireme
 - Make it genuinely test understanding, not trivia. Include a clear debrief/explanation.
 - For any answerIndex fields, the index must be within the choices array bounds.
 - For decision: exactly one of choices/ending per node; every choice.next must target a real node id; include at least one ending; startId must exist.
-- For classify: every card.bucketId must match a bucket id. For hotspot: at least one point with anomaly true. For estimate: min < max and answer within [min, max].`
+- For classify: every card.bucketId must match a bucket id. For hotspot: at least one point with anomaly true. For estimate: min < max and answer within [min, max].
+- Narrative fields (intro, debrief, briefing, explanation) are Markdown and may embed ONE interactive figure as a \`\`\`viz fence containing a JSON widget spec
+  (types: what-if | annotated | sim | donut | gauge | radar | twinBars — see src/widgets.ts). Prefer a "what-if" with sliders when the takeaway is a quantitative
+  relationship the learner should feel by dragging.
+- For estimate: optionally add "live" ({ compute, inputKey, inputs, label, unit, decimals }) so the slider drives a live consequence readout while dragging.
+  Whitelisted computes live in src/computes.ts.`
 }

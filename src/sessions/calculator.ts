@@ -2,6 +2,7 @@ import { el } from '../dom'
 import { donut, stage } from '../fx'
 import type { CalculatorSession } from '../types'
 import { PALETTE, gauge, twinBars } from '../visuals'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { mountMCQ } from './mcq'
 import { register, type SessionModule } from './registry'
@@ -27,7 +28,7 @@ function mountCalculator(
 
   const renderLab = () => {
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
 
     const gaugeHost = el('div', { class: 'lab-left' })
     const chartHost = el('div', { class: 'lab-right' })

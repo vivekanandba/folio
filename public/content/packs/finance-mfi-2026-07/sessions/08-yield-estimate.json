@@ -13,5 +13,15 @@
   "step": 0.1,
   "answer": 7.2,
   "tolerance": 0.08,
-  "debrief": "Return of capital is your own money handed back, not earnings. 12% × (1 − 0.40) ≈ 7.2% is the income-like part — and even that ignores ageing assets and unit-price risk."
+  "debrief": "Return of capital is your own money handed back, not earnings. 12% × (1 − 0.40) ≈ 7.2% is the income-like part — and even that ignores ageing assets and unit-price risk.",
+  "live": {
+    "compute": "simpleIncome",
+    "inputKey": "yield",
+    "inputs": {
+      "principal": 1000000
+    },
+    "label": "Yearly income that yield puts in your pocket on ₹10 lakh",
+    "unit": "₹/yr",
+    "decimals": 0
+  }
 }

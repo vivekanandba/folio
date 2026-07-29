@@ -2,22 +2,70 @@
   "id": "fault-tolerant-blueprint",
   "kind": "blueprint",
   "title": "Make it survive a node kill",
-  "conceptIds": ["quality-attributes"],
+  "conceptIds": [
+    "quality-attributes"
+  ],
   "intro": "Don't pick the fault-tolerant architecture — build it.",
   "briefing": "The inspector will kill any ONE middle component of your system. Wire a topology where a client can still reach data afterwards. Clients must enter through the load balancer — never straight to an app server.",
   "parts": [
-    { "id": "client", "label": "Client", "fixed": true },
-    { "id": "lb", "label": "Load balancer", "max": 2 },
-    { "id": "app", "label": "App replica", "max": 4 },
-    { "id": "db", "label": "Database node", "max": 3 }
+    {
+      "id": "client",
+      "label": "Client",
+      "fixed": true
+    },
+    {
+      "id": "lb",
+      "label": "Load balancer",
+      "max": 2
+    },
+    {
+      "id": "app",
+      "label": "App replica",
+      "max": 4
+    },
+    {
+      "id": "db",
+      "label": "Database node",
+      "max": 3
+    }
   ],
   "rules": [
-    { "rule": "connected", "a": "client", "b": "lb", "label": "Clients enter through the load balancer" },
-    { "rule": "noDirect", "a": "client", "b": "app", "label": "No client talks to an app server directly" },
-    { "rule": "noDirect", "a": "client", "b": "db", "label": "No client touches the database directly" },
-    { "rule": "minCount", "part": "app", "count": 2, "label": "At least two app replicas" },
-    { "rule": "minCount", "part": "db", "count": 2, "label": "The database has a replica" },
-    { "rule": "survivesKill", "from": "client", "to": "db", "label": "Inspector's test: kill any one middle node — a client still reaches data" }
+    {
+      "rule": "connected",
+      "a": "client",
+      "b": "lb",
+      "label": "Clients enter through the load balancer"
+    },
+    {
+      "rule": "noDirect",
+      "a": "client",
+      "b": "app",
+      "label": "No client talks to an app server directly"
+    },
+    {
+      "rule": "noDirect",
+      "a": "client",
+      "b": "db",
+      "label": "No client touches the database directly"
+    },
+    {
+      "rule": "minCount",
+      "part": "app",
+      "count": 2,
+      "label": "At least two app replicas"
+    },
+    {
+      "rule": "minCount",
+      "part": "db",
+      "count": 2,
+      "label": "The database has a replica"
+    },
+    {
+      "rule": "survivesKill",
+      "from": "client",
+      "to": "db",
+      "label": "Inspector's test: kill any one middle node — a client still reaches data"
+    }
   ],
-  "debrief": "The spec is spatial redundancy end to end — and the part most people miss is the FRONT DOOR: with one load balancer, killing it cuts every client off, so the inspection forces a second LB just as much as the second app replica. 'No single point of failure' means every middle node is bypassable: at least two LBs, two apps, and a database replica, wired so an alternative path always exists. In production you'd go further and CROSS-connect (each LB to every app, each app to every DB node) — not for the single-kill test you just passed, but so one failure doesn't halve your capacity and two failures don't strand a whole chain. Redundancy is a property of paths, not a count of boxes."
+  "debrief": "The spec is spatial redundancy end to end — and the part most people miss is the FRONT DOOR: with one load balancer, killing it cuts every client off, so the inspection forces a second LB just as much as the second app replica. 'No single point of failure' means every middle node is bypassable: at least two LBs, two apps, and a database replica, wired so an alternative path always exists. In production you'd go further and CROSS-connect (each LB to every app, each app to every DB node) — not for the single-kill test you just passed, but so one failure doesn't halve your capacity and two failures don't strand a whole chain. Redundancy is a property of paths, not a count of boxes.\n\n```viz\n{\"type\": \"sim\", \"model\": \"failover\", \"title\": \"Now stress the fleet you just designed\", \"caption\": \"Kill replicas and watch availability respond — MTBF/(MTBF+MTTR) in motion.\"}\n```"
 }

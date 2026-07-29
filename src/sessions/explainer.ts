@@ -2,7 +2,7 @@ import { el } from '../dom'
 import { stage } from '../fx'
 import type { ExplainerSession } from '../types'
 import { stepPills } from '../visuals'
-import { mountWidget, renderRichInto } from '../widgets'
+import { mountWidget, renderRichInto, richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -36,7 +36,7 @@ function mountExplainer(
 
     const step = session.steps[idx]
     const body: (Node | string)[] = []
-    if (session.intro && idx === 0) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro && idx === 0) body.push(richBlock(session.intro, 'stage-lead rich-block'))
     body.push(stepPills(idx + 1, total))
     body.push(el('h3', {}, [step.title]))
 

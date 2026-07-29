@@ -2,14 +2,28 @@
   "id": "lifecycle-sequence",
   "kind": "sequence",
   "title": "Order the compounder's life-cycle",
-  "conceptIds": ["wealth-creators"],
+  "conceptIds": [
+    "wealth-creators"
+  ],
   "intro": "The stages a wealth creator moves through — put them in order.",
   "prompt": "Drag into sequence, earliest stage first.",
   "steps": [
-    { "id": "build", "text": "Build — heavy investment; ROCE dips; looks expensive and dull" },
-    { "id": "moat", "text": "Moat forms — pricing power / switching costs hold; ROCE inflects upward" },
-    { "id": "compound", "text": "Compounds — earnings grow for years; profits reinvested into the core" },
-    { "id": "mature", "text": "Maturity — moat widening slows; complacency and challengers become the risk" }
+    {
+      "id": "build",
+      "text": "Build — heavy investment; ROCE dips; looks expensive and dull"
+    },
+    {
+      "id": "moat",
+      "text": "Moat forms — pricing power / switching costs hold; ROCE inflects upward"
+    },
+    {
+      "id": "compound",
+      "text": "Compounds — earnings grow for years; profits reinvested into the core"
+    },
+    {
+      "id": "mature",
+      "text": "Maturity — moat widening slows; complacency and challengers become the risk"
+    }
   ],
-  "debrief": "Wealth is created in the compounding stage, but it's only reachable by surviving the unglamorous build phase (where impatient investors leave) and proving the moat. The final risk isn't collapse — it's complacency once the company is a large-cap incumbent."
+  "debrief": "Wealth is created in the compounding stage, but it's only reachable by surviving the unglamorous build phase (where impatient investors leave) and proving the moat. The final risk isn't collapse — it's complacency once the company is a large-cap incumbent.\n\n```viz\n{\"type\": \"annotated\", \"title\": \"The compounder's J-curve\", \"prompt\": \"Tap each stage — value created vs the attention it gets.\", \"points\": [{\"label\": \"Startup\", \"value\": 10, \"note\": \"Survival mode — cash burns, the story forms.\"}, {\"label\": \"Build\", \"value\": 25, \"note\": \"ROCE dips while the moat is dug. Impatient money leaves here.\"}, {\"label\": \"Moat proven\", \"value\": 45, \"note\": \"Returns inflect — the market starts to notice.\"}, {\"label\": \"Compounding\", \"value\": 100, \"note\": \"The wealth-creation stage: earnings and price climb together for years.\"}, {\"label\": \"Incumbent\", \"value\": 85, \"note\": \"Large-cap comfort. The risk is complacency, not collapse.\"}], \"caption\": \"Wealth is created late — but only for those who held through the middle.\"}\n```"
 }

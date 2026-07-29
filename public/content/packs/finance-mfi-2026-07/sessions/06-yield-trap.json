@@ -2,7 +2,9 @@
   "id": "yield-trap",
   "kind": "classify",
   "title": "Yield Trap",
-  "conceptIds": ["invit-yields"],
+  "conceptIds": [
+    "invit-yields"
+  ],
   "intro": "InvITs can advertise striking yields. Sort each card into whether it supports a naive ‘high income like an FD’ reading — or warns that headline yield hides structure.",
   "buckets": [
     {
@@ -60,5 +62,5 @@
       "bucketId": "structure"
     }
   ],
-  "debrief": "Headline InvIT yields are a starting clue, not the ending answer. Separate distribution theatre from what you keep after structure, capital return, fees, and unit-price risk."
+  "debrief": "Headline InvIT yields are a starting clue, not the ending answer. Separate distribution theatre from what you keep after structure, capital return, fees, and unit-price risk.\n\n```viz\n{\"type\": \"what-if\", \"compute\": \"weightedYield\", \"title\": \"Strip the theatre\", \"inputs\": [{\"key\": \"yield\", \"label\": \"Headline yield\", \"min\": 4, \"max\": 15, \"step\": 0.5, \"value\": 12, \"unit\": \"%\", \"decimals\": 1}, {\"key\": \"returnOfCapital\", \"label\": \"Return of capital\", \"min\": 0, \"max\": 80, \"step\": 5, \"value\": 40, \"unit\": \"%\"}], \"output\": {\"label\": \"Income-like yield\", \"unit\": \"%\", \"decimals\": 1}, \"caption\": \"Drag return-of-capital up and watch the yield you keep shrink.\"}\n```"
 }

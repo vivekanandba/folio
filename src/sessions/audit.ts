@@ -2,6 +2,7 @@ import { el } from '../dom'
 import { burst, stage } from '../fx'
 import type { AuditSession } from '../types'
 import { PALETTE, radarChart } from '../visuals'
+import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
 import { register, type SessionModule } from './registry'
 
@@ -18,7 +19,7 @@ function mountAudit(
 
   const render = () => {
     const body: (Node | string)[] = []
-    if (session.intro) body.push(el('p', { class: 'stage-lead' }, [session.intro]))
+    if (session.intro) body.push(richBlock(session.intro, 'stage-lead rich-block'))
 
     const axes = session.pillars.map((p) => ({
       label: p.label,
@@ -98,7 +99,7 @@ function mountAudit(
           )
         }
       }
-      reportBody.push(el('p', {}, [session.debrief]))
+      reportBody.push(richBlock(session.debrief))
       burst(finish)
       root.replaceChildren(stage('audit', 'Gap report', 'Your gap report', reportBody))
       onComplete(total, max)
