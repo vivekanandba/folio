@@ -28,7 +28,10 @@ const KNOWN_KINDS = new Set([
 const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect', 'pathExists', 'survivesKill'])
 
 /** Whitelisted simulation models — keep in sync with src/sim/models.ts. */
-const SIM_MODELS = new Set(['queue', 'failover', 'compound', 'retention'])
+const SIM_MODELS = new Set([
+  'queue', 'failover', 'compound', 'retention',
+  'sipVsLump', 'retryStorm', 'fanout', 'marketCycle',
+])
 const LAB_OPS = new Set(['<', '<=', '>', '>='])
 
 /** Whitelisted compute names — keep in sync with src/computes.ts. */

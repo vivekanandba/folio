@@ -2,17 +2,61 @@
   "id": "sip-explainer",
   "kind": "explainer",
   "title": "SIP, lumpsum & averaging — what actually helps",
-  "conceptIds": ["sip-vs-lumpsum"],
+  "conceptIds": [
+    "sip-vs-lumpsum"
+  ],
   "intro": "Untangle the myth that a SIP magically beats a lumpsum.",
   "steps": [
     {
       "title": "What rupee-cost averaging really does",
-      "body": "A fixed monthly amount buys **more units when prices are low** and fewer when high, smoothing your average cost. That genuinely reduces the risk of dumping everything at a peak.\n\nBut markets rise more often than they fall — so money invested *earlier* is exposed to more growth time. Averaging manages **regret and timing risk**, not a guaranteed return premium."
+      "body": "A fixed monthly amount buys **more units when prices are low** and fewer when high, smoothing your average cost. That genuinely reduces the risk of dumping everything at a peak.\n\nBut markets rise more often than they fall — so money invested *earlier* is exposed to more growth time. Averaging manages **regret and timing risk**, not a guaranteed return premium.",
+      "viz": {
+        "type": "sim",
+        "model": "sipVsLump",
+        "title": "Race a lumpsum against a SIP",
+        "caption": "Crash the market mid-window — the SIP's average cost drops while the lump rides it down."
+      }
     },
     {
       "title": "Watch the compounding",
       "body": "The power of a SIP is consistency over time, not a trick. Drag the sliders — most of the final corpus is compounding, not your contributions.",
-      "viz": { "type": "what-if", "compute": "sipFuture", "title": "Future value of a monthly SIP", "inputs": [ { "key": "monthly", "label": "Monthly SIP", "min": 1000, "max": 50000, "step": 1000, "value": 10000, "unit": "₹" }, { "key": "rate", "label": "Return", "min": 6, "max": 16, "step": 0.5, "value": 12 }, { "key": "years", "label": "Years", "min": 3, "max": 30, "step": 1, "value": 10 } ], "output": { "label": "Corpus", "unit": "₹", "decimals": 0 } }
+      "viz": {
+        "type": "what-if",
+        "compute": "sipFuture",
+        "title": "Future value of a monthly SIP",
+        "inputs": [
+          {
+            "key": "monthly",
+            "label": "Monthly SIP",
+            "min": 1000,
+            "max": 50000,
+            "step": 1000,
+            "value": 10000,
+            "unit": "₹"
+          },
+          {
+            "key": "rate",
+            "label": "Return",
+            "min": 6,
+            "max": 16,
+            "step": 0.5,
+            "value": 12
+          },
+          {
+            "key": "years",
+            "label": "Years",
+            "min": 3,
+            "max": 30,
+            "step": 1,
+            "value": 10
+          }
+        ],
+        "output": {
+          "label": "Corpus",
+          "unit": "₹",
+          "decimals": 0
+        }
+      }
     },
     {
       "title": "So which should you use?",
