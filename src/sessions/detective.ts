@@ -17,6 +17,12 @@ function mountDetective(
   let revealed = 0
   let diagnosing = false
 
+  // Evidence meter: each clue carries diagnostic weight; the case builds live.
+  const totalSignal = session.facts.reduce((acc, f) => acc + Math.max(0, f.signal ?? 0), 0)
+  const signalAt = (n: number) =>
+    session.facts.slice(0, n).reduce((acc, f) => acc + Math.max(0, f.signal ?? 0), 0)
+  const evidencePct = () => (totalSignal > 0 ? Math.round((signalAt(revealed) / totalSignal) * 100) : 0)
+
   const segsAt = (n: number) => {
     if (!session.composition?.length) return []
     return session.composition
@@ -47,6 +53,20 @@ function mountDetective(
     layout.append(board)
 
     const deck = el('div', { class: 'clue-deck' }, [el('h3', {}, ['Clue deck'])])
+    if (totalSignal > 0) {
+      const p = evidencePct()
+      deck.append(
+        el('div', { class: 'evidence-meter' }, [
+          el('div', { class: 'evidence-meter-head' }, [
+            el('span', { class: 'evidence-meter-label' }, [session.meterLabel ?? 'Evidence gathered']),
+            el('span', { class: 'evidence-meter-value' }, [`${p}%`]),
+          ]),
+          el('div', { class: 'evidence-meter-track', 'aria-hidden': 'true' }, [
+            el('div', { class: 'evidence-meter-fill', style: `width:${p}%` }),
+          ]),
+        ]),
+      )
+    }
     session.facts.forEach((fact, i) => {
       const open = i < revealed
       const card = el('button', {
@@ -109,6 +129,13 @@ function mountDetective(
     if (diagnosing) return
     diagnosing = true
     const panel = el('div', { class: 'diagnose-panel pop-in' })
+    if (totalSignal > 0 && revealed < session.facts.length) {
+      panel.append(
+        el('p', { class: 'muted small' }, [
+          `Diagnosing with ${evidencePct()}% of the evidence on the table — bold.`,
+        ]),
+      )
+    }
     panel.append(
       mountMCQ({
         prompt: session.question,

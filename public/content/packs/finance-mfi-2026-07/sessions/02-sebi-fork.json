@@ -2,7 +2,10 @@
   "id": "sebi-fork",
   "kind": "decision",
   "title": "SEBI Fork",
-  "conceptIds": ["flexi-cap-vs-multi-cap", "style-drift-flexi-tax"],
+  "conceptIds": [
+    "flexi-cap-vs-multi-cap",
+    "style-drift-flexi-tax"
+  ],
   "intro": "It is 2020. Multi-cap funds were sold as go-anywhere products but many settled into large caps. You are shaping the rulebook response.",
   "startId": "problem",
   "nodes": [
@@ -13,12 +16,16 @@
         {
           "label": "Force every multi-cap to hold ≥25% in large, mid, and small",
           "next": "hard-rule",
-          "note": "You chose hard floors for multi-cap."
+          "note": "You chose hard floors for multi-cap.",
+          "effect": 15,
+          "preview": "Categories become true to label — trust rebuilds, but managers must reshuffle whole books."
         },
         {
           "label": "Ignore it — labels are marketing, not promises",
           "next": "ignore",
-          "note": "You left the label-substance gap unfixed."
+          "note": "You left the label-substance gap unfixed.",
+          "effect": -20,
+          "preview": "Savers keep buying labels that promise nothing — the same complaint returns, louder."
         }
       ]
     },
@@ -29,7 +36,9 @@
         {
           "label": "Impose 25/25/25 floors on multi-cap",
           "next": "hard-rule",
-          "note": "Forced toward the floor solution."
+          "note": "Forced toward the floor solution.",
+          "effect": 20,
+          "preview": "Late but structural: floors restore meaning to the category name."
         }
       ]
     },
@@ -40,12 +49,16 @@
         {
           "label": "Hold the line — no new category; multi-cap means floors",
           "next": "hold-line",
-          "note": "No flexi escape hatch."
+          "note": "No flexi escape hatch.",
+          "effect": 5,
+          "preview": "Honest labels, unhappy managers — freedom-seeking money has nowhere legitimate to go."
         },
         {
           "label": "Create flexi-cap: ≥65% equity, no mid/small floors",
           "next": "create-flexi",
-          "note": "Created the freedom category."
+          "note": "Created the freedom category.",
+          "effect": 10,
+          "preview": "A freedom product with an honest name — labels stay meaningful, choice expands."
         }
       ]
     },
@@ -56,7 +69,9 @@
         {
           "label": "Acknowledge the demand and create flexi-cap anyway",
           "next": "create-flexi",
-          "note": "Flexi-cap arrives after all."
+          "note": "Flexi-cap arrives after all.",
+          "effect": 10,
+          "preview": "The demand was real: a labelled freedom product beats disguised drift."
         }
       ]
     },
@@ -67,12 +82,16 @@
         {
           "label": "Rules can rename buckets; they cannot force conviction to use freedom",
           "next": "end-good",
-          "note": "Landed on the right lesson."
+          "note": "Landed on the right lesson.",
+          "effect": 10,
+          "preview": "Naming honesty restored — but conviction to roam stays optional."
         },
         {
           "label": "Flexi-caps always beat because freedom = alpha",
           "next": "end-bad",
-          "note": "Confused freedom with guaranteed skill."
+          "note": "Confused freedom with guaranteed skill.",
+          "effect": -15,
+          "preview": "Freedom mistaken for alpha — label trust erodes into hype."
         }
       ]
     },
@@ -92,5 +111,11 @@
         "score": 0
       }
     }
-  ]
+  ],
+  "meter": {
+    "label": "Investor trust",
+    "min": 0,
+    "max": 100,
+    "start": 50
+  }
 }
