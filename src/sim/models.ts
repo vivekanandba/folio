@@ -381,7 +381,9 @@ const sipVsLump: SimModel = {
     return s
   },
   step(state, params, dt) {
-    // 1 real second ≈ 1 year, integrated monthly.
+    // 1 real second ≈ 3 months, integrated monthly — slow enough that the
+    // SIP window (12–36 months) is still open after the engine's 3s chart
+    // seed, so the crash button demonstrates rupee-cost averaging on arrival.
     const spreadM = Math.round(params.spreadM ?? 12)
     const drift = (params.drift ?? 10) / 100 / 12
     const vol = ((params.vol ?? 16) / 100) / Math.sqrt(12)
@@ -390,7 +392,7 @@ const sipVsLump: SimModel = {
     let units = state.scratch.sipUnits as number
     let spent = state.scratch.sipSpent as number
 
-    const frac = (state.scratch.monthFrac as number) + dt * 12
+    const frac = (state.scratch.monthFrac as number) + dt * 3
     const whole = Math.floor(frac)
     state.scratch.monthFrac = frac - whole
     for (let i = 0; i < whole; i++) {
