@@ -2684,6 +2684,39 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
 }
 .floor-canvas:active { cursor: grabbing; }
 
+/* Hall chips — fly the view to one hall (the phone way to walk the floor).
+   One scrollable row: on phones, wrapping would shove the canvas below the fold. */
+.floor-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.floor-chips::-webkit-scrollbar { display: none; }
+.floor-chip { flex: 0 0 auto; }
+.floor-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  max-width: 100%;
+}
+.floor-chip-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--brass-bright);
+}
+.floor-chip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 11rem;
+}
+
 .floor-tip {
   position: absolute;
   transform: translateX(-50%);
