@@ -40,12 +40,15 @@ for (const file of walk(join(ROOT, 'src'))) {
   })
   code = stripTypeScriptTypes(code, { mode: 'strip' })
   // relative specifiers → explicit browser paths: './x' → './x.js',
-  // and directory imports './sessions' → './sessions/index.js'
-  code = code.replace(/(from\s+['"])(\.\.?\/[^'"]+)(['"])/g, (m, a, spec, z) => {
+  // directory imports './sessions' → './sessions/index.js'. Covers both
+  // `from './x'` and bare side-effect `import './x'` forms.
+  const respell = (m, a, spec, z) => {
     if (/\.(js|css|svg|png)$/.test(spec)) return m
     const abs = resolve(dirname(file), spec)
     return existsSync(join(abs, 'index.ts')) ? `${a}${spec}/index.js${z}` : `${a}${spec}.js${z}`
-  })
+  }
+  code = code.replace(/(from\s+['"])(\.\.?\/[^'"]+)(['"])/g, respell)
+  code = code.replace(/(^import\s+['"])(\.\.?\/[^'"]+)(['"])/gm, respell)
   const dest = join(OUT, 'src', relative(join(ROOT, 'src'), file)).replace(/\.ts$/, '.js')
   mkdirSync(dirname(dest), { recursive: true })
   writeFileSync(dest, code)
