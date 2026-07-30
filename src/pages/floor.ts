@@ -59,7 +59,8 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
   const halls: Hall[] = []
   const nodes: FloorNode[] = []
   const t = today()
-  const hallRingR = metas.length > 1 ? 300 : 0
+  // Wide enough that one hall's plaque doesn't caption a neighbour's lamps.
+  const hallRingR = metas.length > 1 ? 350 : 0
 
   metas.forEach((meta, i) => {
     const angle = (i / metas.length) * Math.PI * 2 - Math.PI / 2
@@ -126,6 +127,12 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
   let oy = 0
   let dpr = 1
   let hovered: FloorNode | null = null
+  let laidOut = false
+
+  /** Below this zoom, lamp labels are culled and hall plaques shorten —
+   * a fit-all view on a phone would otherwise be label soup. Desktop's
+   * fit-all lands ~0.43, phones ~0.3: labels survive on wide screens. */
+  const LABEL_MIN_SCALE = 0.4
 
   const wrap = el('div', { class: 'floor-wrap' })
   const tip = el('div', { class: 'floor-tip', hidden: 'true' })
@@ -145,14 +152,38 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     oy = h / 2 - ((minY + maxY) / 2) * scale
   }
 
+  /** Fly the view to one hall — the phone way to walk the museum. */
+  function focusHall(hall: Hall): void {
+    const w = canvas.width / dpr
+    const h = canvas.height / dpr
+    const pad = 44
+    scale = Math.min((w - pad) / (hall.r * 2), (h - pad) / (hall.r * 2), 2.2)
+    ox = w / 2 - hall.x * scale
+    oy = h / 2 - hall.y * scale
+    draw(performance.now())
+  }
+
   function resize(): void {
     const w = wrap.clientWidth || 600
-    const h = Math.min(560, Math.max(380, Math.round(w * 0.72)))
+    // Portrait phones get a taller canvas — a radial map hates letterbox.
+    const h = w < 520
+      ? Math.min(520, Math.max(420, Math.round(w * 1.15)))
+      : Math.min(560, Math.max(380, Math.round(w * 0.72)))
     dpr = Math.min(window.devicePixelRatio || 1, 2)
     canvas.width = Math.round(w * dpr)
     canvas.height = Math.round(h * dpr)
     canvas.style.height = `${h}px`
-    fitAll()
+    if (!laidOut) {
+      laidOut = true
+      // On a narrow screen, open INSIDE a hall (the one with due lamps if
+      // any) instead of an unreadable fit-all; wide screens see the museum.
+      if (w < 520 && halls.length) {
+        const due = nodes.find((n) => n.due)
+        focusHall(halls.find((h2) => h2.packId === due?.packId) ?? halls[0])
+      } else {
+        fitAll()
+      }
+    }
     draw(performance.now())
   }
 
@@ -164,6 +195,7 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     const sy = (y: number): number => y * scale + oy
 
     // hall rings + plaques
+    const cw = canvas.width / dpr
     for (const hall of halls) {
       ctx.beginPath()
       ctx.arc(sx(hall.x), sy(hall.y), hall.r * scale, 0, Math.PI * 2)
@@ -175,7 +207,18 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
       ctx.fillStyle = 'rgba(201, 168, 106, 0.85)'
       ctx.font = `500 ${Math.max(10, 11 * scale)}px "IBM Plex Mono", ui-monospace, monospace`
       ctx.textAlign = 'center'
-      ctx.fillText(`HALL ${hall.num} — ${hall.title.toUpperCase()}`, sx(hall.x), sy(hall.y - hall.r) - 8)
+      // Zoomed out, the full title is soup — shorten it; nudge it inside the
+      // canvas when its hall is in view, but never drag a far-off hall's
+      // plaque into the frame (it would caption someone else's lamps).
+      const plaque = scale >= LABEL_MIN_SCALE ? `HALL ${hall.num} — ${hall.title.toUpperCase()}` : `HALL ${hall.num}`
+      const tw = ctx.measureText(plaque).width
+      const anchorX = sx(hall.x)
+      const anchorY = sy(hall.y - hall.r) - 8
+      const tx = Math.min(Math.max(anchorX, tw / 2 + 6), cw - tw / 2 - 6)
+      const ch = canvas.height / dpr
+      if (Math.abs(tx - anchorX) < 90 && anchorY > -20 && anchorY < ch + 20) {
+        ctx.fillText(plaque, tx, anchorY)
+      }
     }
 
     // cross-link wires
@@ -217,11 +260,13 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
       ctx.strokeStyle = n.band === 'unvisited' ? '#57534e' : 'rgba(242, 237, 228, 0.5)'
       ctx.lineWidth = 1.2
       ctx.stroke()
-      // label
-      ctx.fillStyle = n === hovered ? '#f2ede4' : 'rgba(197, 189, 177, 0.85)'
-      ctx.font = `600 ${Math.max(9, 11 * scale)}px "DM Sans", system-ui, sans-serif`
-      ctx.textAlign = 'center'
-      ctx.fillText(n.label, x, y + r + 13)
+      // label — culled when zoomed out (the lamps stay; names come with zoom)
+      if (scale >= LABEL_MIN_SCALE || n === hovered) {
+        ctx.fillStyle = n === hovered ? '#f2ede4' : 'rgba(197, 189, 177, 0.85)'
+        ctx.font = `600 ${Math.max(9, 11 * scale)}px "DM Sans", system-ui, sans-serif`
+        ctx.textAlign = 'center'
+        ctx.fillText(n.label, x, y + r + 13)
+      }
     }
   }
 
@@ -261,7 +306,9 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
 
   function nodeAt(wx: number, wy: number): FloorNode | null {
     let best: FloorNode | null = null
-    let bestD = 18 // world-unit hit radius
+    // Hit radius in SCREEN pixels (finger-sized), converted to world units —
+    // zoomed out, lamps would otherwise be impossible to tap.
+    let bestD = 24 / scale
     for (const n of nodes) {
       const d = Math.hypot(n.x - wx, n.y - wy)
       if (d < bestD) { best = n; bestD = d }
@@ -273,8 +320,28 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
   let moved = false
   let lastX = 0
   let lastY = 0
+  // two-finger pinch state
+  const pointers = new Map<number, { x: number; y: number }>()
+  let pinchDist = 0
+
+  const applyZoom = (factor: number, cx: number, cy: number): void => {
+    const next = Math.max(0.3, Math.min(3.5, scale * factor))
+    const applied = next / scale
+    scale = next
+    // keep the point under the gesture fixed
+    ox = cx - (cx - ox) * applied
+    oy = cy - (cy - oy) * applied
+  }
 
   canvas.addEventListener('pointerdown', (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()]
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y)
+      moved = true // a pinch is never a tap
+      dragging = false
+      return
+    }
     dragging = true
     moved = false
     lastX = e.clientX
@@ -282,6 +349,19 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     canvas.setPointerCapture(e.pointerId)
   })
   canvas.addEventListener('pointermove', (e) => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (pointers.size === 2) {
+      // pinch: zoom about the midpoint
+      const [a, b] = [...pointers.values()]
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      if (pinchDist > 0 && dist > 0) {
+        const rect = canvas.getBoundingClientRect()
+        applyZoom(dist / pinchDist, (a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top)
+        draw(performance.now())
+      }
+      pinchDist = dist
+      return
+    }
     if (dragging) {
       const dx = e.clientX - lastX
       const dy = e.clientY - lastY
@@ -310,14 +390,18 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     }
   })
   canvas.addEventListener('pointerup', (e) => {
+    pointers.delete(e.pointerId)
+    if (pointers.size < 2) pinchDist = 0
     dragging = false
-    if (!moved) {
+    if (!moved && pointers.size === 0) {
       const w = toWorld(e)
       const hit = nodeAt(w.x, w.y)
       if (hit) location.hash = href({ name: 'concept', packId: hit.packId, conceptId: hit.conceptId }).slice(1)
     }
   })
-  canvas.addEventListener('pointercancel', () => {
+  canvas.addEventListener('pointercancel', (e) => {
+    pointers.delete(e.pointerId)
+    if (pointers.size < 2) pinchDist = 0
     dragging = false
   })
   canvas.addEventListener('pointerleave', () => {
@@ -327,13 +411,8 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
   })
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault()
-    const w = toWorld(e)
-    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12
-    scale = Math.max(0.3, Math.min(3.5, scale * factor))
-    // keep the point under the cursor fixed
     const rect = canvas.getBoundingClientRect()
-    ox = e.clientX - rect.left - w.x * scale
-    oy = e.clientY - rect.top - w.y * scale
+    applyZoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top)
     draw(performance.now())
   }, { passive: false })
 
@@ -341,11 +420,28 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     const b = el('button', { class: 'ghost floor-zoom', type: 'button', 'aria-label': label === '+' ? 'Zoom in' : label === '−' ? 'Zoom out' : 'Fit all' }, [label])
     b.addEventListener('click', () => {
       if (factor === 0) fitAll()
-      else scale = Math.max(0.3, Math.min(3.5, scale * factor))
+      else applyZoom(factor, canvas.width / dpr / 2, canvas.height / dpr / 2) // zoom about the centre
       draw(performance.now())
     })
     return b
   }
+
+  // ---- hall chips: fly to a hall (THE way to walk the floor on a phone) ---
+  const hallChips = el('div', { class: 'floor-chips', role: 'group', 'aria-label': 'Jump to a hall' }, [
+    ...halls.map((hall) => {
+      const chip = el('button', { class: 'ghost floor-chip', type: 'button', title: hall.title }, [
+        el('span', { class: 'floor-chip-num' }, [hall.num]),
+        el('span', { class: 'floor-chip-title' }, [hall.title]),
+      ])
+      chip.addEventListener('click', () => focusHall(hall))
+      return chip
+    }),
+    (() => {
+      const all = el('button', { class: 'ghost floor-chip', type: 'button' }, ['Whole museum'])
+      all.addEventListener('click', () => { fitAll(); draw(performance.now()) })
+      return all
+    })(),
+  ])
 
   // ---- a11y/keyboard mirror ----------------------------------------------
   const listSections = metas.map((meta, i) => {
@@ -395,6 +491,7 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
       ]),
     ]),
     homeStrip,
+    hallChips,
     wrap,
     el('div', { class: 'floor-controls' }, [
       zoomBtn('+', 1.25),

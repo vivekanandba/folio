@@ -16,6 +16,11 @@ npm run build
 npm run preview
 ```
 
+No node_modules? `npm run preview:offline` builds a dependency-free static
+preview into `.preview/` (Node 22 strips the types; vite-isms are patched).
+Serve it with `python3 -m http.server 8077 -d .preview` and screenshot with
+any headless Chromium — layout/behaviour parity, no bundler.
+
 ## Content
 
 Packs live under `public/content/`:
