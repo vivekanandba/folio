@@ -1,0 +1,41 @@
+{
+  "id": "forward-pass-sequence",
+  "kind": "sequence",
+  "title": "One token's journey",
+  "conceptIds": [
+    "kv-cache-memory"
+  ],
+  "intro": "Every generated token makes this exact trip. Put the stops in order.",
+  "prompt": "Order the steps of generating the next token:",
+  "steps": [
+    {
+      "id": "embed",
+      "text": "Input tokens become embedding vectors"
+    },
+    {
+      "id": "qkv",
+      "text": "q/k/v projections produce Q for the new token (K, V of the past come from the cache)"
+    },
+    {
+      "id": "scores",
+      "text": "Q is dotted with every K, scaled by √(key dim), softmaxed into attention weights"
+    },
+    {
+      "id": "blend",
+      "text": "Weighted sum of the V vectors, passed through o_proj"
+    },
+    {
+      "id": "ffn",
+      "text": "The feed-forward network transforms each token's representation"
+    },
+    {
+      "id": "head",
+      "text": "The LM head scores every possible next token"
+    },
+    {
+      "id": "append",
+      "text": "Highest-scoring token is emitted, appended, and the whole pass repeats"
+    }
+  ],
+  "debrief": "Tokens → embeddings → attention (Q·K → softmax → blend V) → FFN → LM head → append and repeat. The cache means steps 2–4 only compute fresh values for the NEW token; everything historical is a lookup.\n\n```viz\n{\"type\": \"sim\", \"model\": \"llmServe\", \"title\": \"Why this loop is bandwidth-bound\", \"caption\": \"Each trip streams the full weight tensor from HBM. That's the cost batching amortises.\"}\n```"
+}

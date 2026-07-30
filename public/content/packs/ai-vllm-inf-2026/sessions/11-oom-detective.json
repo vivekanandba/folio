@@ -1,0 +1,47 @@
+{
+  "id": "oom-detective",
+  "kind": "detective",
+  "title": "The server that fits six users",
+  "conceptIds": [
+    "serving-vllm",
+    "kv-cache-memory"
+  ],
+  "intro": "Llama 3 70B on 4×80 GB. Memory reads 'full' at just six concurrent users. The GPUs were not cheap. Open the clues.",
+  "meterLabel": "Evidence for an allocator problem",
+  "facts": [
+    {
+      "label": "Weights",
+      "value": "140 GB, loaded once at startup — 180 GB should remain for KV cache.",
+      "signal": 1
+    },
+    {
+      "label": "Real contexts",
+      "value": "Live conversations average ~2K tokens ≈ 640 MB of KV each.",
+      "signal": 2
+    },
+    {
+      "label": "Allocator",
+      "value": "Each request pre-reserves one contiguous slab at max length 32K (~10 GB).",
+      "signal": 3
+    },
+    {
+      "label": "Cache census",
+      "value": "Only ~25% of allocated cache slots contain real tokens.",
+      "signal": 3
+    },
+    {
+      "label": "Between slabs",
+      "value": "Plenty of free memory exists — in gaps too small to fit a new 10 GB slab.",
+      "signal": 2
+    }
+  ],
+  "question": "What's actually wrong with this deployment?",
+  "choices": [
+    "The model is too big — quantize it and the problem disappears",
+    "Pre-allocation and fragmentation are wasting the pool — switch to paged, block-based KV allocation",
+    "Users send too much text — cap context length at 1K tokens",
+    "180 GB is simply not enough — buy four more GPUs"
+  ],
+  "answerIndex": 1,
+  "debrief": "The math says ~280 users' worth of 2K contexts fit in 180 GB — yet six fill it. Every clue points at the **allocator**: max-length slabs (over-reservation), 25% real occupancy (internal fragmentation), unusable gaps (external fragmentation). This is the exact 20–40% utilization finding that motivated **PagedAttention**: fixed-size blocks allocated as tokens land, one shared pool, no slabs. Quantizing or buying GPUs treats the symptom and keeps the waste.\n\n```viz\n{\"type\": \"sim\", \"model\": \"kvcache\", \"title\": \"Fix it yourself\", \"caption\": \"This deployment is the 40% knob. Drag 'usable pool' to 100% — same hardware, ~2.5× the users.\"}\n```"
+}

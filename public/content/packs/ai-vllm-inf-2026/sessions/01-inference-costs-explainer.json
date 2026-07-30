@@ -1,0 +1,82 @@
+{
+  "id": "inference-costs-explainer",
+  "kind": "explainer",
+  "title": "Why inference is the new bottleneck",
+  "conceptIds": [
+    "inference-costs-slos"
+  ],
+  "intro": "Good open models are everywhere now. Running them cheaply is the hard part.",
+  "steps": [
+    {
+      "title": "Training happens once, inference forever",
+      "body": "Most AI cost is **inference, not training**. Training is a one-off; inference bills you *every single time a user sends a message*. And since thousands of competitive open models now sit on Hugging Face (Llama, Qwen, Mistral, DeepSeek, gpt-oss…), the question has flipped from *\"can I get a good model?\"* to *\"can I run it efficiently?\"*\n\nSelf-hosting pays four ways: **cost** (match model size to task), **security** (data never leaves), **control** (no rate limits or third-party downtime), **customization** (fine-tune)."
+    },
+    {
+      "title": "Fast enough AND accurate enough",
+      "body": "A deployment needs **SLOs** — measurable targets on both axes. Accuracy must clear the usability bar for *your* use case (check the model card). Performance is measured in four numbers:",
+      "viz": {
+        "type": "annotated",
+        "title": "The four performance metrics",
+        "prompt": "Tap each one.",
+        "points": [
+          {
+            "label": "TTFT",
+            "value": 2,
+            "note": "Time to first token — how long the user waits before anything appears. Chatbot SLO: ≤200 ms at p99."
+          },
+          {
+            "label": "ITL",
+            "value": 1,
+            "note": "Inter-token latency — the gap between streamed tokens. Governs how smooth the answer feels."
+          },
+          {
+            "label": "E2E",
+            "value": 4,
+            "note": "Full request latency, first to last token. What a non-streaming client experiences."
+          },
+          {
+            "label": "Throughput",
+            "value": 3,
+            "note": "Output tokens/sec across ALL requests — whether you survive production scale."
+          }
+        ]
+      }
+    },
+    {
+      "title": "The tradeoff triangle",
+      "body": "**Accuracy ↔ Performance ↔ Cost: pick two.** Faster answers need more compute; bigger models cost more; aggressive optimization can dent accuracy. Good tooling doesn't repeal the triangle — it pushes the frontier outward.",
+      "viz": {
+        "type": "radar",
+        "caption": "A naive full-precision deployment: accurate, but slow and expensive. The rest of this pack moves the other two corners.",
+        "axes": [
+          {
+            "label": "Accuracy",
+            "value": 5,
+            "max": 5
+          },
+          {
+            "label": "Performance",
+            "value": 1.5,
+            "max": 5
+          },
+          {
+            "label": "Cost-efficiency",
+            "value": 1,
+            "max": 5
+          }
+        ]
+      }
+    },
+    {
+      "title": "Feel the 10×",
+      "body": "Naive serving (full precision, one request at a time) costs **$100Ks–$millions per month**. vLLM's batching alone is ~10× cheaper; a quantized model cuts it again. This machine is the physics of that claim — every decode step streams the whole weight tensor, so **batch** amortises it and **precision** shrinks it:",
+      "viz": {
+        "type": "sim",
+        "model": "llmServe",
+        "title": "The token factory",
+        "caption": "Start at batch 1 (the naive deployment). Raise the batch, then drop the precision — that's the 10×."
+      }
+    }
+  ],
+  "recap": "Inference dominates cost because it recurs per message. Define SLOs on **both** axes — accuracy (model card) and performance (TTFT / ITL / e2e latency / throughput, at percentiles) — then optimize inside the accuracy↔performance↔cost triangle. Batching and quantization are the two big levers."
+}

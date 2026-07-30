@@ -1,0 +1,38 @@
+{
+  "id": "kv-budget-lab",
+  "kind": "lab",
+  "title": "Feed thirty users from one pool",
+  "conceptIds": [
+    "serving-vllm",
+    "kv-cache-memory"
+  ],
+  "model": "kvcache",
+  "briefing": "Same 4×80 GB box: 180 GB of cache pool after weights. Demand is rising and product wants **30 concurrent users at 16K+ context**, served stably (don't redline the pool). Your naive allocator only makes 40% of the pool usable. The knobs are demand, context — and the allocator itself.",
+  "params": {
+    "users": 10,
+    "contextK": 8,
+    "usablePct": 40
+  },
+  "goals": [
+    {
+      "metric": "active",
+      "op": ">=",
+      "value": 30,
+      "label": "Serve ≥ 30 concurrent users"
+    },
+    {
+      "metric": "contextK",
+      "op": ">=",
+      "value": 16,
+      "label": "At ≥ 16K context per user"
+    },
+    {
+      "metric": "utilPct",
+      "op": "<=",
+      "value": 90,
+      "label": "Pool below 90% (stable, no thrash)"
+    }
+  ],
+  "holdSeconds": 5,
+  "debrief": "30 users × 16K × 320 KB ≈ 100+ GB of real tokens — physically fine in 180 GB, impossible when the allocator wastes 60%. The only winning move is the **usable-pool knob: go paged**. That slider is PagedAttention: fixed-size blocks, allocated as tokens land, one shared pool. Capacity you already paid for, returned by software."
+}

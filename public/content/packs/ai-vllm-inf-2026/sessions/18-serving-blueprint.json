@@ -1,0 +1,72 @@
+{
+  "id": "serving-blueprint",
+  "kind": "blueprint",
+  "title": "An inference stack that survives",
+  "conceptIds": [
+    "serving-vllm",
+    "inference-costs-slos"
+  ],
+  "intro": "Design the production serving topology — then read the physics tiles under the board.",
+  "briefing": "Wire a production LLM serving stack: users reach vLLM replicas only through a gateway, replicas pull weights from a model registry, and **no single node failure may cut users off from the models**. The live tiles under the board score your topology as you build.",
+  "parts": [
+    {
+      "id": "client",
+      "label": "Users",
+      "fixed": true
+    },
+    {
+      "id": "gw",
+      "label": "API gateway",
+      "max": 2
+    },
+    {
+      "id": "vllm",
+      "label": "vLLM replica",
+      "max": 3
+    },
+    {
+      "id": "registry",
+      "label": "Model registry",
+      "max": 2
+    }
+  ],
+  "rules": [
+    {
+      "rule": "connected",
+      "a": "client",
+      "b": "gw",
+      "label": "Users enter through the gateway"
+    },
+    {
+      "rule": "noDirect",
+      "a": "client",
+      "b": "vllm",
+      "label": "No client talks straight to a replica"
+    },
+    {
+      "rule": "noDirect",
+      "a": "client",
+      "b": "registry",
+      "label": "The registry is never public"
+    },
+    {
+      "rule": "minCount",
+      "part": "vllm",
+      "count": 2,
+      "label": "At least two vLLM replicas"
+    },
+    {
+      "rule": "connected",
+      "a": "vllm",
+      "b": "registry",
+      "label": "Replicas pull weights from the registry"
+    },
+    {
+      "rule": "survivesKill",
+      "from": "client",
+      "to": "registry",
+      "label": "No single point of failure users → models"
+    }
+  ],
+  "debrief": "The shape that passes: two gateways, two-plus replicas, a reachable registry, cross-wired so every middle node is bypassable. The part most designs miss is the front door — one gateway is a single point of failure no matter how many replicas sit behind it. Continuous batching makes each replica efficient; the topology makes the fleet survive."
+}

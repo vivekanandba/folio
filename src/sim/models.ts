@@ -612,6 +612,138 @@ const marketCycle: SimModel = {
   },
 }
 
+/* --------------------------------------------------------------- llmServe --
+ * The token factory: every decode step streams the ENTIRE weight tensor from
+ * HBM to the tensor cores, whether it serves one user or sixty-four. Batching
+ * amortises that fixed cost across users; quantization shrinks the cost
+ * itself. Per-user smoothness (ITL) is the price you watch while you tune.   */
+const HBM_GBPS = 1500 // HBM → SRAM bandwidth, ~A100/H100 class (GB/s)
+const COMPUTE_MS_PER_REQ = 1.5 // attention+FFN math per request per step
+const llmServe: SimModel = {
+  id: 'llmServe',
+  title: 'Token factory',
+  params: [
+    { key: 'weightsGB', label: 'Model weights', min: 1, max: 140, step: 1, value: 140, unit: 'GB' },
+    { key: 'bits', label: 'Precision', min: 4, max: 16, step: 4, value: 16, unit: 'bit' },
+    { key: 'batch', label: 'Batch size', min: 1, max: 64, step: 1, value: 1 },
+  ],
+  series: [
+    { key: 'tps', label: 'Throughput (tok/s)', color: '#4fd1c5' },
+    { key: 'itl', label: 'Per-user ITL (ms)', color: '#f4a26b' },
+  ],
+  readouts: [
+    { key: 'tps', label: 'Throughput', unit: 'tok/s', decimals: 0 },
+    { key: 'itl', label: 'ITL per user', unit: 'ms', decimals: 0 },
+    { key: 'mathPct', label: 'GPU doing math', unit: '%', decimals: 0 },
+    { key: 'gbPerTok', label: 'Data per token', unit: 'GB', decimals: 2 },
+  ],
+  init() {
+    return baseState()
+  },
+  step(state, params, dt) {
+    const weightsGB = params.weightsGB ?? 140
+    const bits = params.bits ?? 16
+    const batch = Math.round(params.batch ?? 1)
+    // One decode step: stream (weights × bits/16) GB, then do the batch's math.
+    const loadMs = (weightsGB * (bits / 16)) / (HBM_GBPS / 1000)
+    const computeMs = batch * COMPUTE_MS_PER_REQ
+    const stepMs = (loadMs + computeMs) * (0.97 + Math.random() * 0.06)
+    const tps = (batch / stepMs) * 1000
+    state.scalars.tps = tps
+    state.scalars.itl = stepMs
+    state.scalars.mathPct = (computeMs / (loadMs + computeMs)) * 100
+    state.scalars.gbPerTok = (weightsGB * (bits / 16)) / batch
+    push(state, 'tps', tps)
+    push(state, 'itl', stepMs)
+    state.t += dt
+  },
+}
+
+/* ---------------------------------------------------------------- kvcache --
+ * KV-cache pressure vessel: 4×80 GB of HBM minus 140 GB of weights leaves
+ * 180 GB for the cache. Requests arrive, each growing toward its context
+ * length at ~2K tokens/s of sim time; a naive allocator wastes most of the
+ * pool (fragmentation + max-length over-reservation), a paged one doesn't.
+ * When the usable pool is full, new arrivals are turned away.               */
+const KV_BUDGET_GB = 180
+const KV_GB_PER_KTOK = 0.32 // Llama-3-70B: ~320 KB per token
+const kvcache: SimModel = {
+  id: 'kvcache',
+  title: 'KV-cache pressure',
+  params: [
+    { key: 'users', label: 'User demand', min: 1, max: 40, step: 1, value: 10 },
+    { key: 'contextK', label: 'Context per user', min: 1, max: 64, step: 1, value: 8, unit: 'K tok' },
+    { key: 'usablePct', label: 'Usable pool (naive→paged)', min: 20, max: 100, step: 5, value: 40, unit: '%' },
+  ],
+  series: [
+    { key: 'kvGB', label: 'KV cache in use (GB)', color: '#f4a26b' },
+    { key: 'active', label: 'Users served', color: '#4fd1c5' },
+  ],
+  readouts: [
+    { key: 'active', label: 'Users served', decimals: 0 },
+    { key: 'kvGB', label: 'KV cache', unit: 'GB', decimals: 1 },
+    { key: 'capGB', label: 'Usable pool', unit: 'GB', decimals: 0 },
+    { key: 'rejected', label: 'Turned away', decimals: 0 },
+  ],
+  actions: [
+    {
+      id: 'whale',
+      label: '🐋 128K whale arrives',
+      apply(state) {
+        const reqs = state.scratch.reqs as { tokK: number; targetK: number }[]
+        // A 128K-token prompt prefills the cache in one go (~41 GB), then
+        // generates a little more — and starves everyone else while it lives.
+        reqs.push({ tokK: 128, targetK: 132 })
+      },
+    },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.reqs = [] as { tokK: number; targetK: number }[]
+    s.scratch.rejected = 0
+    return s
+  },
+  step(state, params, dt) {
+    const want = Math.round(params.users ?? 10)
+    const contextK = params.contextK ?? 8
+    const capGB = KV_BUDGET_GB * ((params.usablePct ?? 40) / 100)
+    let reqs = state.scratch.reqs as { tokK: number; targetK: number }[]
+
+    // Finished requests leave; everyone else generates ~2K tokens/s —
+    // but a token only lands if the pool has a free block for its KV.
+    reqs = reqs.filter((r) => r.tokK < r.targetK)
+    let used = reqs.reduce((acc, r) => acc + r.tokK * KV_GB_PER_KTOK, 0)
+    for (const r of reqs) {
+      const wantK = Math.min(r.targetK - r.tokK, dt * 2)
+      const grantK = Math.max(0, Math.min(wantK, (capGB - used) / KV_GB_PER_KTOK))
+      r.tokK += grantK
+      used += grantK * KV_GB_PER_KTOK
+    }
+
+    // Arrivals top the pool back up to demand — if the cache has room.
+    while (reqs.length < want) {
+      const startK = contextK * 0.2 // prompt arrives, answer grows
+      if (used + startK * KV_GB_PER_KTOK > capGB) {
+        state.scratch.rejected = (state.scratch.rejected as number) + 1
+        break
+      }
+      reqs.push({ tokK: startK, targetK: contextK * (0.75 + Math.random() * 0.5) })
+      used += startK * KV_GB_PER_KTOK
+    }
+    state.scratch.reqs = reqs
+
+    const kvGB = used
+    state.scalars.active = reqs.length
+    state.scalars.kvGB = kvGB
+    state.scalars.capGB = capGB
+    state.scalars.rejected = state.scratch.rejected as number
+    state.scalars.utilPct = capGB > 0 ? (kvGB / capGB) * 100 : 0
+    push(state, 'kvGB', kvGB)
+    push(state, 'active', reqs.length)
+    state.t += dt
+  },
+}
+
 export const SIM_MODELS: Record<string, SimModel> = {
   queue,
   failover,
@@ -621,4 +753,6 @@ export const SIM_MODELS: Record<string, SimModel> = {
   retryStorm,
   fanout,
   marketCycle,
+  llmServe,
+  kvcache,
 }

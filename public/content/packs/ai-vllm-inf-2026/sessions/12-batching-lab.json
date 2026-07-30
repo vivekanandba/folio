@@ -1,0 +1,33 @@
+{
+  "id": "batching-lab",
+  "kind": "lab",
+  "title": "Run the token factory",
+  "conceptIds": [
+    "serving-vllm",
+    "quantization"
+  ],
+  "model": "llmServe",
+  "briefing": "You inherit a naive deployment: 140 GB of BF16 weights, batch size 1 — about 10 tok/s and the GPU doing math 2% of the time. Production needs **350+ tok/s** without letting per-user smoothness die, while keeping data movement per token sane. Batch amortises the weight streaming; precision shrinks it. Find a configuration that holds.",
+  "goals": [
+    {
+      "metric": "tps",
+      "op": ">=",
+      "value": 350,
+      "label": "Throughput ≥ 350 tok/s"
+    },
+    {
+      "metric": "itl",
+      "op": "<=",
+      "value": 110,
+      "label": "Per-user ITL ≤ 110 ms"
+    },
+    {
+      "metric": "gbPerTok",
+      "op": "<=",
+      "value": 3,
+      "label": "Data moved ≤ 3 GB per token"
+    }
+  ],
+  "holdSeconds": 5,
+  "debrief": "There is no single answer — that's the lesson. 8-bit at batch ~40 works; 4-bit at batch ~24 works better. What can't work is batch 1 (all bandwidth, no amortisation) or BF16 at any batch (the fixed 93 ms weight-stream keeps ITL and tok/s in a headlock). Batching amortises the streaming cost; quantization shrinks the cost itself; ITL is the price you watch while turning both knobs."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "kv-size-estimate",
+  "kind": "estimate",
+  "title": "The 32K question",
+  "conceptIds": [
+    "kv-cache-memory"
+  ],
+  "intro": "Llama 3 70B stores ~320 KB of K/V per token. A user pastes a 32K-token document.",
+  "prompt": "How much KV-cache memory does that single 32K-token request consume (GB)?",
+  "unit": "GB",
+  "min": 0,
+  "max": 45,
+  "step": 0.5,
+  "answer": 10.2,
+  "tolerance": 0.08,
+  "live": {
+    "compute": "usersFit",
+    "inputKey": "gb",
+    "inputs": {
+      "poolGB": 180
+    },
+    "label": "Users that size would fit in the 180 GB pool",
+    "decimals": 0
+  },
+  "debrief": "32,000 tokens × 320 KB ≈ **10.2 GB — for one request**. The 180 GB pool (4×80 GB minus 140 GB of weights) serves ~18 such users if none of it is wasted; a naive allocator that only keeps 20–40% useful serves 2–3. At 128K context one request is ~40 GB.\n\n```viz\n{\"type\": \"what-if\", \"compute\": \"kvCacheGB\", \"title\": \"Scale the intuition\", \"inputs\": [{\"key\": \"tokensK\", \"label\": \"Context\", \"min\": 1, \"max\": 128, \"step\": 1, \"value\": 32, \"unit\": \"K tok\"}], \"output\": {\"label\": \"KV per request\", \"unit\": \"GB\", \"decimals\": 1}, \"caption\": \"Linear in tokens — context limits are memory budgets.\"}\n```"
+}

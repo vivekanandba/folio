@@ -1,0 +1,56 @@
+{
+  "id": "kv-cache-explainer",
+  "kind": "explainer",
+  "title": "The forward pass and the KV cache",
+  "conceptIds": [
+    "kv-cache-memory"
+  ],
+  "intro": "Two tenants share GPU memory. One never moves. The other never stops growing.",
+  "steps": [
+    {
+      "title": "One token at a time",
+      "body": "Generation is **autoregressive**: the model predicts one token, appends it, and runs again — each token conditioned on *all* previous ones. A 500-token answer = **500 full forward passes**.\n\nEach pass: `tokens → embeddings → [attention + FFN] × N layers → LM head → next-token scores`. Nearly all parameters and compute live in seven **linear layers** per block (`q/k/v/o_proj` in attention, `gate/up/down_proj` in the FFN)."
+    },
+    {
+      "title": "Q, K, V — and why the past is cacheable",
+      "body": "In attention, the current token's **Query** is scored against every previous token's **Key**; the softmaxed scores blend their **Values**. The crucial asymmetry: a new token needs the **K and V of every past token**, but only its *own* Q — and past K/V **never change**.\n\nRecomputing them every step would be pure waste, so they're cached in GPU memory — at every one of the N layers, so the savings multiply by N."
+    },
+    {
+      "title": "320 KB per token adds up",
+      "body": "Per token you store K and V at every layer across the KV heads: `2 × layers × KV-heads × head-dim × bytes`. For Llama 3 70B that's 2 × 80 × 8 × 128 × 2 ≈ **320 KB/token**. Innocent — until you multiply by context and users:",
+      "viz": {
+        "type": "what-if",
+        "compute": "kvCacheGB",
+        "title": "One request's appetite",
+        "inputs": [
+          {
+            "key": "tokensK",
+            "label": "Context length",
+            "min": 1,
+            "max": 128,
+            "step": 1,
+            "value": 8,
+            "unit": "K tok"
+          }
+        ],
+        "output": {
+          "label": "KV cache for one request",
+          "unit": "GB",
+          "decimals": 1
+        },
+        "caption": "Drag to 128K: one request ≈ 40 GB — a third of the weights, per user."
+      }
+    },
+    {
+      "title": "Where it all lives",
+      "body": "**SRAM** (20 MB @ ~19 TB/s, beside the tensor cores) ← **HBM** (40–80 GB @ 1.5 TB/s, holds weights + cache) ← **CPU DRAM** (huge but ~12 GB/s away). Weights load into HBM once; the cache grows there per request; every step streams chunks of both into SRAM.\n\nNow watch the cache fight for space — this is the machine a production server has to keep alive:",
+      "viz": {
+        "type": "sim",
+        "model": "kvcache",
+        "title": "The pressure vessel",
+        "caption": "180 GB left after the weights. Raise users and context, then send in the whale."
+      }
+    }
+  ],
+  "recap": "One token = one forward pass; K/V of the past are cached so only Q is fresh. ~320 KB/token on a 70B means context length is a **memory budget**. Weights are the fixed tenant, the KV cache the growing one — and speed is governed by HBM→SRAM data movement plus tensor-core math."
+}

@@ -31,6 +31,7 @@ const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect'
 const SIM_MODELS = new Set([
   'queue', 'failover', 'compound', 'retention',
   'sipVsLump', 'retryStorm', 'fanout', 'marketCycle',
+  'llmServe', 'kvcache',
 ])
 const LAB_OPS = new Set(['<', '<=', '>', '>='])
 
@@ -38,6 +39,7 @@ const LAB_OPS = new Set(['<', '<=', '>', '>='])
 const COMPUTES = new Set([
   'compound', 'sipFuture', 'realReturn', 'weightedYield', 'downtime', 'feeImpact',
   'impliedCagr', 'simpleIncome', 'availabilityPct',
+  'kvCacheGB', 'modelMemory', 'gpusNeeded', 'usersFit',
 ])
 
 /** Widget spec types — keep in sync with build() in src/widgets.ts. */

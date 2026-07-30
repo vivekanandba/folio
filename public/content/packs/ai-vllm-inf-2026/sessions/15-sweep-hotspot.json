@@ -1,0 +1,38 @@
+{
+  "id": "sweep-hotspot",
+  "kind": "hotspot",
+  "title": "Find the knee",
+  "conceptIds": [
+    "benchmarking-evaluation"
+  ],
+  "intro": "A GuideLLM sweep measured p99 request latency at rising request rates.",
+  "prompt": "Where has the deployment blown past its capacity knee?",
+  "series": [
+    {
+      "label": "1 rps",
+      "value": 210
+    },
+    {
+      "label": "2 rps",
+      "value": 215
+    },
+    {
+      "label": "4 rps",
+      "value": 230
+    },
+    {
+      "label": "8 rps",
+      "value": 260
+    },
+    {
+      "label": "16 rps",
+      "value": 340
+    },
+    {
+      "label": "32 rps",
+      "value": 2400,
+      "anomaly": true
+    }
+  ],
+  "debrief": "Latency is nearly flat, then explodes — the queueing knee. Between 16 and 32 rps this deployment ran out of capacity and p99 went from 340 ms to 2.4 s. This is why you run a **sweep** before launch: find the knee, set the autoscaling threshold left of it, and never discover it from a pager.\n\n```viz\n{\"type\": \"sim\", \"model\": \"queue\", \"title\": \"The knee, live\", \"caption\": \"Same physics as the request queue — push traffic past capacity and watch p99 run away.\"}\n```"
+}
