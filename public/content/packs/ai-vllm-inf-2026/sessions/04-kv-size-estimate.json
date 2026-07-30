@@ -8,7 +8,7 @@
   "intro": "Llama 3 70B stores ~320 KB of K/V per token. A user pastes a 32K-token document.",
   "prompt": "How much KV-cache memory does that single 32K-token request consume (GB)?",
   "unit": "GB",
-  "min": 0,
+  "min": 0.5,
   "max": 45,
   "step": 0.5,
   "answer": 10.2,

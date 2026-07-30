@@ -15,6 +15,8 @@ export interface SimParam {
   step: number
   value: number
   unit?: string
+  /** Allowed values; the knob snaps to the nearest (e.g. real bit-widths). */
+  snap?: number[]
 }
 
 export interface SimSeries {
@@ -624,7 +626,7 @@ const llmServe: SimModel = {
   title: 'Token factory',
   params: [
     { key: 'weightsGB', label: 'Model weights', min: 1, max: 140, step: 1, value: 140, unit: 'GB' },
-    { key: 'bits', label: 'Precision', min: 4, max: 16, step: 4, value: 16, unit: 'bit' },
+    { key: 'bits', label: 'Precision', min: 4, max: 16, step: 1, value: 16, unit: 'bit', snap: [4, 8, 16] },
     { key: 'batch', label: 'Batch size', min: 1, max: 64, step: 1, value: 1 },
   ],
   series: [
