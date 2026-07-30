@@ -1,0 +1,118 @@
+{
+  "id": "deploy-decision",
+  "kind": "decision",
+  "title": "Ship the 70B",
+  "conceptIds": [
+    "inference-costs-slos",
+    "serving-vllm",
+    "quantization",
+    "benchmarking-evaluation"
+  ],
+  "intro": "Llama 3 70B, 4×80 GB, 100 concurrent users promised for launch. The naive prototype serves six. You own the deployment.",
+  "meter": {
+    "label": "SLO compliance",
+    "min": 0,
+    "max": 100,
+    "start": 35
+  },
+  "startId": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "text": "Six users fit; a hundred are coming. Memory is 'full' and the GPU is idle 95% of the time. First move?",
+      "choices": [
+        {
+          "label": "Double the hardware — four more GPUs",
+          "next": "gpus",
+          "effect": -10,
+          "note": "Bought GPUs first.",
+          "preview": "Cost doubles. The allocator still wastes 60–80% of every new gigabyte, and the GPU still idles between requests."
+        },
+        {
+          "label": "Switch the serving engine to vLLM",
+          "next": "vllm",
+          "effect": 30,
+          "note": "Adopted vLLM.",
+          "preview": "PagedAttention recovers the wasted cache; continuous batching wakes the idle GPU. Same hardware."
+        }
+      ]
+    },
+    {
+      "id": "gpus",
+      "text": "Twice the hardware, six became eleven users. Finance is asking questions. The bottleneck was never capacity.",
+      "choices": [
+        {
+          "label": "Adopt vLLM now",
+          "next": "vllm",
+          "effect": 30,
+          "note": "Adopted vLLM (after the invoice).",
+          "preview": "The fix that was available before the purchase order."
+        }
+      ]
+    },
+    {
+      "id": "vllm",
+      "text": "Serving is healthy — 60+ users fit and the GPU is busy. But TTFT misses the 200 ms p99 SLO at peak: streaming 140 GB of BF16 weights per step is the fixed cost.",
+      "choices": [
+        {
+          "label": "Quantize to W4A16 with GPTQ calibration",
+          "next": "quant",
+          "effect": 20,
+          "note": "Quantized with calibration.",
+          "preview": "A quarter of the bytes per step — TTFT and ITL drop hard. Calibration holds recovery near 99%."
+        },
+        {
+          "label": "Ship as is — the average latency looks fine",
+          "next": "end-blind",
+          "effect": -30,
+          "note": "Shipped on the average.",
+          "preview": "The mean is under target. p99 is not. Your heaviest users live in the tail."
+        }
+      ]
+    },
+    {
+      "id": "quant",
+      "text": "The compressed checkpoint is ready and fast. Launch is tomorrow. Last call:",
+      "choices": [
+        {
+          "label": "GuideLLM sweep + lm_eval against the live server, then launch",
+          "next": "end-good",
+          "effect": 15,
+          "note": "Benchmarked before launch.",
+          "preview": "Find the knee, verify recovery on your tasks, set autoscaling left of the cliff."
+        },
+        {
+          "label": "Try three prompts by hand — looks great, ship it",
+          "next": "end-vibes",
+          "effect": -20,
+          "note": "Vibe-checked only.",
+          "preview": "Three prompts is a demo, not an evaluation. The knee and the recovery number stay unknown."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "Optimize → serve → measure — in that order",
+        "debrief": "vLLM recovered the memory and the idle GPU; calibrated quantization cut the fixed streaming cost; the sweep found the knee before users did. Every step attacked the *actual* bottleneck because you measured before and after. That is the whole course in one deployment.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-blind",
+      "ending": {
+        "principle": "Averages are not an SLO",
+        "debrief": "Launch night: dashboards green, support queue on fire. The mean hid a p99 of seconds, and the customers who paste long documents — your best ones — churned first. SLOs are written at percentiles because that's where real users live.",
+        "score": 0
+      }
+    },
+    {
+      "id": "end-vibes",
+      "ending": {
+        "principle": "A vibe check is not an evaluation",
+        "debrief": "It launched fine — until traffic found the knee you never measured, and a subtle accuracy regression on your domain went unnoticed for a month. GuideLLM would have found the first in an afternoon; lm_eval plus the model card the second.",
+        "score": 0
+      }
+    }
+  ]
+}

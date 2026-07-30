@@ -1,0 +1,92 @@
+{
+  "id": "graded-quiz",
+  "kind": "quiz",
+  "title": "The graded quiz, replayed",
+  "conceptIds": [
+    "inference-costs-slos",
+    "kv-cache-memory",
+    "quantization",
+    "serving-vllm",
+    "benchmarking-evaluation"
+  ],
+  "intro": "The certificate quiz, rebuilt from my answer key — including the one I missed.",
+  "questions": [
+    {
+      "prompt": "What role does quantization play in inference efficiency?",
+      "choices": [
+        "It retrains the model on smaller data",
+        "It stores weights in lower-precision formats, cutting memory and data movement",
+        "It caches previous answers to skip generation",
+        "It splits the model across more GPUs"
+      ],
+      "answerIndex": 1,
+      "explanation": "Fewer bits per weight → less memory AND fewer bytes streamed HBM→SRAM every step."
+    },
+    {
+      "prompt": "Why is the KV cache critical in modern LLM inference?",
+      "choices": [
+        "It stores the model weights closer to the tensor cores",
+        "It keeps previously computed keys & values so past tokens aren't recomputed",
+        "It caches full responses for repeated questions",
+        "It reduces the number of layers per forward pass"
+      ],
+      "answerIndex": 1,
+      "explanation": "A new token needs the K/V of every past token — cached once, reused every step, at every layer."
+    },
+    {
+      "prompt": "How does continuous batching improve GPU utilization?",
+      "choices": [
+        "It pads all requests to the same length",
+        "It dynamically fills freed slots at the token level, so no slot idles behind a long request",
+        "It runs each request on its own GPU",
+        "It processes requests strictly in arrival order"
+      ],
+      "answerIndex": 1,
+      "explanation": "Token-level scheduling: the moment a request finishes, a queued one takes its slot on the next step."
+    },
+    {
+      "prompt": "What problem does PagedAttention solve?",
+      "choices": [
+        "Slow attention math for long contexts",
+        "KV-cache waste from fragmentation and max-length over-reservation",
+        "Weights not fitting on a single GPU",
+        "Networking overhead between replicas"
+      ],
+      "answerIndex": 1,
+      "explanation": "Fixed-size blocks tracked by a block table replace contiguous max-length slabs — recovering the 60–80% of cache that naive allocation wasted."
+    },
+    {
+      "prompt": "⚠️ The one I missed — key difference between W8A16 and W8A8?",
+      "choices": [
+        "Weight-only quantization degrades accuracy less than weight+activation",
+        "W8A16 speeds up data movement; W8A8 speeds up data movement AND tensor-core compute",
+        "W8A8 only works during training",
+        "W8A16 requires no calibration data"
+      ],
+      "answerIndex": 1,
+      "explanation": "The trap is answer A: with calibrated methods BOTH preserve accuracy — the schemes differ in **which bottleneck they speed up**, not quality. Weight-only halves the bytes moved; adding activations unlocks low-precision tensor cores for the math itself."
+    },
+    {
+      "prompt": "How do SLOs influence benchmarking and deployment?",
+      "choices": [
+        "They are fixed industry standards every deployment must meet",
+        "They are measurable per-use-case targets (TTFT/ITL/latency at percentiles) that benchmarks are judged against",
+        "They only apply to training pipelines",
+        "They replace the need for benchmarking"
+      ],
+      "answerIndex": 1,
+      "explanation": "Define them BEFORE benchmarking: a chatbot might need TTFT ≤200 ms @ p99 while RAG relaxes to 300 ms — same metrics, different thresholds."
+    },
+    {
+      "prompt": "What is the calibration dataset for in GPTQ / AWQ?",
+      "choices": [
+        "Fine-tuning the model on domain data",
+        "Representative text that reveals which weights matter, so quantization can protect them",
+        "Measuring throughput under load",
+        "Generating the model card"
+      ],
+      "answerIndex": 1,
+      "explanation": "A few hundred samples run through the model let GPTQ measure sensitivity (Hessian) and AWQ spot high-activation weights — protecting what matters and compressing the rest."
+    }
+  ]
+}

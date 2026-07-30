@@ -1,0 +1,27 @@
+{
+  "id": "quant-size-estimate",
+  "kind": "estimate",
+  "title": "Scout on a diet",
+  "conceptIds": [
+    "quantization",
+    "llm-compressor-workflow"
+  ],
+  "intro": "Llama 4 Scout has 109B parameters. BF16 needs 2 bytes per parameter; INT4 needs half a byte.",
+  "prompt": "Roughly how many GB do Scout's weights need at 4-bit?",
+  "unit": "GB",
+  "min": 10,
+  "max": 250,
+  "step": 1,
+  "answer": 54.5,
+  "tolerance": 0.08,
+  "live": {
+    "compute": "gpusNeeded",
+    "inputKey": "gb",
+    "inputs": {
+      "gpuGB": 80
+    },
+    "label": "80-GB GPUs just to load your guess",
+    "decimals": 0
+  },
+  "debrief": "109B × 0.5 bytes ≈ **55 GB** — from 3 GPUs (220 GB at BF16) down to **one 80-GB card**, with room left for cache. Caveat from the lab: small models fall short of the theoretical 4× (Qwen3-0.6B measured −42%, not −75%) because the LM head and norms stay high-precision; big models get close."
+}

@@ -1,0 +1,58 @@
+{
+  "id": "optimization-classify",
+  "kind": "classify",
+  "title": "Model or engine?",
+  "conceptIds": [
+    "inference-costs-slos",
+    "quantization",
+    "serving-vllm"
+  ],
+  "intro": "Two optimization families: change the **model** before deployment, or run it smarter at **runtime**. Sort them.",
+  "buckets": [
+    {
+      "id": "model",
+      "label": "Model optimization (before deploy)",
+      "tone": "warm",
+      "hint": "Changes the checkpoint itself"
+    },
+    {
+      "id": "engine",
+      "label": "Inference optimization (runtime)",
+      "tone": "cool",
+      "hint": "The engine runs an unchanged model smarter"
+    }
+  ],
+  "cards": [
+    {
+      "id": "quant",
+      "text": "Quantization to FP8/INT4",
+      "bucketId": "model"
+    },
+    {
+      "id": "sparse",
+      "text": "2:4 sparsification",
+      "bucketId": "model"
+    },
+    {
+      "id": "calib",
+      "text": "GPTQ calibration with a representative dataset",
+      "bucketId": "model"
+    },
+    {
+      "id": "cbatch",
+      "text": "Continuous batching",
+      "bucketId": "engine"
+    },
+    {
+      "id": "paged",
+      "text": "PagedAttention block tables",
+      "bucketId": "engine"
+    },
+    {
+      "id": "prefix",
+      "text": "Prefix caching for shared system prompts",
+      "bucketId": "engine"
+    }
+  ],
+  "debrief": "Model optimizations (quantization, sparsification, calibrated compression) shrink what must move through the memory hierarchy — applied **once, before deployment**. Inference optimizations (continuous batching, PagedAttention, prefix caching) never touch the weights — the engine schedules and allocates smarter **at runtime**. The 10× comes from stacking both."
+}

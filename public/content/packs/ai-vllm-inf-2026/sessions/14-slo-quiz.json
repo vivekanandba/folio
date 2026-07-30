@@ -1,0 +1,56 @@
+{
+  "id": "slo-quiz",
+  "kind": "quiz",
+  "title": "SLOs and honest measurement",
+  "conceptIds": [
+    "benchmarking-evaluation",
+    "inference-costs-slos"
+  ],
+  "intro": "Numbers mean nothing without targets, and averages lie. Quick check.",
+  "questions": [
+    {
+      "prompt": "TTFT measures…",
+      "choices": [
+        "the total time for the full response",
+        "how long before the FIRST output token appears",
+        "the average gap between streamed tokens",
+        "tokens per second across all requests"
+      ],
+      "answerIndex": 1,
+      "explanation": "TTFT = time to first token — the silence before anything appears. ITL is the gap between tokens; request latency is end-to-end; throughput is the fleet-wide rate."
+    },
+    {
+      "prompt": "Your dashboard shows mean latency 180 ms; p95 is 1.9 s. What's the right read?",
+      "choices": [
+        "Fine — the mean is under the 200 ms target",
+        "Tail-latency trouble: 5%+ of users wait 10× longer than the average suggests",
+        "The benchmark is broken; means and percentiles can't diverge",
+        "Only p50 matters for SLOs"
+      ],
+      "answerIndex": 1,
+      "explanation": "A wide mean↔p95 gap IS the finding — outliers the average hides, often your heaviest users. SLOs are written and alerted at p95/p99, never the mean."
+    },
+    {
+      "prompt": "Which GuideLLM traffic pattern best imitates real users?",
+      "choices": [
+        "Synchronous",
+        "Constant rate",
+        "Poisson",
+        "Sweep"
+      ],
+      "answerIndex": 2,
+      "explanation": "Poisson keeps the average rate fixed with random spacing — bursty like humans. Synchronous is the clean baseline, constant is steady robots, and sweep maps the whole floor-to-ceiling curve in one run."
+    },
+    {
+      "prompt": "Why should GuideLLM's dataset use `samples ≥ requests`?",
+      "choices": [
+        "Fewer samples would crash the benchmark",
+        "Repeated prompts hit the prefix cache and flatter the numbers",
+        "It makes the run finish faster",
+        "lm_eval requires it"
+      ],
+      "answerIndex": 1,
+      "explanation": "If prompts repeat, vLLM's prefix cache reuses their KV — you'd be benchmarking the cache, not the deployment. Unique samples keep the numbers honest."
+    }
+  ]
+}

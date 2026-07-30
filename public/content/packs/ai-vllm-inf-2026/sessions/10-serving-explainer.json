@@ -1,0 +1,40 @@
+{
+  "id": "serving-explainer",
+  "kind": "explainer",
+  "title": "Serving with vLLM — three techniques",
+  "conceptIds": [
+    "serving-vllm"
+  ],
+  "intro": "The GPU should never wait for work, and no cache byte should sit reserved for a token that never comes.",
+  "steps": [
+    {
+      "title": "The GPU is starving",
+      "body": "Decode is **bandwidth-bound**: every step streams all the weights from HBM while the tensor cores idle. The compute per token is tiny; the data movement is the bill. **Batching** reads the weights once for many users — same movement, many tokens:",
+      "viz": {
+        "type": "sim",
+        "model": "llmServe",
+        "title": "The token factory",
+        "caption": "Watch 'GPU doing math %' climb as the batch grows — the cores finally stop waiting."
+      }
+    },
+    {
+      "title": "Continuous beats static",
+      "body": "**Static** batching schedules whole batches — fine when outputs are fixed-size (BERT, YOLO), terrible for LLMs where \"what's 2+2\" shares a batch with a 2000-word essay: finished slots idle until the longest request completes.\n\n**Continuous** batching schedules at the **token level**: the moment a request finishes, a queued one takes its slot on the very next step. GPU utilization stays pinned."
+    },
+    {
+      "title": "PagedAttention — virtual memory for the cache",
+      "body": "Old servers pre-allocated each request one **contiguous** slab at max length → internal fragmentation, external fragmentation, over-reservation: only **20–40%** of cache memory held real tokens (Kwon et al., SOSP 2023).\n\nvLLM splits the cache into **fixed-size blocks** scattered anywhere, stitched per-request by a **block table** — the OS paging playbook. Blocks allocate only as tokens land; every request draws from one shared pool:",
+      "viz": {
+        "type": "sim",
+        "model": "kvcache",
+        "title": "Naive vs paged, live",
+        "caption": "The 'usable pool' knob IS this story — drag it from 40% (naive) to 100% (paged) under load."
+      }
+    },
+    {
+      "title": "Prefix caching — compute once, reuse",
+      "body": "Requests that share a prefix — the same system prompt, few-shot examples, RAG context, or earlier turns of a chat — **reuse the shared KV blocks** instead of recomputing them. At a 75% hit rate that's ~4× throughput on its own.\n\nAll three run in the open-source **vLLM** engine: any model, any accelerator, an OpenAI-compatible API, and a `/metrics` endpoint where you can watch each technique working."
+    }
+  ],
+  "recap": "Continuous batching keeps the GPU busy (token-level scheduling). PagedAttention keeps the cache honest (block tables, no fragmentation — recovering the wasted 60–80%). Prefix caching makes shared context free. Together: vLLM, roughly 10× cheaper than naive serving."
+}

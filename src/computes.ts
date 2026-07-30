@@ -34,4 +34,13 @@ export const COMPUTES: Record<string, (v: Record<string, number>) => number> = {
   simpleIncome: (v) => ((v.principal ?? 0) * (v.yield ?? 0)) / 100,
   // Downtime minutes per year → implied availability %.
   availabilityPct: (v) => (1 - (v.downtime ?? 0) / 525600) * 100,
+  // KV-cache size in GB for `tokensK` thousand tokens (Llama-3-70B geometry:
+  // 2 × 80 layers × 8 KV heads × 128 dim × 2 bytes ≈ 320 KB/token → 0.32 GB/K).
+  kvCacheGB: (v) => (v.tokensK ?? 0) * 0.32,
+  // Weight memory in GB: `paramsB` billion params at `bits` per weight.
+  modelMemory: (v) => (v.paramsB ?? 0) * ((v.bits ?? 16) / 8),
+  // 80-GB-class GPUs needed just to hold `gb` of weights.
+  gpusNeeded: (v) => Math.ceil((v.gb ?? 0) / (v.gpuGB || 80)),
+  // Concurrent requests of `gb` each that fit in a `poolGB` cache pool.
+  usersFit: (v) => Math.floor((v.poolGB ?? 180) / Math.max(0.01, v.gb ?? 1)),
 }

@@ -11,6 +11,10 @@
     {
       "id": "sysarch-lss-2026",
       "path": "packs/sysarch-lss-2026"
+    },
+    {
+      "id": "ai-vllm-inf-2026",
+      "path": "packs/ai-vllm-inf-2026"
     }
   ]
 }

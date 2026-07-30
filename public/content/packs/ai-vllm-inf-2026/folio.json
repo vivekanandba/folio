@@ -1,0 +1,47 @@
+{
+  "id": "ai-vllm-inf-2026",
+  "title": "LLM Inference — Fast & Efficient with vLLM",
+  "subject": "ai-inference",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from 'Fast and Efficient LLM Inference with vLLM' (DeepLearning.AI × Red Hat, Cedric Clyburn; own completed course). Not affiliated; for personal revision only.",
+  "summary": "Why inference dominates AI cost, how the KV cache eats GPU memory, quantization without quality loss, vLLM's continuous batching + PagedAttention + prefix caching, and how to benchmark a deployment honestly.",
+  "tags": [
+    "llm",
+    "inference",
+    "vllm",
+    "quantization",
+    "kv-cache",
+    "gpu",
+    "benchmarking",
+    "serving"
+  ],
+  "concepts": [
+    "inference-costs-slos",
+    "kv-cache-memory",
+    "quantization",
+    "llm-compressor-workflow",
+    "serving-vllm",
+    "benchmarking-evaluation"
+  ],
+  "sessions": [
+    "01-inference-costs-explainer.json",
+    "02-kv-cache-explainer.json",
+    "03-forward-pass-sequence.json",
+    "04-kv-size-estimate.json",
+    "05-optimization-classify.json",
+    "06-quantization-explainer.json",
+    "07-quant-scheme-classify.json",
+    "08-quant-size-estimate.json",
+    "09-compression-sequence.json",
+    "10-serving-explainer.json",
+    "11-oom-detective.json",
+    "12-batching-lab.json",
+    "13-kv-budget-lab.json",
+    "14-slo-quiz.json",
+    "15-sweep-hotspot.json",
+    "16-deploy-decision.json",
+    "17-graded-quiz.json",
+    "18-serving-blueprint.json"
+  ]
+}

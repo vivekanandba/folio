@@ -90,7 +90,13 @@ export function mountSim(
     range.value = String(params[p.key])
     range.setAttribute('aria-label', p.label)
     range.addEventListener('input', () => {
-      params[p.key] = Number(range.value)
+      let v = Number(range.value)
+      if (p.snap?.length) {
+        // Snap to the nearest allowed value (e.g. real bit-widths: 4/8/16).
+        v = p.snap.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a))
+        range.value = String(v)
+      }
+      params[p.key] = v
       valTag.textContent = fmtKnob(params[p.key], p.unit)
       if (!running) { tick(SIM_DT); draw(); updateReadouts() } // knobs respond while paused
     })

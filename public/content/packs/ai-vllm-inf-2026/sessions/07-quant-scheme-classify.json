@@ -1,0 +1,61 @@
+{
+  "id": "quant-scheme-classify",
+  "kind": "classify",
+  "title": "W8A16, W8A8, or both?",
+  "conceptIds": [
+    "quantization"
+  ],
+  "intro": "The graded quiz's favourite trap. Sort each property to the scheme it belongs to.",
+  "buckets": [
+    {
+      "id": "wonly",
+      "label": "W8A16 — weight-only",
+      "tone": "warm",
+      "hint": "Activations stay BF16"
+    },
+    {
+      "id": "wa",
+      "label": "W8A8 — weight + activation",
+      "tone": "cool",
+      "hint": "Low-precision math too"
+    },
+    {
+      "id": "both",
+      "label": "True of BOTH",
+      "tone": "neutral"
+    }
+  ],
+  "cards": [
+    {
+      "id": "dequant",
+      "text": "Dequantizes to BF16 before the matrix multiply",
+      "bucketId": "wonly"
+    },
+    {
+      "id": "cores",
+      "text": "Runs the math on FP8/INT8 tensor cores",
+      "bucketId": "wa"
+    },
+    {
+      "id": "move",
+      "text": "Halves the bytes streamed HBM→SRAM per step",
+      "bucketId": "both"
+    },
+    {
+      "id": "compute",
+      "text": "Speeds up compute as well as data movement",
+      "bucketId": "wa"
+    },
+    {
+      "id": "acc",
+      "text": "Preserves accuracy when calibrated",
+      "bucketId": "both"
+    },
+    {
+      "id": "oldgpu",
+      "text": "The pick when your GPU has no low-precision tensor cores",
+      "bucketId": "wonly"
+    }
+  ],
+  "debrief": "Both schemes compress the **weights**, so both halve data movement. Only W8A8 also quantizes **activations**, unlocking the fast low-precision tensor cores — data movement *and* compute. And the trap: neither 'loses more accuracy' — calibrated methods preserve quality in both. It's a performance split, not a quality one."
+}

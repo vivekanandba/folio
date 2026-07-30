@@ -1,0 +1,82 @@
+{
+  "id": "quantization-explainer",
+  "kind": "explainer",
+  "title": "Quantization — fewer bits, same answers",
+  "conceptIds": [
+    "quantization"
+  ],
+  "intro": "Model sizes double yearly. GPU memory doesn't. Bits are the lever.",
+  "steps": [
+    {
+      "title": "Fewer bits per number",
+      "body": "Like storing **π as 3.14** instead of 3.14159 — for 70 billion numbers. Models ship in BF16 (2 bytes/param); quantization stores them in FP8, INT8, or INT4. The embedding layer and LM head stay high-precision to protect accuracy; the seven linear layers per block — where the parameters actually live — get compressed.",
+      "viz": {
+        "type": "what-if",
+        "compute": "modelMemory",
+        "title": "Bits → gigabytes",
+        "inputs": [
+          {
+            "key": "paramsB",
+            "label": "Parameters",
+            "min": 1,
+            "max": 700,
+            "step": 1,
+            "value": 109,
+            "unit": "B"
+          },
+          {
+            "key": "bits",
+            "label": "Precision",
+            "min": 4,
+            "max": 16,
+            "step": 4,
+            "value": 16,
+            "unit": "bit"
+          }
+        ],
+        "output": {
+          "label": "Weight memory",
+          "unit": "GB",
+          "decimals": 0
+        },
+        "caption": "Llama 4 Scout: 220 GB at BF16 (3 GPUs) → 55 GB at 4-bit (one card)."
+      }
+    },
+    {
+      "title": "Two schemes, two bottlenecks",
+      "body": "**W8A16** quantizes *weights only*: compressed weights stream HBM→SRAM (half the data — a **latency** win), then dequantize to BF16 for the math. **W8A8** also quantizes *activations*, so the matmuls run on low-precision tensor cores (H100 FP8: 2× the BF16 FLOPS) — a **latency AND throughput** win.\n\n⚠️ The classic trap: this is a **performance** distinction, *not* an accuracy one. Calibrated, both preserve quality."
+    },
+    {
+      "title": "Calibration is the magic",
+      "body": "Blind rounding degrades — especially at 4-bit. Calibrated methods run a few hundred representative samples through the model to learn what to protect:\n\n- **AWQ** — *not all weights are equal*: shields weights tied to large activations, compresses the rest hard. Lighter; the INT4 favourite.\n- **GPTQ** — *compensate for error*: Hessian-based sensitivity, layer-by-layer quantization, remaining weights nudged to offset rounding error. Industry standard.\n- **SmoothQuant** — flattens activation spikes; the W8A8 INT8 pick."
+    },
+    {
+      "title": "Proof it holds up",
+      "body": "Published averages (pass@1 over AIME 2024 / MATH-500 / GPQA-Diamond) for Qwen-14B — quantized bars sit on top of the baseline:",
+      "viz": {
+        "type": "annotated",
+        "title": "Accuracy: BF16 vs quantized",
+        "prompt": "Tap each format.",
+        "points": [
+          {
+            "label": "BF16",
+            "value": 73.6,
+            "note": "Baseline: 73.6 average. Full precision, full size."
+          },
+          {
+            "label": "W4A16",
+            "value": 72.8,
+            "note": "4-bit weights, ~4× smaller: 72.8 — a 0.8-point dip for a quarter of the memory."
+          },
+          {
+            "label": "FP W8A8",
+            "value": 74.3,
+            "note": "8-bit weights+activations, 2× smaller: 74.3 — ABOVE baseline, i.e. run-to-run noise."
+          }
+        ],
+        "caption": "A real RAG workload (Llama-3-70B, 2×H100, FP16→FP8) tripled throughput: ~158 → ~474 tok/s."
+      }
+    }
+  ],
+  "recap": "Quantization trades precision for size — and buys **bandwidth** (weights) and **compute** (activations). W8A16 vs W8A8 is about *which bottleneck you speed up*, never about accuracy loss. Calibration (AWQ/GPTQ/SmoothQuant) is what keeps recovery near 99% — check the model card, per benchmark."
+}

@@ -1,0 +1,37 @@
+{
+  "id": "compression-sequence",
+  "kind": "sequence",
+  "title": "The one-shot compression run",
+  "conceptIds": [
+    "llm-compressor-workflow"
+  ],
+  "intro": "You have a full-precision checkpoint and a GPU hour. Order the LLM Compressor workflow.",
+  "prompt": "Put the compression workflow in order:",
+  "steps": [
+    {
+      "id": "pick",
+      "text": "Choose the model and a representative calibration dataset"
+    },
+    {
+      "id": "algo",
+      "text": "Pick the algorithm — GPTQ (Hessian, compensates error) vs AWQ (protects high-activation weights)"
+    },
+    {
+      "id": "scheme",
+      "text": "Choose the scheme — W4A16, INT8, FP8 — targeting Linear layers, ignoring lm_head"
+    },
+    {
+      "id": "oneshot",
+      "text": "Run one-shot post-training quantization over ~256 calibration samples"
+    },
+    {
+      "id": "verify",
+      "text": "Verify: size on disk, a sample generation, and perplexity vs the base model"
+    },
+    {
+      "id": "serve",
+      "text": "Serve the compressed checkpoint directly in vLLM"
+    }
+  ],
+  "debrief": "Model + data → algorithm → scheme → one-shot → **verify** → serve. The verification step is not optional: the lab's Qwen3-0.6B came out 42% smaller (not the theoretical 75%) with perplexity 32.79 → 35.48 (~8% worse) — numbers you only know by measuring."
+}
