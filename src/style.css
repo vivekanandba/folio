@@ -2391,7 +2391,11 @@ details.deeper[open] > summary { border-bottom: 1px solid var(--line); margin-bo
   box-shadow: var(--shadow-2);
 }
 .cinematic-hero > * { position: relative; z-index: 1; }
-.cinematic-hero > .aurora-canvas { z-index: 0; }
+/* Must repeat position here: the `> *` rule above ties on specificity and is
+   later in the sheet, so it silently pulled the canvas into normal flow —
+   which fed its own height back through the ResizeObserver and stretched the
+   hero without bound (the "endless blank halls page" bug). */
+.cinematic-hero > .aurora-canvas { position: absolute; z-index: 0; }
 
 /* Completion ceremony */
 .stage-bloom .stage-glow {

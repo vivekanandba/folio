@@ -137,10 +137,12 @@ export function mountAurora(host: HTMLElement, opts: AuroraOptions): AuroraHandl
     const resize = () => {
       const w = host.clientWidth || 300
       const h = host.clientHeight || 150
-      // Cap backing store: DPR ≤ 1.5 AND width ≤ 720 device px.
+      // Cap backing store: DPR ≤ 1.5, width ≤ 720 device px, height ≤ 600.
+      // The hard height cap also breaks any layout feedback loop if CSS ever
+      // lets the canvas back into normal flow (see the halls-hero bug).
       const scale = Math.min(Math.min(window.devicePixelRatio || 1, 1.5), 720 / Math.max(w, 1))
       canvas.width = Math.max(1, Math.round(w * scale))
-      canvas.height = Math.max(1, Math.round(h * scale))
+      canvas.height = Math.max(1, Math.min(600, Math.round(h * scale)))
       gl.viewport(0, 0, canvas.width, canvas.height)
     }
 
