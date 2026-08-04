@@ -114,6 +114,15 @@ onRoute(async (route) => {
   if (title) liveAnnounce(`${title} loaded`)
 })
 
+// The pocket museum: after one online visit, everything works offline.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
+      /* offline support is progressive — never block the app on it */
+    })
+  })
+}
+
 // Global shortcuts: Cmd/Ctrl+K, or "/" when not typing in a field.
 window.addEventListener('keydown', (e) => {
   const target = e.target as HTMLElement | null

@@ -1,6 +1,6 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
-import { loadProgress, packCompletion } from '../progress'
+import { exportProgress, importProgress, loadProgress, packCompletion } from '../progress'
 import { href } from '../router'
 import { computeStreak, masteryBand, retentionRate, today } from '../srs'
 import type { Attempt, FolioPackMeta } from '../types'
@@ -76,6 +76,49 @@ function streakCalendar(daily: Record<string, number>, weeks = 8): HTMLElement {
   return grid
 }
 
+/** Backup / restore — progress lives in this browser unless you carry it out. */
+function ledgerSection(): HTMLElement {
+  const exportBtn = el('button', { class: 'ghost', type: 'button' }, ['⬇ Export progress'])
+  exportBtn.addEventListener('click', () => {
+    const blob = new Blob([exportProgress()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = el('a', { href: url, download: `folio-progress-${today()}.json` })
+    document.body.append(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  })
+
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = 'application/json,.json'
+  fileInput.className = 'sr-only'
+  const importBtn = el('button', { class: 'ghost', type: 'button' }, ['⬆ Import backup'])
+  const note = el('p', { class: 'muted small' }, [
+    'Progress lives in this browser only. Export a ledger before switching devices; importing replaces what’s here.',
+  ])
+  importBtn.addEventListener('click', () => fileInput.click())
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    const check = importProgress(text)
+    if (check.ok) {
+      note.textContent = 'Ledger restored. Reloading…'
+      window.setTimeout(() => location.reload(), 600)
+    } else {
+      note.textContent = `Import refused: ${check.error}`
+      note.classList.add('bad')
+    }
+  })
+
+  return el('section', {}, [
+    el('h2', {}, ['The ledger']),
+    note,
+    el('div', { class: 'session-actions' }, [exportBtn, importBtn, fileInput]),
+  ])
+}
+
 export async function renderReport(root: HTMLElement): Promise<void> {
   root.replaceChildren(el('p', { class: 'muted' }, ['The curator is tallying…']))
   const catalog = await loadCatalog()
@@ -100,6 +143,7 @@ export async function renderReport(root: HTMLElement): Promise<void> {
         'Nothing to tally yet — play a session or run the daily review, and the curator will start keeping records.',
       ]),
       el('a', { class: 'primary', href: href({ name: 'today' }) }, ['Start today’s review']),
+      ledgerSection(),
     )
     return
   }
@@ -181,5 +225,5 @@ export async function renderReport(root: HTMLElement): Promise<void> {
     }),
   ])
 
-  root.replaceChildren(crumb, head, stats, curve, lamps, visits, halls)
+  root.replaceChildren(crumb, head, stats, curve, lamps, visits, halls, ledgerSection())
 }
