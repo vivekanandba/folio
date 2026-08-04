@@ -7,8 +7,10 @@ const EMA_ALPHA = 0.4 // recency bias for mastery
 const NEW_PER_DAY = 4
 const MAX_QUEUE = 20
 
-/** Audit is self-report, so it's a weaker mastery signal than correctness-based kinds. */
-const KIND_WEIGHT: Record<SessionKind, number> = {
+/** Audit is self-report, so it's a weaker mastery signal than correctness-based kinds.
+ *  Exported so tests can assert parity with the linter's KNOWN_KINDS (the
+ *  missing-`lab` entry broke main once — tsc-only, invisible offline). */
+export const KIND_WEIGHT: Record<SessionKind, number> = {
   quiz: 1,
   classify: 1,
   detective: 1,

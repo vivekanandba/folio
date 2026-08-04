@@ -20,7 +20,7 @@ export interface PackInput {
   sessions: { file: string; data: Json }[]
 }
 
-const KNOWN_KINDS = new Set([
+export const KNOWN_KINDS = new Set([
   'quiz', 'classify', 'detective', 'calculator', 'audit', 'decision',
   'sequence', 'estimate', 'hotspot', 'explainer', 'lab', 'blueprint',
 ])
@@ -28,7 +28,7 @@ const KNOWN_KINDS = new Set([
 const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect', 'pathExists', 'survivesKill'])
 
 /** Whitelisted simulation models — keep in sync with src/sim/models.ts. */
-const SIM_MODELS = new Set([
+export const SIM_MODELS = new Set([
   'queue', 'failover', 'compound', 'retention',
   'sipVsLump', 'retryStorm', 'fanout', 'marketCycle',
   'llmServe', 'kvcache',
@@ -36,7 +36,7 @@ const SIM_MODELS = new Set([
 const LAB_OPS = new Set(['<', '<=', '>', '>='])
 
 /** Whitelisted compute names — keep in sync with src/computes.ts. */
-const COMPUTES = new Set([
+export const COMPUTES = new Set([
   'compound', 'sipFuture', 'realReturn', 'weightedYield', 'downtime', 'feeImpact',
   'impliedCagr', 'simpleIncome', 'availabilityPct',
   'kvCacheGB', 'modelMemory', 'gpusNeeded', 'usersFit',

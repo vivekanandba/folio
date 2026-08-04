@@ -10,25 +10,6 @@ import { mountFlashcards } from '../sessions/flashcard'
 import { mountSim } from '../sim/engine'
 import { buildToday, today, type ConceptRef } from '../srs'
 
-/**
- * Interleave the queue across packs (round-robin by packId, order preserved
- * within a pack): mixing subjects during one review beats blocking them.
- */
-function interleaveByPack<T extends { ref: ConceptRef }>(queue: T[]): T[] {
-  const byPack = new Map<string, T[]>()
-  for (const item of queue) {
-    const bucket = byPack.get(item.ref.packId) ?? []
-    bucket.push(item)
-    byPack.set(item.ref.packId, bucket)
-  }
-  const buckets = [...byPack.values()]
-  const out: T[] = []
-  for (let i = 0; out.length < queue.length; i++) {
-    for (const bucket of buckets) if (i < bucket.length) out.push(bucket[i])
-  }
-  return out
-}
-
 function header(): HTMLElement {
   return el('nav', { class: 'crumb' }, [
     el('a', { href: href({ name: 'hub' }) }, ['Folio']),
@@ -54,7 +35,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   }
 
   const store = loadProgress()
-  const queue = interleaveByPack(buildToday(store.concepts, allConcepts))
+  const queue = buildToday(store.concepts, allConcepts) // already pack-interleaved
 
   if (!queue.length) {
     // The museum explains itself: a live forgetting curve while you wait.

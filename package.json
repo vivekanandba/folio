@@ -10,11 +10,13 @@
     "pages:build": "VITE_BASE=/folio/ npm run build",
     "lint:content": "node --experimental-strip-types tools/lint/cli.ts",
     "preview:offline": "node --experimental-strip-types tools/preview/build.mjs",
-    "author": "node --experimental-strip-types tools/authoring/cli.ts"
+    "author": "node --experimental-strip-types tools/authoring/cli.ts",
+    "test": "node --experimental-strip-types --test 'tests/*.test.ts'",
+    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage 'tests/*.test.ts'"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
   },
-  "comment:author": "The AI authoring pipeline (npm run author) needs @anthropic-ai/sdk. Install it on demand — `npm i -D @anthropic-ai/sdk` — it is not part of the app build."
+  "comment:author": "The AI authoring pipeline (npm run author) needs @anthropic-ai/sdk. Install it on demand \u2014 `npm i -D @anthropic-ai/sdk` \u2014 it is not part of the app build."
 }
