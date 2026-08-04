@@ -27,6 +27,8 @@ jobs:
         run: npm ci
       - name: Lint content
         run: npm run lint:content
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run pages:build
       - uses: actions/upload-pages-artifact@v3
