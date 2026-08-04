@@ -173,3 +173,36 @@ export function getResume(): { packId: string; last?: SessionResult } | null {
   }
   return { packId: store.lastPackId, last }
 }
+
+/** Serialize the whole store for a downloadable backup. */
+export function exportProgress(): string {
+  return JSON.stringify(loadProgress(), null, 2)
+}
+
+/**
+ * Replace the store from a backup file's text. Structural validation only —
+ * enough to refuse garbage without being brittle about forward-compat fields.
+ */
+export function importProgress(json: string): { ok: boolean; error?: string } {
+  let data: unknown
+  try {
+    data = JSON.parse(json)
+  } catch {
+    return { ok: false, error: 'Not valid JSON.' }
+  }
+  const d = data as Partial<ProgressStoreV2> | null
+  if (!d || typeof d !== 'object') return { ok: false, error: 'Not a folio backup.' }
+  if (d.version !== 2) return { ok: false, error: `Unsupported backup version (${String(d.version)}).` }
+  if (!d.sessions || typeof d.sessions !== 'object' || Array.isArray(d.sessions)) {
+    return { ok: false, error: 'Backup is missing session records.' }
+  }
+  if (!d.concepts || typeof d.concepts !== 'object' || Array.isArray(d.concepts)) {
+    return { ok: false, error: 'Backup is missing concept states.' }
+  }
+  if (!Array.isArray(d.attempts)) return { ok: false, error: 'Backup is missing the attempt log.' }
+  if (!d.daily || typeof d.daily !== 'object' || Array.isArray(d.daily)) {
+    return { ok: false, error: 'Backup is missing the daily log.' }
+  }
+  persist(d as ProgressStoreV2)
+  return { ok: true }
+}
