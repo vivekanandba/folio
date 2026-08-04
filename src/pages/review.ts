@@ -1,11 +1,33 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
 import { deriveFlashcards } from '../flashcards'
+import { burst } from '../fx'
+import { mountDrill } from '../gauntlet/drill'
+import { dailyDrill } from '../gauntlet/generators'
 import { loadProgress, recordConceptReview } from '../progress'
 import { href } from '../router'
 import { mountFlashcards } from '../sessions/flashcard'
 import { mountSim } from '../sim/engine'
-import { buildToday, type ConceptRef } from '../srs'
+import { buildToday, today, type ConceptRef } from '../srs'
+
+/**
+ * Interleave the queue across packs (round-robin by packId, order preserved
+ * within a pack): mixing subjects during one review beats blocking them.
+ */
+function interleaveByPack<T extends { ref: ConceptRef }>(queue: T[]): T[] {
+  const byPack = new Map<string, T[]>()
+  for (const item of queue) {
+    const bucket = byPack.get(item.ref.packId) ?? []
+    bucket.push(item)
+    byPack.set(item.ref.packId, bucket)
+  }
+  const buckets = [...byPack.values()]
+  const out: T[] = []
+  for (let i = 0; out.length < queue.length; i++) {
+    for (const bucket of buckets) if (i < bucket.length) out.push(bucket[i])
+  }
+  return out
+}
 
 function header(): HTMLElement {
   return el('nav', { class: 'crumb' }, [
@@ -32,7 +54,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   }
 
   const store = loadProgress()
-  const queue = buildToday(store.concepts, allConcepts)
+  const queue = interleaveByPack(buildToday(store.concepts, allConcepts))
 
   if (!queue.length) {
     // The museum explains itself: a live forgetting curve while you wait.
@@ -61,17 +83,20 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
+    const stamp = el('div', { class: 'exhibit-stamp mastered', role: 'status' }, ['Gauntlet cleared'])
     root.replaceChildren(
       header(),
       el('div', { class: 'result-card pop-in review-summary' }, [
         el('h2', {}, ['Review complete']),
         el('p', { class: 'score-hero' }, [String(reviewed)]),
         el('p', {}, [
-          `concept${reviewed === 1 ? '' : 's'} reviewed today. Spaced out for maximum retention.`,
+          `concept${reviewed === 1 ? '' : 's'} reviewed today. Fresh drills return tomorrow.`,
         ]),
-        el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to hub']),
+        stamp,
+        el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
       ]),
     )
+    burst(stamp)
   }
 
   const runNext = async () => {
@@ -88,7 +113,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         item.ref.conceptId,
         info.sessionFiles,
       )
-      if (!cards.length) {
+      // Today's generated drill for this concept (null → flashcards only).
+      const drill = dailyDrill(item.ref.packId, item.ref.conceptId, today())
+      if (!cards.length && !drill) {
         pos += 1
         continue
       }
@@ -97,12 +124,12 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       root.replaceChildren(
         header(),
         el('p', { class: 'review-progress muted small' }, [
-          `Concept ${pos + 1} of ${queue.length} · ${item.status}`,
+          `Concept ${pos + 1} of ${queue.length} · ${item.status}${drill ? ' · fresh drill waiting' : ''}`,
         ]),
         host,
       )
-      mountFlashcards(host, prettyId(item.ref.conceptId), cards.slice(0, 8), (normalized) => {
-        recordConceptReview(item.ref.packId, item.ref.conceptId, normalized)
+
+      const advance = (): void => {
         reviewed += 1
         pos += 1
         // Surface a mid-queue failure instead of leaving an unhandled rejection.
@@ -116,7 +143,30 @@ export async function renderReview(root: HTMLElement): Promise<void> {
             ]),
           )
         })
-      })
+      }
+
+      // Recall first, then prove it on fresh numbers. The drill is weighted
+      // into the SRS grade: objective performance tempers self-assessment.
+      const finishConcept = (flashAvg: number, drillScore: number | null): void => {
+        const normalized = drillScore == null ? flashAvg : flashAvg * 0.6 + drillScore * 0.4
+        recordConceptReview(item.ref.packId, item.ref.conceptId, normalized)
+        advance()
+      }
+
+      const runDrill = (flashAvg: number): void => {
+        if (!drill) {
+          finishConcept(flashAvg, null)
+          return
+        }
+        mountDrill(host, prettyId(item.ref.conceptId), drill, (score) => finishConcept(flashAvg, score))
+      }
+
+      if (cards.length) {
+        // Time-box the round: fewer cards when a drill follows.
+        mountFlashcards(host, prettyId(item.ref.conceptId), cards.slice(0, drill ? 5 : 8), runDrill)
+      } else {
+        runDrill(0.75) // no cards — the drill alone carries the grade at neutral prior
+      }
       return
     }
     showSummary()
