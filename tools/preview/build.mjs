@@ -41,11 +41,14 @@ for (const file of walk(join(ROOT, 'src'))) {
   code = stripTypeScriptTypes(code, { mode: 'strip' })
   // relative specifiers → explicit browser paths: './x' → './x.js',
   // directory imports './sessions' → './sessions/index.js'. Covers both
-  // `from './x'` and bare side-effect `import './x'` forms.
+  // `from './x'` and bare side-effect `import './x'` forms. Explicit '.ts'
+  // extensions (allowed by allowImportingTsExtensions, used by pure modules
+  // that must run under plain node) are respelled to the transpiled '.js'.
   const respell = (m, a, spec, z) => {
     if (/\.(js|css|svg|png)$/.test(spec)) return m
-    const abs = resolve(dirname(file), spec)
-    return existsSync(join(abs, 'index.ts')) ? `${a}${spec}/index.js${z}` : `${a}${spec}.js${z}`
+    const clean = spec.replace(/\.ts$/, '')
+    const abs = resolve(dirname(file), clean)
+    return existsSync(join(abs, 'index.ts')) ? `${a}${clean}/index.js${z}` : `${a}${clean}.js${z}`
   }
   code = code.replace(/(from\s+['"])(\.\.?\/[^'"]+)(['"])/g, respell)
   code = code.replace(/(^import\s+['"])(\.\.?\/[^'"]+)(['"])/gm, respell)

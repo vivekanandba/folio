@@ -2,6 +2,7 @@ export type Route =
   | { name: 'hub' }
   | { name: 'today' }
   | { name: 'floor' }
+  | { name: 'report' }
   | { name: 'pack'; packId: string }
   | { name: 'concept'; packId: string; conceptId: string }
   | { name: 'session'; packId: string; sessionId: string }
@@ -15,6 +16,7 @@ export function parseHash(): Route {
   if (parts[0] === 'halls') return { name: 'hub' }
   if (parts[0] === 'today') return { name: 'today' }
   if (parts[0] === 'floor') return { name: 'floor' }
+  if (parts[0] === 'report') return { name: 'report' }
   if (parts[0] === 'pack' && parts[1]) {
     if (parts[2] === 'concept' && parts[3]) {
       return { name: 'concept', packId: parts[1], conceptId: parts[3] }
@@ -35,6 +37,8 @@ export function href(route: Route): string {
       return '#/today'
     case 'floor':
       return '#/'
+    case 'report':
+      return '#/report'
     case 'pack':
       return `#/pack/${route.packId}`
     case 'concept':

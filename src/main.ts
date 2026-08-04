@@ -6,6 +6,7 @@ import { onRoute } from './router'
 import { renderConcept } from './pages/concept'
 import { renderFloor } from './pages/floor'
 import { renderHub } from './pages/hub'
+import { renderReport } from './pages/report'
 import { renderPack } from './pages/pack'
 import { renderReview } from './pages/review'
 import { renderSession } from './pages/session'
@@ -68,6 +69,9 @@ onRoute(async (route) => {
           break
         case 'floor':
           await renderFloor(main)
+          break
+        case 'report':
+          await renderReport(main)
           break
         case 'pack':
           await renderPack(main, route.packId)
