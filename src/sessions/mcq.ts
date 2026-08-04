@@ -19,6 +19,9 @@ export interface MCQOptions {
 /**
  * Single-question multiple choice with correct/wrong highlight + burst/shake feedback.
  * Extracted from quiz / detective(showDiagnosis) / calculator(renderJudgment).
+ *
+ * Choices render in a fresh random order every mount: replaying a session must
+ * test the knowledge, not the remembered position of last time's answer.
  */
 export function mountMCQ(opts: MCQOptions): HTMLElement {
   const wrap = el('div', { class: 'mcq' })
@@ -28,19 +31,27 @@ export function mountMCQ(opts: MCQOptions): HTMLElement {
   const list = el('div', { class: grid ? 'choice-grid' : 'choice-list' })
   const feedback = el('div', { class: 'feedback' })
 
-  opts.choices.forEach((choice, i) => {
+  // Display order: a shuffled view over the authored choices.
+  const order = opts.choices.map((_, i) => i)
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+
+  order.forEach((origIndex, displayIndex) => {
+    const choice = opts.choices[origIndex]
     const btn = grid
       ? el('button', { class: 'choice-tile', type: 'button' }, [
-          el('span', { class: 'choice-letter' }, [String.fromCharCode(65 + i)]),
+          el('span', { class: 'choice-letter' }, [String.fromCharCode(65 + displayIndex)]),
           el('span', {}, [choice]),
         ])
       : el('button', { class: 'choice-btn', type: 'button' }, [choice])
     btn.addEventListener('click', () => {
-      const correct = i === opts.answerIndex
+      const correct = origIndex === opts.answerIndex
       list.querySelectorAll('button').forEach((b, j) => {
         b.setAttribute('disabled', 'true')
-        if (j === opts.answerIndex) b.classList.add('correct')
-        if (j === i && !correct) b.classList.add('wrong')
+        if (order[j] === opts.answerIndex) b.classList.add('correct')
+        if (j === displayIndex && !correct) b.classList.add('wrong')
       })
       if (correct) burst(btn)
       else shake(btn)
