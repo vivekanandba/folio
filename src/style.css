@@ -2158,6 +2158,15 @@ input[type='range'] {
   outline-offset: 2px;
 }
 
+/* The router focuses <main> after every navigation (screen-reader/keyboard
+   anchor). A focus ring around the whole page column reads as two stray
+   teal bands down the screen edges — suppress it on the region itself;
+   every interactive element keeps its ring. */
+.main:focus,
+.main:focus-visible {
+  outline: none;
+}
+
 /* Command palette (native dialog) */
 dialog.cmdk {
   margin: 12vh auto auto;
