@@ -12,7 +12,8 @@
     "preview:offline": "node --experimental-strip-types tools/preview/build.mjs",
     "author": "node --experimental-strip-types tools/authoring/cli.ts",
     "test": "node --experimental-strip-types --test 'tests/*.test.ts'",
-    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage 'tests/*.test.ts'"
+    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage 'tests/*.test.ts'",
+    "smoke": "node tools/smoke/run.mjs"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
