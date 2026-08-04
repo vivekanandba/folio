@@ -35,7 +35,7 @@ self.addEventListener('fetch', (event) => {
         const cache = await caches.open(VERSION)
         try {
           const fresh = await fetch(request)
-          cache.put(request, fresh.clone())
+          if (fresh.ok) cache.put(request, fresh.clone()) // never replay an error page offline
           return fresh
         } catch {
           const hit = (await cache.match(request)) ?? (await cache.match(self.registration.scope))
