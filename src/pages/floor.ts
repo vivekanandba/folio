@@ -480,6 +480,7 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
       dueCount > 0 ? `Review ${dueCount} due concept${dueCount === 1 ? '' : 's'}` : 'Start a review',
     ]),
     el('a', { class: 'ghost floor-halls-link', href: href({ name: 'hub' }) }, ['Browse the halls →']),
+    el('a', { class: 'ghost floor-halls-link', href: href({ name: 'report' }) }, ['Curator’s report']),
   ])
 
   wrap.append(canvas, tip)

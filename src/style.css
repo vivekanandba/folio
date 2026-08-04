@@ -2774,6 +2774,50 @@ input[type='range']:active::-moz-range-thumb { transform: scale(1.35); }
 .floor-list { margin: 0.25rem 0; padding-left: 1.2rem; }
 .floor-list li { margin: 0.2rem 0; }
 
+/* ============================================================
+   Curator's report — your museum, measured
+   ============================================================ */
+
+.report-stats { margin: 1rem 0 1.5rem; }
+
+.report-bar {
+  grid-template-columns: 7.5rem 1fr auto;
+  margin: 0.45rem 0;
+}
+.report-bar-note {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  min-width: 6.5rem;
+  text-align: right;
+}
+
+.report-lamp .tag { text-transform: capitalize; }
+.tag.band-shaky { background: #2a2312; color: #e5b567; }
+.tag.band-developing { background: #182236; color: #8ab4f8; }
+.tag.band-solid { background: var(--accent-soft); color: var(--accent); }
+
+.streak-grid {
+  display: grid;
+  grid-template-columns: repeat(28, 0.8rem);
+  grid-auto-rows: 0.8rem;
+  gap: 0.25rem;
+  margin: 0.75rem 0;
+}
+.streak-dot {
+  border-radius: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.streak-dot.level-1 { background: #1e4a44; border-color: transparent; }
+.streak-dot.level-2 { background: #2c8f86; border-color: transparent; }
+.streak-dot.level-3 { background: #4fd1c5; border-color: transparent; }
+
+@media (max-width: 640px) {
+  .streak-grid { grid-template-columns: repeat(14, 0.8rem); }
+  .report-bar { grid-template-columns: 5.5rem 1fr auto; }
+}
+
 /* Gallery colophon */
 .colophon {
   width: min(var(--max), calc(100% - 2rem));
