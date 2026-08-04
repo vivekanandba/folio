@@ -16,6 +16,13 @@ function mountClassify(
   const assignment = new Map<string, string>()
   const max = session.cards.length
 
+  // Fresh pool order each mount — replays test sorting, not remembered layout.
+  const poolOrder = [...session.cards]
+  for (let i = poolOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[poolOrder[i], poolOrder[j]] = [poolOrder[j], poolOrder[i]]
+  }
+
   const announce = (cardId: string, bucketLabel: string) => {
     const text = session.cards.find((c) => c.id === cardId)?.text ?? 'Card'
     liveAnnounce(`${text} → ${bucketLabel}. ${assignment.size} of ${max} sorted.`)
@@ -82,7 +89,7 @@ function mountClassify(
     }
 
     const poolInner = el('div', { class: 'card-pool-inner' })
-    for (const card of session.cards) {
+    for (const card of poolOrder) {
       if (assignment.has(card.id)) continue
       poolInner.append(makeChip(card.id, card.text, false))
     }
