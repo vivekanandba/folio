@@ -14,6 +14,14 @@ The deterministic GitHub steps are in `scripts/ship.sh`; the judgement
 
 ## Procedure
 
+0. **Spec check (features only).** If this change is a feature (new engine
+   behavior, new kind/machine/page — anything bigger than a fix), it must
+   have a `specs/NNN-<slug>/spec.md` (see `specs/templates/`), agreed before
+   the implementation, linked from the PR body, with its `tasks.md`
+   checkboxes updated. Engine changes also update the relevant
+   `specs/<domain>.md` invariant + its test in this same PR
+   (`specs/constitution.md`, Article III). Fixes and content-only changes
+   skip this step.
 1. **Branch.** If on `main`, create a feature branch first (`git switch -c
    <type>/<slug>`). Never open a PR from `main` onto `main`.
 2. **Commit & push** all pending work with a clear message.
