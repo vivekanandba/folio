@@ -1,15 +1,26 @@
 # Folio specs
 
-Living invariants for the engine and content system. **Every line here maps to
-an automated gate** — a test file, the linter, or a CI job. A spec statement
-without a gate is a wish, not a spec; if you find one, either write the test
-or delete the line.
+Two complementary halves, one contract: **a spec statement without an
+automated gate is a wish, not a spec** — if you find one, write the test or
+delete the line.
 
-## The rule
+1. **Invariants** (the domain files below) — what must stay true about the
+   system as shipped. This is the regression side; every line maps to a test
+   file, the linter, or a CI job.
+2. **Feature lifecycle** (spec-driven development, spec-kit style) — new
+   features start as `specs/NNN-<slug>/spec.md` (what/why, acceptance
+   criteria each naming their gate) → `plan.md` (how) → `tasks.md` (steps),
+   built under [constitution.md](constitution.md) and reviewed in the PR with
+   the code. Templates: [templates/](templates/). Worked example:
+   [001-data-storage-machines/](001-data-storage-machines/).
 
-**An engine change lands its spec update and its test in the same PR.**
-Content changes are gated by `npm run lint:content` (tools/lint) and the
-content-contract tests; they don't need spec edits.
+## The rules
+
+- **An engine change lands its spec update and its test in the same PR.**
+- **A feature bigger than a fix starts with `specs/NNN-<slug>/spec.md`** —
+  written and agreed before implementation; the PR body links it.
+- Content-only changes are gated by `npm run lint:content` and the
+  content-contract tests; they need neither spec edits nor a feature folder.
 
 ## The verification pyramid
 

@@ -3,6 +3,13 @@
 Every change lands through a pull request that runs a **reviewer↔dev review
 loop** before it merges. Nothing goes straight to `main`.
 
+**Features start upstream of this loop**: anything bigger than a fix begins
+as `specs/NNN-<slug>/spec.md → plan.md → tasks.md` (see `specs/README.md`
+and `specs/templates/`), agreed before implementation and linked from the PR
+body. The reviewer's first question on a feature PR is "does the diff match
+the spec, and did the invariants + tests land with it?"
+(`specs/constitution.md`, Article III).
+
 The loop is deliberately adversarial with itself: the same agent (or person)
 plays two roles in turn — a **reviewer** who tries to find problems, and a
 **dev** who fixes them — and repeats until the reviewer has nothing left to
