@@ -1,0 +1,28 @@
+{
+  "id": "drift-detective",
+  "kind": "detective",
+  "title": "The project that forgot itself",
+  "conceptIds": ["feature-cycle"],
+  "intro": "Three months in, an SDD project has gone strangely sour: the agent keeps making 'obvious' mistakes it never used to make. Open the clues and diagnose.",
+  "facts": [
+    { "label": "The specs", "value": "requirements.md still describes the appointments table with a `therapist` column. The database has used `therapist_name` since a hotfix in week 3.", "signal": 3 },
+    { "label": "Git history", "value": "A dozen commits touch src/ only — quick manual patches with messages like 'fix css' and 'hotfix col name'. No spec files changed in any of them.", "signal": 3 },
+    { "label": "The agent's behaviour", "value": "It re-asks questions that were settled weeks ago, and its last feature contradicted two of those decisions.", "signal": 2 },
+    { "label": "The team", "value": "Reviews take longer every sprint — nobody can say what the system does without reading the code. One dev keeps a private notes file to cope.", "signal": 2 },
+    { "label": "The constitution", "value": "mission.md and tech-stack.md are intact and still accurate. The roadmap is up to date.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Hand-edits bypassing the agent", "pct": 70, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Ordinary new-feature churn", "pct": 30, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What went wrong with this project?",
+  "choices": [
+    "The constitution was badly written from the start",
+    "Drift: hand-edited code desynced from the specs, so the specs now lie to the agent",
+    "The agent's model degraded and needs replacing",
+    "SDD doesn't work for projects older than a few weeks"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence of spec–code drift",
+  "debrief": "Every clue points the same way: code changed in src/-only commits while requirements.md froze in week 3 — so the specs describe software that no longer exists. The agent isn't degrading; it's faithfully trusting documents that now lie, which is why it re-asks settled questions and contradicts old decisions. The private notes file is the giveaway symptom: **cognitive debt** is back, carried in one person's head. The cure is the rule that was skipped: route fixes **through the agent**, so spec and code move together — and when drift has already happened, run a replanning pass to resync before the next feature."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "doc-triple-classify",
+  "kind": "classify",
+  "title": "Constitution or feature spec?",
+  "conceptIds": ["feature-cycle", "constitution-and-roadmap"],
+  "intro": "The graded quiz's favourite trap, as a sorting bench: which triple does each document belong to?",
+  "buckets": [
+    { "id": "constitution", "label": "Constitution (project level)", "hint": "Written once, evolved forever", "tone": "warm" },
+    { "id": "featurespec", "label": "Feature spec (per feature)", "hint": "One per branch, dated directory", "tone": "cool" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "mission.md — vision, audiences, scope", "bucketId": "constitution" },
+    { "id": "c2", "text": "tech-stack.md — shared engineering agreements", "bucketId": "constitution" },
+    { "id": "c3", "text": "roadmap.md — the living sequence of phases", "bucketId": "constitution" },
+    { "id": "c4", "text": "plan.md — numbered task groups for this work", "bucketId": "featurespec" },
+    { "id": "c5", "text": "requirements.md — this feature's scope and pinned decisions", "bucketId": "featurespec" },
+    { "id": "c6", "text": "validation.md — how we'll know it's done and mergeable", "bucketId": "featurespec" },
+    { "id": "c7", "text": "The doc that gets a phase checked off after a merge", "bucketId": "constitution" },
+    { "id": "c8", "text": "The docs living in specs/2026-03-30-hello-hono/", "bucketId": "featurespec" }
+  ],
+  "debrief": "Two triples, two altitudes. **Constitution** = mission / tech-stack / roadmap: project-level, written once in conversation, evolved through replanning — the roadmap is the piece that changes most (phases get checked off and combined). **Feature spec** = plan / requirements / validation: born on a feature branch in a dated directory, committed before implementation, and kept in sync with the code through the agent. On the quiz, every wrong answer mixes the two."
+}

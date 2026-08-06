@@ -1,0 +1,27 @@
+{
+  "id": "constitution-explainer",
+  "kind": "explainer",
+  "title": "Writing the constitution",
+  "conceptIds": ["constitution-and-roadmap"],
+  "intro": "The project-level foundation: three documents, written in conversation with the agent.",
+  "steps": [
+    {
+      "title": "Two levels of an SDD project",
+      "body": "The **constitution** (project level) feeds repeated **feature phases** (plan → implement → validate), with replanning in between.\n\nThe one key skill throughout: **the right level of detail**. Rich context on goals, mission, audience and constraints; silence on low-level choices the agent can make itself. Treat it as a highly capable pair programmer and you'll usually pitch it right."
+    },
+    {
+      "title": "Mission, tech stack, roadmap",
+      "body": "Three documents in a `specs/` directory:",
+      "viz": { "type": "annotated", "title": "The why, the how, the when", "prompt": "Tap each doc.", "points": [ { "label": "mission.md", "value": 3, "note": "Vision, target audiences, scope. The course's AgentClinic: a satirical vet clinic where patients are AI agents with chronic hallucination and prompt amnesia." }, { "label": "tech-stack.md", "value": 3, "note": "Shared engineering understanding — narrowed by trade-offs and what the team already uses. AgentClinic: TypeScript, Hono, SQLite, Vitest." }, { "label": "roadmap.md", "value": 4, "note": "A LIVING document: small phases, one per feature loop. Ask for nano-phases (1–3 features each) so reviews stay small." } ] }
+    },
+    {
+      "title": "Written in conversation, committed like code",
+      "body": "The flow: describe the project (point at stakeholder input in the README) → require the agent to **interview you before writing to disk** → review → **commit**.\n\n- When a doc misses something (a forgotten target audience), **continue the conversation** rather than hand-editing — the agent keeps related docs consistent.\n- The agent asks permission before writing or running things; grant session-wide approval only where you accept the trade-off."
+    },
+    {
+      "title": "The trap the quiz loves",
+      "body": "> [!warn] **Constitution ≠ feature spec.** Constitution = `mission / tech-stack / roadmap` (project level, written once and evolved). Feature spec = `plan / requirements / validation` (per feature, on its own branch). Mixing these triples is the graded quiz's classic wrong answer."
+    }
+  ],
+  "recap": "**The constitution captures project-level agreement: why (mission), how (tech stack), when (roadmap).**\n\n- Written in conversation with an interviewing agent; reviewed; committed; alive.\n- Nano-phases keep every later review small.\n- Edit through the agent so related docs stay consistent.\n- Don't confuse it with the per-feature triple (plan/requirements/validation)."
+}

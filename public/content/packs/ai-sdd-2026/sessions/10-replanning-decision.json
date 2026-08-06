@@ -1,0 +1,93 @@
+{
+  "id": "replanning-decision",
+  "kind": "decision",
+  "title": "The mid-project curveball",
+  "conceptIds": ["replanning-and-skills"],
+  "intro": "Phase 1 just merged. Then marketing calls: 'it has to work on phones for the conference booth.' Steer the project — and watch the sync meter.",
+  "meter": { "label": "Spec–code sync", "min": 0, "max": 100, "start": 70 },
+  "startId": "curveball",
+  "nodes": [
+    {
+      "id": "curveball",
+      "text": "A real product change (responsive design) has arrived mid-project. It's not on the roadmap and no spec mentions it. What do you do?",
+      "choices": [
+        {
+          "label": "Hand-edit the CSS yourself — it's just a few media queries",
+          "next": "hand-edit",
+          "effect": -30,
+          "note": "You patched code the specs know nothing about."
+        },
+        {
+          "label": "Pause on a replanning branch and assess the change with the agent",
+          "next": "replan",
+          "effect": 10,
+          "note": "You made the pause a normal, deliberate step."
+        }
+      ]
+    },
+    {
+      "id": "hand-edit",
+      "text": "The booth demo works… but requirements.md still says nothing about responsiveness, and the agent's next feature ships a fixed-width page. Reviews get slower; someone starts a private notes file. This is drift. Recover?",
+      "choices": [
+        {
+          "label": "Run a replanning pass to resync specs, code, and roadmap",
+          "next": "replan",
+          "effect": 15,
+          "note": "Recovered — later and more expensively than a pause would have cost."
+        }
+      ]
+    },
+    {
+      "id": "replan",
+      "text": "On the replanning branch the agent sizes the change: viewport meta, mobile-first CSS, one new test. Small, and early in the project. How do you land it?",
+      "choices": [
+        {
+          "label": "Implement it now, updating product specs + feature specs + code together",
+          "next": "workflow",
+          "effect": 15,
+          "note": "Right call for small-and-early: everything moves in one pass."
+        },
+        {
+          "label": "Schedule it as its own roadmap phase regardless of size",
+          "next": "workflow",
+          "effect": 5,
+          "note": "Defensible — but for a change this small you paid process overhead for no extra safety."
+        }
+      ]
+    },
+    {
+      "id": "workflow",
+      "text": "While you're paused, you notice you've typed the same 'update the changelog before merging' prompt four times this month. Do you do anything about it?",
+      "choices": [
+        {
+          "label": "Package it as a skill and invoke /changelog from now on",
+          "next": "end-good",
+          "effect": 10,
+          "note": "Replanning improved the WORKFLOW, not just the project."
+        },
+        {
+          "label": "Keep retyping it — writing a skill feels like yak-shaving",
+          "next": "end-ok",
+          "effect": -5,
+          "note": "The repeated prompt keeps taxing every future feature."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "Run slow to run fast: replanning is a normal step that makes the next feature cheaper than the last.",
+        "debrief": "You absorbed a product change without drift (specs, code, and roadmap moved together), sized it honestly (small + early → do it now; big → its own phase), and turned a repeated prompt into a skill. That's all three radii of replanning: the feature, the project, the workflow.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-ok",
+      "ending": {
+        "principle": "Replanning that only fixes the project — and not the workflow — leaves speed on the table.",
+        "debrief": "The specs and code are back in sync, which is the important half. But the prompts you retype are process debt: the moment you catch yourself repeating one, that's the signal to package it as a skill.",
+        "score": 0
+      }
+    }
+  ]
+}

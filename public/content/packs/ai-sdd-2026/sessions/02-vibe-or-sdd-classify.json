@@ -1,0 +1,22 @@
+{
+  "id": "vibe-or-sdd-classify",
+  "kind": "classify",
+  "title": "Vibe coding, or engineering?",
+  "conceptIds": ["vibe-coding-vs-sdd"],
+  "intro": "Sort each behaviour: is this the disposable loop, or spec-driven discipline?",
+  "buckets": [
+    { "id": "vibe", "label": "Vibe coding", "hint": "Fast, unsaved, drifting", "tone": "warm" },
+    { "id": "sdd", "label": "Spec-driven", "hint": "Captured, steerable, durable", "tone": "cool" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Correcting the result by chatting until it looks right", "bucketId": "vibe" },
+    { "id": "c2", "text": "The design decisions live only in a long chat history", "bucketId": "vibe" },
+    { "id": "c3", "text": "\"Make it green and big\" as the entire requirement", "bucketId": "vibe" },
+    { "id": "c4", "text": "Starting a fresh session means re-explaining everything", "bucketId": "vibe" },
+    { "id": "c5", "text": "A version-controlled spec captures the what & why", "bucketId": "sdd" },
+    { "id": "c6", "text": "A large UI overhaul is triggered by editing a few spec sentences", "bucketId": "sdd" },
+    { "id": "c7", "text": "Success criteria and constraints are written before any code", "bucketId": "sdd" },
+    { "id": "c8", "text": "A new agent picks up the project mid-stream and stays aligned", "bucketId": "sdd" }
+  ],
+  "debrief": "The tell is **where intent lives**. If it lives in a disposable dialogue, you're vibe coding: fast, unrepeatable, and compounding technical debt. If it lives in a maintained spec, you get the three SDD benefits — small edits steer large changes, no context decay across sessions or agents, and code that matches intent because the intent was written down first."
+}

@@ -104,6 +104,15 @@ const CHECKS = [
     },
   },
   {
+    name: 'SDD pack concept page boots',
+    hash: '#/pack/ai-sdd-2026/concept/feature-cycle',
+    assert: (dom) => {
+      mustMatch(dom, /Exhibit/, 'plaque present')
+      mustMatch(dom, /plan\.md/, 'concept content rendered')
+      mustMatch(dom, /class="learn-path"/, 'learn rail present')
+    },
+  },
+  {
     name: 'curator report boots',
     hash: '#/report',
     assert: (dom) => {
