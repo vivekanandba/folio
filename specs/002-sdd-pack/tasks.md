@@ -11,4 +11,4 @@
 - [x] 5. Tests: blueprint solvability cases for 05-sdd-blueprint
 - [x] 6. Smoke: add the feature-cycle concept route to CHECKS
 - [x] 7. Verify offline: lint:content + npm test + npm run smoke
-- [ ] 8. Ship via /ship (PR links specs/002-sdd-pack/)
+- [x] 8. Ship via /ship (PR links specs/002-sdd-pack/)
