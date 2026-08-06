@@ -1,0 +1,27 @@
+{
+  "id": "replanning-explainer",
+  "kind": "explainer",
+  "title": "Replanning & skills — run slow to run fast",
+  "conceptIds": ["replanning-and-skills"],
+  "intro": "The step between features that most teams skip — and why the course treats it as the engine of speed.",
+  "steps": [
+    {
+      "title": "A normal step, not an apology",
+      "body": "Between features, pause **on a dedicated replanning branch** and reflect. The framing: **run slow to run fast** — refine the constitution, tune the process, set the next feature up for success.\n\nKeeping constitution updates on their own branch also tracks *which version of the specs produced which code*."
+    },
+    {
+      "title": "Three radii",
+      "body": "Replanning can touch a feature, the project, or the way you work:",
+      "viz": { "type": "annotated", "title": "What replanning covers", "prompt": "Tap each radius.", "points": [ { "label": "A feature", "value": 2, "note": "Adjust one feature's spec — a course correction." }, { "label": "The project", "value": 3, "note": "The course's pass: add Vitest to tech-stack.md and CASCADE it — config, an extracted app module, then a real test suite for the Phase-1 criteria. Plus roadmap housekeeping: phases 2–5 hung together, so they merged into one." }, { "label": "The workflow", "value": 4, "note": "Improve HOW you work: package repeated prompts into skills that outlive the project." } ] }
+    },
+    {
+      "title": "Absorbing product changes",
+      "body": "Mid-project curveball (responsive design)? Tell the agent to update **product specs + all feature specs + code** in one pass — the fix landed as a viewport meta, mobile-first CSS, and a new test.\n\n> [!tip] The judgment call: **small + early → implement during replanning. Big → its own roadmap phase.** Specs capture *decisions*, not just code."
+    },
+    {
+      "title": "Skills: when a prompt earns a package",
+      "body": "Retyping the same long prompt is the signal. A **skill** is a reusable package of instructions and resources that gives the agent a repeatable capability — and agents have skill-creators, so let the agent write it while you watch its choices.\n\nThe course's example: a `/changelog` skill that updates CHANGELOG.md before every merge, created once, used everywhere — global skills work **across all projects**. Other candidates: a validation bundle (lint, format, tests, README refresh)."
+    }
+  ],
+  "recap": "**Replanning is scheduled reflection with teeth.**\n\n- Own branch; three radii: feature, project, workflow.\n- Cascade constitution changes through specs AND code in one pass.\n- Small + early changes land during replanning; big ones become phases.\n- A retyped prompt is a skill waiting to be written — let the agent write it."
+}

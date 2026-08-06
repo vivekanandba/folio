@@ -1,0 +1,32 @@
+{
+  "id": "ai-sdd-2026",
+  "title": "Spec-Driven Development — Coding with Agents",
+  "subject": "ai-engineering",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from 'Spec-Driven Development with Coding Agents' (JetBrains × DeepLearning.AI, own completion). Not affiliated; for personal revision only.",
+  "summary": "Ditch vibe coding: constitutions, feature specs, the plan→implement→validate loop, replanning, skills, and agent-agnostic workflows — the methodology this very museum is now built with.",
+  "tags": ["sdd", "spec-driven", "coding-agents", "ai-engineering", "workflow", "skills", "mcp"],
+  "concepts": [
+    "vibe-coding-vs-sdd",
+    "constitution-and-roadmap",
+    "feature-cycle",
+    "replanning-and-skills",
+    "sdd-anywhere"
+  ],
+  "sessions": [
+    "01-why-sdd-explainer.json",
+    "02-vibe-or-sdd-classify.json",
+    "03-constitution-explainer.json",
+    "04-which-doc-classify.json",
+    "05-sdd-blueprint.json",
+    "06-feature-cycle-explainer.json",
+    "07-doc-triple-classify.json",
+    "08-feature-phase-sequence.json",
+    "09-drift-detective.json",
+    "10-replanning-decision.json",
+    "11-replanning-explainer.json",
+    "12-sdd-anywhere-explainer.json",
+    "13-graded-quiz.json"
+  ]
+}

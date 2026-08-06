@@ -1,0 +1,26 @@
+{
+  "id": "sdd-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the SDD workflow",
+  "conceptIds": ["feature-cycle"],
+  "intro": "Don't recite the workflow — build it. One wire is forbidden, and it has a name.",
+  "briefing": "Route a stakeholder's intent all the way to merged code. Every stage must be wired in its proper order — and the inspector rejects any blueprint where intent reaches implementation directly. That wire is called vibe coding.",
+  "parts": [
+    { "id": "intent", "label": "Stakeholder intent", "fixed": true },
+    { "id": "constitution", "label": "Constitution (mission/stack/roadmap)", "max": 1 },
+    { "id": "spec", "label": "Feature spec (plan/req/validation)", "max": 1 },
+    { "id": "implement", "label": "Agent implements", "max": 1 },
+    { "id": "validate", "label": "Validate vs the spec", "max": 1 },
+    { "id": "merge", "label": "Merge to main", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "intent", "b": "constitution", "label": "Intent lands in the constitution first" },
+    { "rule": "connected", "a": "constitution", "b": "spec", "label": "Each roadmap phase gets a feature spec" },
+    { "rule": "connected", "a": "spec", "b": "implement", "label": "The agent implements from the committed spec" },
+    { "rule": "connected", "a": "implement", "b": "validate", "label": "Validation reviews the result against the spec" },
+    { "rule": "connected", "a": "validate", "b": "merge", "label": "Only validated work merges" },
+    { "rule": "noDirect", "a": "intent", "b": "implement", "label": "No vibe coding: intent never goes straight to implementation" },
+    { "rule": "pathExists", "from": "intent", "to": "merge", "label": "Intent can actually reach main" }
+  ],
+  "debrief": "The chain you wired — intent → constitution → feature spec → implement → validate → merge — is the whole methodology in one picture. The forbidden wire is the definition of vibe coding: intent jumping straight to implementation, leaving nothing captured in between. Notice what each captured stage buys you: the constitution makes intent durable and shared, the feature spec makes it precise and reviewable, and validation closes the loop by checking the build against the words — not against your memory of a chat."
+}

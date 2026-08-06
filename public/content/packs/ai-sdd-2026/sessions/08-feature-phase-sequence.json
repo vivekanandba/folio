@@ -1,0 +1,18 @@
+{
+  "id": "feature-phase-sequence",
+  "kind": "sequence",
+  "title": "Order the feature phase",
+  "conceptIds": ["feature-cycle"],
+  "intro": "The loop you'll run for every roadmap phase — put it in order.",
+  "prompt": "Drag into sequence, first step on top.",
+  "steps": [
+    { "id": "branch", "text": "Fresh agent context + a new feature branch" },
+    { "id": "interview", "text": "The agent interviews you about scope, decisions, and done-criteria" },
+    { "id": "spec", "text": "plan.md, requirements.md, validation.md written and reviewed" },
+    { "id": "commitspec", "text": "Commit the spec — before any implementation" },
+    { "id": "implement", "text": "\"Implement this plan\" — the agent builds it" },
+    { "id": "validate", "text": "High-altitude review vs the spec; fixes go through the agent" },
+    { "id": "merge", "text": "Check off the roadmap phase, merge, delete the branch" }
+  ],
+  "debrief": "The order is the discipline: the interview comes before the documents, the documents are committed before the code, and validation happens against the written spec rather than your memory. The two easiest steps to skip — committing the spec before implementing, and deleting the branch after merging — are exactly the ones that keep the history clean and the next feature cheap."
+}

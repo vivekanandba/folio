@@ -1,0 +1,27 @@
+{
+  "id": "why-sdd-explainer",
+  "kind": "explainer",
+  "title": "Why spec-driven development",
+  "conceptIds": ["vibe-coding-vs-sdd"],
+  "intro": "Four minutes on why 'make it green and big' doesn't scale — and what replaces it.",
+  "steps": [
+    {
+      "title": "Vibe coding: fast, and disposable",
+      "body": "The loop: vague prompt → eyeball the result → correct by chatting. *\"Make it green and big\"* → overshoots → *\"Not so big!!!\"* → finally right.\n\nFine for a button. But **nothing is captured** — the dialogue that shaped the code is thrown away, and what remains is disposable code, technical debt, and drift."
+    },
+    {
+      "title": "The spec is the brain",
+      "body": "SDD's answer is a **maintained specification** — a permanent, version-controlled artifact that decouples the **what & why** (spec) from the **how** (implementation).\n\n> [!key] The agent is the muscle; the spec is the brain. Your job becomes converting intentions into clear specifications.\n\nLike a compiler turning source into machine code, SDD turns `spec.md` into source code — except the 'source' is now **human-readable intent** stakeholders can read."
+    },
+    {
+      "title": "Three concrete benefits",
+      "body": "Why professionals keep the spec:",
+      "viz": { "type": "annotated", "title": "The three benefits", "prompt": "Tap each.", "points": [ { "label": "Small edits", "value": 3, "note": "A few sentences of spec → hundreds of lines of code. Steer a fast agent with low cognitive overhead." }, { "label": "No decay", "value": 4, "note": "Chat context fills up and the agent degrades. Specs persist across sessions AND across agents — every run re-anchors." }, { "label": "Fidelity", "value": 3, "note": "The spec forces problem, success criteria, constraints, flows BEFORE code exists — output matches intent." } ] }
+    },
+    {
+      "title": "Why it needs an agent, not a chatbot",
+      "body": "A **chatbot** only talks about code you paste in — its context balloons and it can't act. An **agent** plans, reasons, and reaches your codebase and tools (files, DB, terminal).\n\nIn SDD you are the **senior architect** with the blueprints; the agent is a highly capable pair programmer. The result isn't just functional software — it's software aligned with your long-term goals."
+    }
+  ],
+  "recap": "**Vibe coding throws intent away; SDD makes it a permanent artifact.**\n\n- Spec = the brain (what & why); agent = the muscle (how).\n- Benefits: small edits → large changes; no context decay; intent fidelity.\n- The spec is a universal contract — humans ↔ humans, humans ↔ agent.\n- Requires a tool-using agent, not a paste-code-into-chat bot."
+}

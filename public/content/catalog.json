@@ -15,6 +15,10 @@
     {
       "id": "ai-vllm-inf-2026",
       "path": "packs/ai-vllm-inf-2026"
+    },
+    {
+      "id": "ai-sdd-2026",
+      "path": "packs/ai-sdd-2026"
     }
   ]
 }

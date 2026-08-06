@@ -1,0 +1,27 @@
+{
+  "id": "sdd-anywhere-explainer",
+  "kind": "explainer",
+  "title": "Legacy code & replaceable agents",
+  "conceptIds": ["sdd-anywhere"],
+  "intro": "SDD beyond the happy path: brownfield projects, and why your agent is the interchangeable part.",
+  "steps": [
+    {
+      "title": "Brownfield: reverse-engineer the constitution",
+      "body": "On an existing codebase, the constitution isn't written from scratch — the agent **explores the code** (expect a lot of tool calls) plus README, TODO.md, issue trackers, and drafts `mission / tech-stack / roadmap` from what it finds.\n\nThe good versions are **honest about gaps** — 'no linter, no CI' goes straight into tech-stack.md — and the roadmap grows out of the existing TODO list. After the commit, the feature loop is **exactly the same** as greenfield."
+    },
+    {
+      "title": "Then replan generously",
+      "body": "A freshly SDD-ified legacy project has the most to tune: the first **replanning** pass deserves extra time — testing preferences, roadmap re-cuts, the first skills.\n\n> [!key] The quiz's phrasing: SDD applies to **both** greenfield and brownfield — on legacy code the agent reverse-engineers the constitution and you continue with the normal workflow."
+    },
+    {
+      "title": "The agent is the replaceable part",
+      "body": "Because the workflow rests on open standards, no single agent owns your project:",
+      "viz": { "type": "annotated", "title": "Four open standards", "prompt": "Tap each.", "points": [ { "label": "MCP", "value": 3, "note": "Agent ↔ external systems. Any agent reaches the same tools — though for many cases Skills + a CLI are lighter (less setup, lower context cost)." }, { "label": "Skills", "value": 4, "note": "Portable capability folders — the feature-spec skill authored in Claude Code was picked up unchanged by Codex." }, { "label": "AGENTS.md", "value": 2, "note": "A README for agents (60k+ projects use one) — build/test/convention context any agent can find." }, { "label": "ACP", "value": 3, "note": "Editor ↔ agent protocol, like LSP: any ACP agent runs in any ACP editor." } ] }
+    },
+    {
+      "title": "Choose agents like you choose libraries",
+      "body": "The course's demo drove the **same project** — constitution, specs, and the hand-rolled skill — with Claude Code, then Codex, then OpenCode. The agent swapped; nothing else moved.\n\nSo pick by evidence (agent scoreboards, code-arena leaderboards) and re-pick freely when something better ships. **Your specs are the durable asset.**"
+    }
+  ],
+  "recap": "**Specs outlive both messy codebases and agent market cycles.**\n\n- Brownfield: agent explores code → drafts an honest constitution → normal loop.\n- Open standards (MCP, Skills, AGENTS.md, ACP) make agents interchangeable.\n- Same project, three agents, zero rework — that's agent-agnostic in practice.\n- Choose the best agent per task; keep intent in artifacts you own."
+}

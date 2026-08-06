@@ -1,0 +1,23 @@
+{
+  "id": "which-doc-classify",
+  "kind": "classify",
+  "title": "Mission, tech stack, or roadmap?",
+  "conceptIds": ["constitution-and-roadmap"],
+  "intro": "Every statement belongs in exactly one constitution document. File them.",
+  "buckets": [
+    { "id": "mission", "label": "mission.md", "hint": "The why — vision, audience, scope", "tone": "warm" },
+    { "id": "stack", "label": "tech-stack.md", "hint": "The how — engineering agreements", "tone": "cool" },
+    { "id": "roadmap", "label": "roadmap.md", "hint": "The when — phased plan", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "A satirical clinic where the patients are AI agents", "bucketId": "mission" },
+    { "id": "c2", "text": "Target audience: course students and conference-booth demo devs", "bucketId": "mission" },
+    { "id": "c3", "text": "Out of scope: real veterinary medical advice", "bucketId": "mission" },
+    { "id": "c4", "text": "Server-side TypeScript with the Hono framework", "bucketId": "stack" },
+    { "id": "c5", "text": "SQLite for data — it's a quick prototype", "bucketId": "stack" },
+    { "id": "c6", "text": "Tests run on Vitest; `npm test` must pass in CI", "bucketId": "stack" },
+    { "id": "c7", "text": "Phase 1: 'Hello Hono' — a served page with the clinic name", "bucketId": "roadmap" },
+    { "id": "c8", "text": "Phases 2–5 combined into one after replanning", "bucketId": "roadmap" }
+  ],
+  "debrief": "mission.md answers *why this exists and for whom* — vision, audiences, scope boundaries. tech-stack.md is the engineering team's shared agreement — languages, frameworks, testing expectations. roadmap.md is the living *when*: a sequence of deliberately small phases, each of which will get its own feature spec. If a statement is about a single feature's tasks or done-criteria, it doesn't belong in the constitution at all — that's the feature spec's job."
+}

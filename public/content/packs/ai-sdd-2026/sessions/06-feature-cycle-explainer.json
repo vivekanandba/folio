@@ -1,0 +1,27 @@
+{
+  "id": "feature-cycle-explainer",
+  "kind": "explainer",
+  "title": "The feature cycle, end to end",
+  "conceptIds": ["feature-cycle"],
+  "intro": "One feature, one branch, three documents — the loop you'll run for every roadmap phase.",
+  "steps": [
+    {
+      "title": "Fresh context, own branch",
+      "body": "Every feature starts with a **fresh agent context** — the agent pulls what it needs from the constitution, the official source — and its **own branch** (`phase-1-hello-hono`). A clean slate per feature means less context switching and reviewable diffs."
+    },
+    {
+      "title": "The spec comes before the code",
+      "body": "In a dated dir (`specs/2026-03-30-hello-hono/`), the agent — after **interviewing you** — writes the feature-spec triple, referring back to `mission.md` and `tech-stack.md`:",
+      "viz": { "type": "annotated", "title": "plan / requirements / validation", "prompt": "Tap each.", "points": [ { "label": "plan.md", "value": 3, "note": "Numbered task groups — the sequence of the work." }, { "label": "requirements.md", "value": 3, "note": "Scope, decisions and context surfaced by the interview: pinned versions, strict TypeScript, stakeholder notes." }, { "label": "validation.md", "value": 4, "note": "The done-and-mergeable criteria — written before any code exists." } ] }
+    },
+    {
+      "title": "Implement, then validate at altitude",
+      "body": "With the spec **committed**, implementation is nearly a one-liner: *\"implement this plan.\"*\n\nReview the result **high-level**: does it work, does it reflect the spec? Don't sweat CSS class names. When you spot a gap, **fix the spec and the code together, through the agent** — it re-validates after each change (typecheck + smoke) so nothing silently breaks."
+    },
+    {
+      "title": "The enemy is drift",
+      "body": "> [!warn] Hand-editing code leaves the spec describing software that no longer exists. That's **drift**, and it rebuilds **cognitive debt** — the mental load of tracking what changed and why — which is exactly what SDD exists to remove.\n\nFinish the loop: mark the roadmap phase complete, merge the branch, delete it. Small constitution touches (checking off a phase) ride the feature branch; bigger constitution changes deserve their own."
+    }
+  ],
+  "recap": "**Branch → interview → plan/requirements/validation → commit spec → implement → validate → merge.**\n\n- Fresh context per feature; the constitution is the source of truth.\n- Validation criteria are written before the code.\n- Review at altitude; route every fix through the agent to keep spec and code in sync.\n- Drift = specs lying about the code; it is the failure mode to guard against."
+}

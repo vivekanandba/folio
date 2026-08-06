@@ -57,6 +57,20 @@ test('compounder blueprint: the loop wins, trap parts lose', () => {
   assert.ok(passCount(s, [...nodes, N(5, 'unrelated')], loop) < s.rules.length, 'placing a trap part fails inspection')
 })
 
+test('SDD workflow blueprint: the pipeline wins, the vibe-coding wire fails', () => {
+  const s = loadRules('ai-sdd-2026/sessions/05-sdd-blueprint.json')
+  const nodes = [N(1, 'intent'), N(2, 'constitution'), N(3, 'spec'), N(4, 'implement'), N(5, 'validate'), N(6, 'merge')]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'the disciplined pipeline passes')
+  // intent wired straight to implementation IS vibe coding — must fail
+  const vibe: Edge[] = [...chain, [1, 4]]
+  const noDirect = s.rules.findIndex((r: { rule: string }) => r.rule === 'noDirect')
+  assert.equal(evalRule(s.rules[noDirect], nodes, vibe).ok, false, 'vibe-coding wire refused')
+  // skipping the spec entirely also fails (constitution wired to implement)
+  const skipSpec: Edge[] = [[1, 2], [2, 4], [4, 5], [5, 6]]
+  assert.ok(passCount(s, nodes, skipSpec) < s.rules.length, 'skipping the feature spec fails')
+})
+
 /* Pure graph helpers */
 
 test('shortestHops + connectivityAvailability behave analytically', () => {

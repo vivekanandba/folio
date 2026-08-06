@@ -1,0 +1,130 @@
+{
+  "id": "graded-quiz",
+  "kind": "quiz",
+  "title": "The graded quiz, replayed",
+  "conceptIds": ["vibe-coding-vs-sdd", "constitution-and-roadmap", "feature-cycle", "replanning-and-skills", "sdd-anywhere"],
+  "intro": "The course's end-of-course quiz — 10 questions with the official explanations. Score to beat: your original 100/100.",
+  "questions": [
+    {
+      "prompt": "The main advantage of SDD vs vibe coding is…",
+      "choices": [
+        "SDD uses persistent specs to anchor intent across sessions, avoiding the drift of long prompt dialogues",
+        "SDD requires writing all code manually, using the agent only for small suggestions",
+        "SDD lets the agent work fully autonomously with no human review",
+        "SDD eliminates the need for version control since specs replace git history"
+      ],
+      "answerIndex": 0,
+      "explanation": "Persistent specs anchor the agent's work so you can make large changes confidently — no mental load of tracking a messy chat history."
+    },
+    {
+      "prompt": "The three 'constitution' documents are…",
+      "choices": [
+        "README.md, CHANGELOG.md, LICENSE.md",
+        "user-stories.md, acceptance-criteria.md, sprint-backlog.md",
+        "mission.md, tech-stack.md, and roadmap.md",
+        "requirements.md, plan.md, validation.md"
+      ],
+      "answerIndex": 2,
+      "explanation": "The three pillars: the why (mission.md), the how (tech-stack.md), and the when (roadmap.md). The fourth option is the FEATURE-spec triple — the classic trap."
+    },
+    {
+      "prompt": "The three feature-spec documents are…",
+      "choices": [
+        "README.md, CONTRIBUTING.md, CHANGELOG.md",
+        "design.md, code.md, tests.md",
+        "plan.md, requirements.md, and validation.md",
+        "mission.md, tech-stack.md, roadmap.md"
+      ],
+      "answerIndex": 2,
+      "explanation": "plan.md lays out the task groups, requirements.md captures scope & decisions, validation.md defines how you'll know the feature is done. Constitution = project level; feature spec = per feature."
+    },
+    {
+      "prompt": "The three phases of the feature cycle are…",
+      "choices": [
+        "Design, Code, Ship",
+        "Plan, Implement, Validate",
+        "Specify, Compile, Test",
+        "Research, Write, Deploy"
+      ],
+      "answerIndex": 1,
+      "explanation": "Three repeatable phases per feature — and between features you also replan to refine the constitution."
+    },
+    {
+      "prompt": "The developer's role in SDD is best described as…",
+      "choices": [
+        "An architect and reviewer who provides the spec and steers the agent, which handles most implementation",
+        "A project manager who only creates tickets and never touches code or specs",
+        "A QA tester whose only job is finding bugs in the agent's output",
+        "A typist who writes most production code by hand"
+      ],
+      "answerIndex": 0,
+      "explanation": "The agent is the muscle, the spec is the brain. You define intent, review results, and steer."
+    },
+    {
+      "prompt": "Why route changes through the agent instead of editing files yourself?",
+      "choices": [
+        "To save context tokens in the agent's memory",
+        "To prevent drift — the agent updates the related specs at the same time, keeping docs and code in sync",
+        "Because manually editing code is always slower",
+        "Because developers aren't allowed to touch code in an SDD project"
+      ],
+      "answerIndex": 1,
+      "explanation": "Editing code directly risks leaving specs and READMEs out of sync; routing changes through the agent keeps everything aligned."
+    },
+    {
+      "prompt": "Why 'replan' between features?",
+      "choices": [
+        "Replanning is optional and most teams skip it to ship faster",
+        "It's a chance to reflect, update the constitution and roadmap, and refine your workflow — a normal step, not a failure",
+        "Replanning means throwing out the constitution and rewriting from scratch",
+        "Replanning is only needed when something has gone badly wrong"
+      ],
+      "answerIndex": 1,
+      "explanation": "Run slow to run fast: a pause to refine the constitution, tune your process, and set the next feature up for success."
+    },
+    {
+      "prompt": "Can SDD be applied to a legacy codebase?",
+      "choices": [
+        "No — SDD is only for greenfield projects; legacy code needs a rewrite",
+        "Both: on a legacy project the agent reverse-engineers a constitution from the existing code and docs, then the normal workflow continues",
+        "Only for small personal projects",
+        "Only for projects originally started with an AI agent"
+      ],
+      "answerIndex": 1,
+      "explanation": "Brownfield SDD: the agent explores the codebase, drafts an honest constitution (including gaps), and you proceed with the identical feature loop."
+    },
+    {
+      "prompt": "A 'skill' is… (and when should you create one?)",
+      "choices": [
+        "A reusable package of instructions and resources giving the agent a repeatable capability — create one when you catch yourself retyping the same prompt",
+        "A special kind of AI model only certain commercial agents support",
+        "A paid plugin bought from an app store",
+        "A type of spec that replaces plan/requirements/validation"
+      ],
+      "answerIndex": 0,
+      "explanation": "Writing the same long prompt repeatedly (like the feature-spec interview)? Turn it into a skill the agent can invoke on demand."
+    },
+    {
+      "prompt": "Why is an agent-agnostic workflow valuable?",
+      "choices": [
+        "Agent-agnostic workflows run measurably faster",
+        "The agent landscape moves fast — keeping specs and tools independent of any single agent lets you switch without rebuilding your workflow",
+        "It means you never need a coding agent at all",
+        "It's required by law for enterprise software"
+      ],
+      "answerIndex": 1,
+      "explanation": "Standards like Skills, MCP, and ACP keep the SDD process intact when a better agent arrives — your specs move with you."
+    },
+    {
+      "prompt": "In SDD, what is 'cognitive debt'?",
+      "choices": [
+        "The interest you pay on cloud compute",
+        "The mental load of tracking what the code does and how it evolved — which specs exist to remove",
+        "The number of tokens the agent has consumed",
+        "Technical debt that only affects senior engineers"
+      ],
+      "answerIndex": 1,
+      "explanation": "Keep changes manageable and specs in sync to stay fast, in control, and low-debt — cognitive debt is what returns when drift sets in."
+    }
+  ]
+}
