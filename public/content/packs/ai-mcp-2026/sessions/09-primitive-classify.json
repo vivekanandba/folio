@@ -1,0 +1,23 @@
+{
+  "id": "primitive-classify",
+  "kind": "classify",
+  "title": "Tool, resource, or prompt?",
+  "conceptIds": ["mcp-primitives"],
+  "intro": "The confusable triple, as a sorting bench. Side effects? Initiative? Recipe? File each capability.",
+  "buckets": [
+    { "id": "tool", "label": "Tool", "hint": "Action, side effects, model-initiated", "tone": "warm" },
+    { "id": "resource", "label": "Resource", "hint": "Read-only, GET-like, app pulls it", "tone": "cool" },
+    { "id": "prompt", "label": "Prompt", "hint": "Reusable tested template, user-triggered", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "search_papers — query arXiv and store results to disk", "bucketId": "tool" },
+    { "id": "c2", "text": "Send a message to a Slack channel", "bucketId": "tool" },
+    { "id": "c3", "text": "Update a record in the CRM", "bucketId": "tool" },
+    { "id": "c4", "text": "papers://folders — the list of saved topic folders", "bucketId": "resource" },
+    { "id": "c5", "text": "papers://{topic} — the stored info for a topic, filled at runtime", "bucketId": "resource" },
+    { "id": "c6", "text": "An API response cached as read-only JSON with a mime type", "bucketId": "resource" },
+    { "id": "c7", "text": "A well-tested 'summarize this transcript' message template", "bucketId": "prompt" },
+    { "id": "c8", "text": "generate_search_prompt(topic, num_papers) returning crafted instructions", "bucketId": "prompt" }
+  ],
+  "debrief": "Run the decision rule: anything that acts or writes (search-and-store, send, update) is a tool — the model reaches for it mid-conversation. Anything that only hands back existing data (folder lists, stored topic info, cached responses) is a resource — GET-like, no side effects, addressed by URI, pulled in by the app or user. Anything that packages a great interaction (summary templates, crafted search instructions) is a prompt — authored and tested once on the server, triggered by the user. The trap card is c1: it *mentions papers* like the resources do, but it writes to disk — side effects make it a tool."
+}

@@ -1,0 +1,32 @@
+{
+  "id": "ai-mcp-2026",
+  "title": "MCP — Build Rich-Context AI Apps",
+  "subject": "ai-engineering",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from 'MCP: Build Rich-Context AI Apps with Anthropic' (DeepLearning.AI × Anthropic, own completion). Not affiliated; for personal revision only.",
+  "summary": "The protocol that kills M×N glue: hosts, clients and servers; FastMCP tools; the session ritual; tools vs resources vs prompts; and taking servers remote with SSE and streamable HTTP.",
+  "tags": ["mcp", "anthropic", "protocol", "agents", "fastmcp", "tools", "ai-engineering"],
+  "concepts": [
+    "mcp-architecture",
+    "mcp-servers",
+    "mcp-clients",
+    "mcp-primitives",
+    "mcp-deployment"
+  ],
+  "sessions": [
+    "01-architecture-explainer.json",
+    "02-role-classify.json",
+    "03-server-explainer.json",
+    "04-server-build-sequence.json",
+    "05-mcp-blueprint.json",
+    "06-client-explainer.json",
+    "07-config-detective.json",
+    "08-primitives-explainer.json",
+    "09-primitive-classify.json",
+    "10-transport-classify.json",
+    "11-deployment-explainer.json",
+    "12-deploy-sequence.json",
+    "13-mcp-quiz.json"
+  ]
+}

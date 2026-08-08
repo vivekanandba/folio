@@ -1,0 +1,27 @@
+{
+  "id": "client-explainer",
+  "kind": "explainer",
+  "title": "The client lifecycle and the multi-server chatbot",
+  "conceptIds": ["mcp-clients"],
+  "intro": "Connect, initialize, list, call — then scale the same ritual to many servers with one config file.",
+  "steps": [
+    {
+      "title": "The ritual",
+      "body": "```python\nasync with stdio_client(server_params) as (read, write):\n    async with ClientSession(read, write) as session:\n        await session.initialize()\n        tools = await session.list_tools()\n        result = await session.call_tool(\"search_papers\", arguments={...})\n```\n\nFor stdio, `stdio_client` **launches the server as a subprocess** and returns the read/write streams; the `ClientSession` runs the 1:1 connection."
+    },
+    {
+      "title": "The chatbot, slimmed",
+      "body": "`MCP_ChatBot` keeps just `process_query` and `chat_loop` — tool definitions and execution moved to the server. Each server tool's name/description/schema joins the LLM's tool list; when the model requests one, the client dispatches the call through the right session and feeds the result back into the conversation."
+    },
+    {
+      "title": "Many servers, one config",
+      "body": "Hardcoded server params don't scale. `server_config.json` declares each server; the chatbot opens **one session per entry** and aggregates all tools:",
+      "viz": { "type": "annotated", "title": "server_config.json", "prompt": "Tap each entry.", "points": [ { "label": "research", "value": 3, "note": "command: uv, args: [run, research_server.py] — your own server." }, { "label": "filesystem", "value": 3, "note": "npx -y @modelcontextprotocol/server-filesystem . — official reference server; '.' scopes it to the current directory." }, { "label": "fetch", "value": 3, "note": "uvx mcp-server-fetch — fetch a URL, get its contents as markdown. npx/uvx install these on the fly." } ] }
+    },
+    {
+      "title": "Free capabilities",
+      "body": "The official servers repo carries reference implementations and thousands of community servers — the chatbot gained file access and web fetch **without writing a line of tool code**.\n\n> [!warn] The failure to remember: a server that isn't in the config gets no session — and its tools silently never appear. Debug missing tools at the config first."
+    }
+  ],
+  "recap": "**connect → initialize → list_tools → call_tool, once per configured server.**\n\n- stdio clients launch their servers as subprocesses.\n- The chatbot aggregates every server's tools into one LLM tool list, dispatching by session.\n- server_config.json makes servers data, not code.\n- Reference servers = real capabilities for free."
+}

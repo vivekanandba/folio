@@ -1,0 +1,17 @@
+{
+  "id": "server-build-sequence",
+  "kind": "sequence",
+  "title": "Order the server build",
+  "conceptIds": ["mcp-servers"],
+  "intro": "From empty folder to inspected server — the course's exact path. Put it in order.",
+  "prompt": "Drag into build order, first step on top.",
+  "steps": [
+    { "id": "init", "text": "uv init the project, create and activate the venv" },
+    { "id": "deps", "text": "uv add mcp arxiv — add the dependencies" },
+    { "id": "fastmcp", "text": "Declare the server: mcp = FastMCP(\"research\")" },
+    { "id": "decorate", "text": "Move the functions in and decorate them with @mcp.tool()" },
+    { "id": "transport", "text": "Add mcp.run(transport=\"stdio\") at the bottom" },
+    { "id": "inspect", "text": "npx @modelcontextprotocol/inspector — connect, list tools, call them" }
+  ],
+  "debrief": "Environment first (uv init + deps), then the FastMCP declaration, then the functions-become-tools step, then the transport line, and only then the inspector. The two steps people swap: the transport line must exist before anything can connect — and inspection comes before any client is written, because interactive list/call against the bare server is the cheapest debugging you'll ever do."
+}

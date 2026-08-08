@@ -1,0 +1,27 @@
+{
+  "id": "deployment-explainer",
+  "kind": "explainer",
+  "title": "Taking a server remote",
+  "conceptIds": ["mcp-deployment"],
+  "intro": "Same tools, resources, and prompts — different run line, different operational reality.",
+  "steps": [
+    {
+      "title": "One line changes",
+      "body": "```python\nmcp = FastMCP(\"research\", port=8001)\nmcp.run(transport=\"sse\")            # or: transport=\"streamable-http\"\n```\n\nThe tool/resource/prompt definitions are **identical** to the local server. The course deploys SSE (streamable HTTP's Python SDK was still landing at filming); the notes cover both."
+    },
+    {
+      "title": "Stateless or stateful",
+      "body": "Streamable HTTP lets the server choose:\n\n```python\nmcp = FastMCP(\"research\")                        # stateful — remembers the client across requests\nmcp = FastMCP(\"research\", stateless_http=True)   # stateless — independent request/response\n```\n\n> [!tip] Stateless for simple, independent requests (and web-scale deployment); stateful when a multi-step workflow needs the server to hold context across calls."
+    },
+    {
+      "title": "The operational flip",
+      "body": "A **stdio** server is a subprocess — its client starts it on demand. A **remote** server is an independent process that must **already be running** before any client connects.\n\nDeploy (the course uses Render), get the public URL, and hand `https://…/sse` (or `/mcp/`) to any client. From that moment it's infrastructure: uptime, auth (OAuth 2.1 since the March 2025 spec), versioning."
+    },
+    {
+      "title": "Test it like you built it",
+      "body": "`npx @modelcontextprotocol/inspector` → paste the URL → list tools → call them. Same inspector, same loop, whether the server is a local subprocess or a container on Render.",
+      "viz": { "type": "annotated", "title": "Local → remote", "prompt": "Tap each stage.", "points": [ { "label": "Local stdio", "value": 2, "note": "uv run research_server.py — launched by its client, env-var auth." }, { "label": "Run remote", "value": 3, "note": "transport='sse' (URL ends /sse) or 'streamable-http' (/mcp/); server must be up first." }, { "label": "Deploy", "value": 3, "note": "Render (or any host) → public URL. The server is now infrastructure." }, { "label": "Inspect", "value": 4, "note": "Inspector against the URL: list, call, verify — the post-deploy smoke test." } ] }
+    }
+  ],
+  "recap": "**Transport is a deploy-time choice; operations are not.**\n\n- Same FastMCP code; sse → /sse, streamable-http → /mcp/.\n- Streamable HTTP: stateless_http=True for independent requests, stateful for workflows.\n- Remote servers must be running before clients arrive — uptime is now your problem.\n- Inspector + URL = the smoke test after every deploy."
+}

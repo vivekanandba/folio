@@ -1,0 +1,27 @@
+{
+  "id": "primitives-explainer",
+  "kind": "explainer",
+  "title": "Tools, resources, prompts",
+  "conceptIds": ["mcp-primitives"],
+  "intro": "A server can offer more than tools. The triple — and who reaches for each — is MCP's most confusable idea.",
+  "steps": [
+    {
+      "title": "The triple",
+      "body": "The client **invokes tools**, **queries resources**, and **interpolates prompts**; the server exposes all three.",
+      "viz": { "type": "annotated", "title": "The three primitives", "prompt": "Tap each.", "points": [ { "label": "Tools", "value": 4, "note": "Functions the client can invoke — retrieve/search, send a message, update DB records. Actions, possibly with side effects; the model decides to use them." }, { "label": "Resources", "value": 3, "note": "READ-ONLY data exposed by the server — files, database records, API responses. Like GET endpoints: data out, no significant computation, no side effects." }, { "label": "Prompts", "value": 3, "note": "Pre-defined, well-tested templates for AI interactions — document Q&A, transcript summary, output-as-JSON. User-triggered." } ] }
+    },
+    {
+      "title": "Resources: URIs, direct and templated",
+      "body": "```python\n@mcp.resource(\"papers://folders\")          # direct/static URI\ndef get_available_folders() -> str: ...\n\n@mcp.resource(\"papers://{topic}\")          # templated URI, filled at runtime\ndef get_topic_papers(topic: str) -> str: ...\n```\n\nThe URI uniquely identifies the resource; set **mime_type** to hint what's coming back (strings, JSON, binary…)."
+    },
+    {
+      "title": "Prompts: ship your best one",
+      "body": "A prompt is a set of User/Assistant messages the client interpolates — **high quality and well-tested**, authored once on the server instead of improvised by every user.\n\nIn the course chatbot: `/prompts` lists them, `/prompt <name> <args>` executes one; resources surface as **@-mentions** (`@folders`, `@ai_interpretability`). Tools need no UI at all — the model reaches for them itself."
+    },
+    {
+      "title": "The decision rule",
+      "body": "> [!key] **Side effects or model initiative → tool. Read-only context the app pulls in → resource. A reusable, tested recipe → prompt.**\n\nThe course's own example: fetching new papers from arXiv (writes files, model-initiated) is a *tool*; reading the already-saved `papers_info.json` is a *resource*; \"generate a great search prompt for topic X\" is a *prompt*."
+    }
+  ],
+  "recap": "**Invoke tools, query resources, interpolate prompts.**\n\n- Tools: actions, side effects, model-initiated.\n- Resources: GET-like read-only data; direct or templated URIs + mime types.\n- Prompts: server-authored, user-triggered templates.\n- UI tells: automatic (tools), @-mentions (resources), slash commands (prompts)."
+}

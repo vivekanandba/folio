@@ -1,0 +1,25 @@
+{
+  "id": "mcp-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the MCP ecosystem",
+  "conceptIds": ["mcp-architecture"],
+  "intro": "Build the path from an LLM app to its data — two wires are forbidden, and both have names.",
+  "briefing": "Route the host's need for context all the way to the data source. The inspector rejects any blueprint where the host hardwires the data directly (the M×N glue MCP exists to kill) — or where the client bypasses the server to reach a tool (clients speak protocol, not Python).",
+  "parts": [
+    { "id": "host", "label": "Host (LLM app)", "fixed": true },
+    { "id": "client", "label": "MCP client (1:1 session)", "max": 1 },
+    { "id": "server", "label": "MCP server (FastMCP)", "max": 1 },
+    { "id": "tool", "label": "Tool function (@mcp.tool)", "max": 1 },
+    { "id": "data", "label": "Data source (arXiv / files / DB)", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "host", "b": "client", "label": "The host contains an MCP client" },
+    { "rule": "connected", "a": "client", "b": "server", "label": "The client holds a 1:1 protocol session with the server" },
+    { "rule": "connected", "a": "server", "b": "tool", "label": "The server exposes the tool with its schema" },
+    { "rule": "connected", "a": "tool", "b": "data", "label": "The tool actually touches the data source" },
+    { "rule": "noDirect", "a": "host", "b": "data", "label": "No bespoke integration: the M×N glue MCP exists to kill" },
+    { "rule": "noDirect", "a": "client", "b": "tool", "label": "Clients speak protocol to servers, never to tools directly" },
+    { "rule": "pathExists", "from": "host", "to": "data", "label": "Context can actually flow end to end" }
+  ],
+  "debrief": "The chain — host → client → server → tool → data — is the M+N world: each side implements the protocol once, and the same server serves every MCP-compatible host. The first forbidden wire (host → data) is the old world: custom prompt logic, custom tool calls, custom data access, duplicated per app. The second (client → tool) is subtler: the client's vocabulary is ListTools and CallTool over a session — the server owns the functions, their schemas, and their execution. That separation is why a server built once is adopted everywhere."
+}

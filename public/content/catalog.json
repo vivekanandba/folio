@@ -23,6 +23,10 @@
     {
       "id": "ai-media-agents-2026",
       "path": "packs/ai-media-agents-2026"
+    },
+    {
+      "id": "ai-mcp-2026",
+      "path": "packs/ai-mcp-2026"
     }
   ]
 }

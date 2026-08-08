@@ -1,0 +1,108 @@
+{
+  "id": "mcp-quiz",
+  "kind": "quiz",
+  "title": "MCP — check what stuck",
+  "conceptIds": ["mcp-architecture", "mcp-servers", "mcp-clients", "mcp-primitives", "mcp-deployment"],
+  "intro": "Nine self-check questions written from the course notes (this course has no official graded quiz).",
+  "questions": [
+    {
+      "prompt": "MCP is best described as…",
+      "choices": [
+        "An open protocol standardizing how LLM applications connect to tools and data sources",
+        "A Python library for calling the Anthropic API",
+        "A replacement for REST APIs in web development",
+        "A model architecture for faster inference"
+      ],
+      "answerIndex": 0,
+      "explanation": "The course's analogy: REST standardized web↔backend, LSP standardized IDE↔language tools, MCP standardizes AI apps↔external systems."
+    },
+    {
+      "prompt": "The problem MCP solves is often summarized as…",
+      "choices": [
+        "M×N → M+N: every app no longer needs custom glue for every data source",
+        "Making models smaller",
+        "Eliminating the need for tool use",
+        "Replacing JSON with a binary format"
+      ],
+      "answerIndex": 0,
+      "explanation": "Without MCP each of M apps builds custom integrations to each of N sources. With MCP, each side implements the protocol once — and a server built once is reused by every compatible app."
+    },
+    {
+      "prompt": "In the architecture, the MCP client…",
+      "choices": [
+        "Is a lightweight program exposing capabilities",
+        "Lives inside the host and maintains a 1:1 connection with one server",
+        "Is the LLM itself",
+        "Stores the papers_info.json files"
+      ],
+      "answerIndex": 1,
+      "explanation": "Hosts (Claude Desktop, IDEs, agents) contain clients; each client speaks the protocol 1:1 with one server. Servers are the lightweight capability programs."
+    },
+    {
+      "prompt": "With FastMCP, a tool's schema comes from…",
+      "choices": [
+        "A JSON schema file you write by hand",
+        "The decorated function's type hints and docstring",
+        "The server_config.json entry",
+        "The inspector"
+      ],
+      "answerIndex": 1,
+      "explanation": "@mcp.tool() turns a plain function into a protocol-compliant tool — signature + docstring become the schema. Low-level implementations handle ListToolsRequest/CallToolRequest directly."
+    },
+    {
+      "prompt": "The client session ritual, in order, is…",
+      "choices": [
+        "call_tool → list_tools → initialize",
+        "initialize → list_tools → call_tool",
+        "list_tools → initialize → call_tool",
+        "fetch → generate → evaluate"
+      ],
+      "answerIndex": 1,
+      "explanation": "Connect (for stdio: launch the subprocess), initialize the session, list what's available, then call. The chatbot repeats this per configured server."
+    },
+    {
+      "prompt": "Which is a RESOURCE rather than a tool?",
+      "choices": [
+        "search_papers — queries arXiv and saves results to disk",
+        "papers://{topic} — read-only access to already-stored paper info",
+        "Sending a message to a channel",
+        "Updating a database record"
+      ],
+      "answerIndex": 1,
+      "explanation": "Resources are read-only, GET-like data addressed by URI — no side effects. search_papers writes files (tool); send/update are actions (tools)."
+    },
+    {
+      "prompt": "MCP prompts exist so that…",
+      "choices": [
+        "The model can invoke them autonomously mid-conversation",
+        "The server author can ship high-quality, well-tested interaction templates users trigger on demand",
+        "Clients can avoid calling initialize()",
+        "Servers can store conversation history"
+      ],
+      "answerIndex": 1,
+      "explanation": "Prompts are pre-defined User/Assistant message templates — authored and tested once on the server (the chatbot exposes them as /prompt commands). Tools are the model-initiated primitive."
+    },
+    {
+      "prompt": "The key operational difference between stdio and remote servers is…",
+      "choices": [
+        "stdio servers are launched by their client as a subprocess; remote servers must already be running independently",
+        "stdio is faster because it skips JSON",
+        "Remote servers cannot expose resources",
+        "stdio servers require OAuth 2.1"
+      ],
+      "answerIndex": 0,
+      "explanation": "Local: the client owns the lifecycle (command + args in config, env-var auth). Remote: independent infrastructure reached by URL (/sse or /mcp/), OAuth 2.1 available since the March 2025 spec."
+    },
+    {
+      "prompt": "A streamable-HTTP server with stateless_http=True is appropriate when…",
+      "choices": [
+        "Requests are simple and independent — no memory of prior interactions needed",
+        "A multi-step workflow needs the server to remember the client across requests",
+        "The server runs locally",
+        "You need the client to launch the server"
+      ],
+      "answerIndex": 0,
+      "explanation": "Stateless = independent request/response (and easy scaling). Choose stateful when a workflow genuinely needs session memory across calls."
+    }
+  ]
+}

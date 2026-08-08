@@ -1,0 +1,23 @@
+{
+  "id": "role-classify",
+  "kind": "classify",
+  "title": "Host, client, or server?",
+  "conceptIds": ["mcp-architecture"],
+  "intro": "Eight responsibilities — file each under the role that owns it.",
+  "buckets": [
+    { "id": "host", "label": "Host", "hint": "The LLM app wanting context", "tone": "warm" },
+    { "id": "client", "label": "MCP client", "hint": "1:1 protocol session, inside the host", "tone": "cool" },
+    { "id": "server", "label": "MCP server", "hint": "Lightweight capability program", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Claude Desktop, an IDE, or an AI agent as a whole application", "bucketId": "host" },
+    { "id": "c2", "text": "Runs the LLM and decides a tool is needed mid-conversation", "bucketId": "host" },
+    { "id": "c3", "text": "Maintains exactly one connection to exactly one server", "bucketId": "client" },
+    { "id": "c4", "text": "Calls session.initialize(), list_tools(), call_tool(...)", "bucketId": "client" },
+    { "id": "c5", "text": "Launches a stdio server as a subprocess and holds its read/write streams", "bucketId": "client" },
+    { "id": "c6", "text": "Exposes search_papers and extract_info with their schemas", "bucketId": "server" },
+    { "id": "c7", "text": "Answers ListToolsRequest and CallToolRequest", "bucketId": "server" },
+    { "id": "c8", "text": "Wraps arXiv access once, gets reused by every MCP-compatible app", "bucketId": "server" }
+  ],
+  "debrief": "The host is the application — it runs the LLM and wants context. Each client lives inside the host and owns one 1:1 protocol session (for stdio it even launches the server as its subprocess). The server is the lightweight program on the other side, exposing capabilities and answering the two canonical requests. Keep the direction straight: hosts contain clients; clients speak protocol; servers expose tools, resources, and prompts."
+}

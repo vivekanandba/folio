@@ -1,0 +1,28 @@
+{
+  "id": "config-detective",
+  "kind": "detective",
+  "title": "The invisible server",
+  "conceptIds": ["mcp-clients"],
+  "intro": "You built a new weather server and the chatbot can't see its tools. The research, filesystem and fetch tools all work fine. Open the clues and diagnose.",
+  "facts": [
+    { "label": "The server, standalone", "value": "Run directly with the MCP inspector, weather_server.py connects, lists both its tools, and executes them perfectly.", "signal": 3 },
+    { "label": "server_config.json", "value": "Entries present: research, filesystem, fetch. Nothing else.", "signal": 3 },
+    { "label": "The chatbot's startup log", "value": "\"Connected to server: research (2 tools), filesystem (11 tools), fetch (1 tool).\" Three sessions opened, no errors, no mention of weather.", "signal": 2 },
+    { "label": "The LLM's behaviour", "value": "Asked about the weather, the model apologizes that it has no weather tool — it never attempts a call.", "signal": 2 },
+    { "label": "The code", "value": "MCP_ChatBot iterates the config file and opens one session per entry. It has no other discovery mechanism.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Registration (config) issue", "pct": 80, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Server-side issue", "pct": 20, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "Why can't the chatbot see the weather tools?",
+  "choices": [
+    "The weather server has a bug in its tool schemas",
+    "The server was never added to server_config.json — no entry, no session, no tools",
+    "stdio transport can't handle more than three servers",
+    "The LLM doesn't support weather-related tool calls"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence it's a registration problem",
+  "debrief": "The inspector run proves the server itself is healthy — schemas list, tools execute. The startup log shows exactly three sessions, matching exactly three config entries, and the code's only discovery mechanism is iterating that file. The model never attempts a call because the tool list the client aggregated simply doesn't contain weather tools. One JSON entry — command, args — and the tools appear. The general lesson: in a config-driven multi-server client, absence from the config is silent; check registration before debugging servers."
+}

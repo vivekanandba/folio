@@ -1,0 +1,27 @@
+{
+  "id": "server-explainer",
+  "kind": "explainer",
+  "title": "Your first MCP server",
+  "conceptIds": ["mcp-servers"],
+  "intro": "Wrap the chatbot's tools into a server any MCP app can use — with FastMCP doing the protocol work.",
+  "steps": [
+    {
+      "title": "Two requests, two ways to build",
+      "body": "A tools server answers two request types: **ListToolsRequest** (\"what do you have?\") and **CallToolRequest** (\"run this one\").\n\n- **Low-level**: handle those request types directly — full control over every aspect.\n- **FastMCP**: a high-level interface — *you just write functions*; FastMCP handles the protocol."
+    },
+    {
+      "title": "Functions become tools",
+      "body": "```python\nmcp = FastMCP(\"research\")\n\n@mcp.tool()\ndef search_papers(topic: str, max_results: int = 5) -> List[str]:\n    \"\"\"Search arXiv for papers on a topic and store their info.\"\"\"\n    ...\n```\n\n> [!key] The **type hints and docstring become the tool schema** the client sees. One source of truth — no handwritten JSON."
+    },
+    {
+      "title": "A real project, run with uv",
+      "body": "The research server gets its own project: `uv init`, a virtual environment, `uv add mcp arxiv`, code in `research_server.py`, and `mcp.run(transport=\"stdio\")` at the bottom — local servers speak stdio and get launched by their client as a subprocess.",
+      "viz": { "type": "annotated", "title": "From chatbot function to shared tool", "prompt": "Tap each step.", "points": [ { "label": "Write fn", "value": 2, "note": "The same search_papers / extract_info the Lesson-3 chatbot called directly." }, { "label": "Decorate", "value": 3, "note": "@mcp.tool() registers it; schema derived automatically." }, { "label": "Run stdio", "value": 3, "note": "mcp.run(transport='stdio') — the client will spawn this file." }, { "label": "Inspect", "value": 4, "note": "npx @modelcontextprotocol/inspector — list and call the tools by hand." } ] }
+    },
+    {
+      "title": "Inspector before client",
+      "body": "The **MCP inspector** is a browser UI that connects to your server, lists its capabilities, and invokes tools interactively — the fastest feedback loop in MCP development.\n\n> [!tip] After the refactor, the chatbot keeps only query processing and the chat loop. The tools now live where they belong: on a server **any** MCP-compatible app can use."
+    }
+  ],
+  "recap": "**FastMCP: write functions, get a protocol-compliant server.**\n\n- Two canonical requests: list tools, call tool.\n- Signatures + docstrings ARE the schema.\n- Local servers run stdio and are launched by their clients.\n- Always smoke-test with the inspector before building a client."
+}

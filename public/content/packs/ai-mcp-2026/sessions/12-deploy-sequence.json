@@ -1,0 +1,17 @@
+{
+  "id": "deploy-sequence",
+  "kind": "sequence",
+  "title": "Order the road to remote",
+  "conceptIds": ["mcp-deployment"],
+  "intro": "From working local server to a deployed one any client can reach — put the steps in order.",
+  "prompt": "Drag into order, first step on top.",
+  "steps": [
+    { "id": "local", "text": "Working local server: tools/resources/prompts under stdio" },
+    { "id": "transport", "text": "Switch the run line: FastMCP(…, port=8001) + mcp.run(transport=\"sse\")" },
+    { "id": "runit", "text": "Run it as an independent process — it must be up before any client" },
+    { "id": "deploy", "text": "Deploy to a host (Render) and note the public URL" },
+    { "id": "url", "text": "Append the transport path: …/sse (or /mcp/ for streamable HTTP)" },
+    { "id": "inspect", "text": "Point the MCP inspector at the URL — list tools, call one, verify" }
+  ],
+  "debrief": "The definitions never change — the journey is all operational: flip the transport, accept that the server now runs independently (nobody will spawn it for you), deploy, build the correct URL (the /sse or /mcp/ suffix is the step everyone forgets), and smoke-test with the inspector exactly as you did locally. If the inspector can list and call against the deployed URL, any MCP client in the world can too."
+}

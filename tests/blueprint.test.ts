@@ -82,6 +82,17 @@ test('media-agent blueprint: pipeline wins, ungrounded/unevaluated wires fail', 
   assert.ok(passCount(s, nodes, [...chain, [4, 6]]) < s.rules.length, 'unevaluated delivery refused')
 })
 
+test('MCP ecosystem blueprint: chain wins, glue and protocol-bypass wires fail', () => {
+  const s = loadRules('ai-mcp-2026/sessions/05-mcp-blueprint.json')
+  const nodes = [N(1, 'host'), N(2, 'client'), N(3, 'server'), N(4, 'tool'), N(5, 'data')]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'the M+N chain passes')
+  // host hardwired to data = the M\u00d7N glue MCP exists to kill
+  assert.ok(passCount(s, nodes, [...chain, [1, 5]]) < s.rules.length, 'bespoke host\u2192data glue refused')
+  // client reaching around the server to a tool = protocol bypass
+  assert.ok(passCount(s, nodes, [...chain, [2, 4]]) < s.rules.length, 'client\u2192tool bypass refused')
+})
+
 /* Pure graph helpers */
 
 test('shortestHops + connectivityAvailability behave analytically', () => {
