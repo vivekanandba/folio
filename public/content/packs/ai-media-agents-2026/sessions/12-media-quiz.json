@@ -1,0 +1,97 @@
+{
+  "id": "media-quiz",
+  "kind": "quiz",
+  "title": "Media agents — check what stuck",
+  "conceptIds": ["generative-media-map", "media-prompting", "media-evaluation", "media-agents", "agents-building-agents"],
+  "intro": "Eight self-check questions written from the course notes (this course has no official graded quiz).",
+  "questions": [
+    {
+      "prompt": "Diffusion models generate by…",
+      "choices": [
+        "Predicting the next token sequentially",
+        "Starting from noise and refining the whole output pass by pass, in latent space",
+        "Copying the nearest training image",
+        "Sampling a random image and cropping it"
+      ],
+      "answerIndex": 1,
+      "explanation": "Diffusion = iterative denoising of the whole output (condition → denoise → decode) — the sculptor mental model. Sequential next-token prediction is the autoregressive paradigm."
+    },
+    {
+      "prompt": "Autoregressive generation excels at…",
+      "choices": [
+        "Instruction following, compositional accuracy, and fine control",
+        "High-fidelity texture and detail",
+        "Running without any compute",
+        "Producing audio only"
+      ],
+      "answerIndex": 0,
+      "explanation": "AR builds sequentially like an LLM — its strength is control. Diffusion owns fidelity and texture. Hybrids chain AR structure into diffusion detail."
+    },
+    {
+      "prompt": "Why hand your prompt keywords to an LLM before generating?",
+      "choices": [
+        "To count the tokens",
+        "The image model prefers one rich descriptive paragraph — the LLM weaves the keywords into it",
+        "Because keyword lists are forbidden by the API",
+        "To translate the prompt into English"
+      ],
+      "answerIndex": 1,
+      "explanation": "LLM-enhanced prompting: keywords structure your thinking, but the generation model's deep language understanding favors a detailed paragraph — so an LLM acts as the director."
+    },
+    {
+      "prompt": "In the video prompt formula, which dimensions exist that images don't need?",
+      "choices": [
+        "Subject and style",
+        "Temporal pacing, camera movement, and audio",
+        "Lighting and composition",
+        "Aspect ratio"
+      ],
+      "answerIndex": 1,
+      "explanation": "Video adds the time dimensions: how the scene changes (temporal), motion of the frame itself (pan/tilt), and native audio (dialogue, sound effects)."
+    },
+    {
+      "prompt": "SigLIP is best used as…",
+      "choices": [
+        "The final safety review before shipping",
+        "A fast, deterministic first filter — one alignment score to discard clear failures",
+        "A tool that explains why an image failed",
+        "A video-editing model"
+      ],
+      "answerIndex": 1,
+      "explanation": "SigLIP's dual encoder gives one 0→1 similarity, cheap and deterministic — ideal at the funnel's mouth. It can't tell you why something failed (that's the judge/rubric tier) and it isn't a human sign-off."
+    },
+    {
+      "prompt": "Gecko's rubric approach works by…",
+      "choices": [
+        "Averaging pixel differences against a reference image",
+        "Decomposing the prompt into questions, then verifying each against the image — per-element pass/fail",
+        "Asking three humans to vote",
+        "Measuring generation latency"
+      ],
+      "answerIndex": 1,
+      "explanation": "Decompose → verify: the same question set applied to every candidate makes comparisons fair, and per-element results are interpretable — you know WHICH part failed."
+    },
+    {
+      "prompt": "The video agent's evaluator returns failure_type: \"audio\". The right retry is…",
+      "choices": [
+        "Regenerate both the reference image and the video",
+        "Regenerate the video only, reusing the reference image",
+        "Re-plan every scene from scratch",
+        "Lower the pass threshold"
+      ],
+      "answerIndex": 1,
+      "explanation": "Targeted retries: audio failure → the frame was fine, regenerate only the Veo clip. Visual failure → regenerate both. Classifying the failure is what keeps retries cheap."
+    },
+    {
+      "prompt": "In the ADK triple, the 'instruction' is…",
+      "choices": [
+        "The system prompt that sets how the agent orchestrates its tools",
+        "The Python function the agent calls",
+        "The model's weights",
+        "A billing configuration"
+      ],
+      "answerIndex": 0,
+      "explanation": "Model = the brain choosing the next tool; tools = the capabilities; instruction = the SYSTEM_PROMPT encoding the loop (analyse → generate → evaluate → retry with feedback, capped)."
+    }
+  ]
+}

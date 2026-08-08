@@ -1,0 +1,27 @@
+{
+  "id": "agents-building-agents-explainer",
+  "kind": "explainer",
+  "title": "Agents building agents",
+  "conceptIds": ["agents-building-agents"],
+  "intro": "The finale: teach a coding agent two skills, state a one-sentence goal, and review what it builds.",
+  "steps": [
+    {
+      "title": "Skills give the CLI its hands",
+      "body": "Two **skills** were prepared — themselves authored by handing docs to the Gemini CLI:\n\n- **`adk-agent-creator`** — how to scaffold, configure and run an ADK agent (venv, `adk create`, the `agent.py` + `.env` structure, `adk run` / `adk web`).\n- **`nano-banana-image-gen`** — image generation and conversational editing via the genai SDK.\n\nRegister them and the CLI knows what it's capable of."
+    },
+    {
+      "title": "A goal in natural language",
+      "body": "State what you want — an infographic agent that turns a blog post into an image — and the CLI activates the relevant skills, scaffolds the project, wires the env, and writes the tools and root agent into `agent.py`.\n\n> [!warn] **Watch the build.** The point of review doesn't disappear because an agent is writing the code — verify it's making the choices your skills specified. (It did here: the skill's model recommendation overrode the CLI's own default.)"
+    },
+    {
+      "title": "What it built",
+      "body": "A single ADK `LlmAgent` whose one tool chains three functions:",
+      "viz": { "type": "annotated", "title": "infographic_workflow", "prompt": "Tap each stage.", "points": [ { "label": "fetch", "value": 2, "note": "fetch_blog_content(url): plain requests, truncated to ~5000 chars, logged." }, { "label": "generate", "value": 3, "note": "generate_infographic(content, feedback): Nano Banana renders — and on a retry, the prior feedback is appended to the prompt." }, { "label": "evaluate", "value": 4, "note": "evaluate_infographic: factual accuracy, spelling, aesthetic alignment → 'PASS' or specific feedback." }, { "label": "cap", "value": 3, "note": "max_attempts = 3, every step logged; after 3, return the last version rather than looping forever." } ] }
+    },
+    {
+      "title": "The pattern underneath",
+      "body": "This is the same discipline the hand-built agents used — generate, judge, feed feedback into the retry, cap the attempts — reconstructed by a coding agent from a one-sentence goal plus packaged capabilities.\n\nRepeatable capability → **skill**. Goal → **agent**. Your job → **review**."
+    }
+  ],
+  "recap": "**Package capabilities as skills; let the agent write the agent; review the choices.**\n\n- Two skills (ADK scaffolding + Nano Banana) taught the CLI what it could build.\n- The generated loop: fetch → generate → evaluate → feedback-driven retry, capped at 3.\n- Skill instructions override tool defaults — what you package wins.\n- Less-structured inputs make the evaluate→regenerate loop earn its keep."
+}

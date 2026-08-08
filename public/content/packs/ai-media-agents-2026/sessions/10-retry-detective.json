@@ -1,0 +1,28 @@
+{
+  "id": "retry-detective",
+  "kind": "detective",
+  "title": "Scene 3 keeps failing",
+  "conceptIds": ["media-agents"],
+  "intro": "The video agent's third scene failed evaluation. Retries cost real money — open the clues and choose the cheapest fix that actually works.",
+  "facts": [
+    { "label": "The judge's scores", "value": "visual_quality 4.2, temporal_consistency 4.0, motion_coherence 3.8 — but narration_alignment 1.5 and voice_profile 2.0. Overall 2.7, below the 3.0 bar.", "signal": 3 },
+    { "label": "failure_type", "value": "The evaluator returned failure_type: \"audio\".", "signal": 3 },
+    { "label": "The reference frame", "value": "The scene's Nano Banana frame matches its visual_description — diagram layout, style prefix, all present.", "signal": 2 },
+    { "label": "The narration script", "value": "plan_scenes wrote ~20 words for the 8-second clip, but the generated speech trails off mid-sentence and the voice sounds nothing like the profile.", "signal": 2 },
+    { "label": "The budget", "value": "Each Veo generation costs the same; regenerating the image adds a Nano Banana call on top.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Audio criteria failing", "pct": 75, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Visual criteria failing", "pct": 25, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What's the right retry?",
+  "choices": [
+    "Regenerate both the image and the video — start the scene over",
+    "Regenerate the video only, reusing the existing reference frame",
+    "Re-run plan_scenes and rebuild the whole scene plan",
+    "Lower the pass threshold to 2.5 and move on"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence the failure is audio-only",
+  "debrief": "The judge didn't just fail the scene — it named the failure type, and every clue agrees: visuals score fine, the frame matches its description, and what's broken is narration alignment and voice. That's the video agent's targeted-retry rule: **audio failure → regenerate the video only, reusing the image** (visual failure would mean regenerating both). Rebuilding the plan throws away good work; lowering the bar ships a broken scene. Classifying the failure is what makes the retry cheap — that's the whole reason evaluate_scene returns failure_type at all."
+}

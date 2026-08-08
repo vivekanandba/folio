@@ -1,0 +1,31 @@
+{
+  "id": "ai-media-agents-2026",
+  "title": "AI Agents for Image & Video Generation",
+  "subject": "ai-engineering",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from 'AI Agents for Image and Video Generation' (DeepLearning.AI × Google, own completion). Not affiliated; for personal revision only.",
+  "summary": "The generative media map, prompting formulas for stills and motion, the evaluation funnel (SigLIP → judges → rubrics → humans), and agents that generate, judge, and retry — including agents that build agents.",
+  "tags": ["generative-media", "image-generation", "video-generation", "evaluation", "adk", "agents", "gemini", "veo"],
+  "concepts": [
+    "generative-media-map",
+    "media-prompting",
+    "media-evaluation",
+    "media-agents",
+    "agents-building-agents"
+  ],
+  "sessions": [
+    "01-media-map-explainer.json",
+    "02-paradigm-classify.json",
+    "03-prompting-explainer.json",
+    "04-prompt-dimension-classify.json",
+    "05-eval-explainer.json",
+    "06-eval-method-classify.json",
+    "07-eval-funnel-sequence.json",
+    "08-media-agent-blueprint.json",
+    "09-agent-loop-explainer.json",
+    "10-retry-detective.json",
+    "11-agents-building-agents-explainer.json",
+    "12-media-quiz.json"
+  ]
+}

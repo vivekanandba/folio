@@ -1,0 +1,27 @@
+{
+  "id": "eval-explainer",
+  "kind": "explainer",
+  "title": "Evaluating what you generated",
+  "conceptIds": ["media-evaluation"],
+  "intro": "Subjective, multi-dimensional, no ground truth — and you still have to ship. Here's the funnel.",
+  "steps": [
+    {
+      "title": "Why it's hard",
+      "body": "- Quality is **subjective** — depends on the audience, the brand, the use case.\n- **No single ground truth** — a creative prompt has many valid outputs.\n- **Many dimensions** — fidelity, prompt adherence, aesthetics, coherence, temporal consistency.\n- **Scale vs nuance** — you can't human-review every asset; pure metrics miss what matters."
+    },
+    {
+      "title": "Four evaluators, ordered by cost",
+      "body": "Each tier filters for the next:",
+      "viz": { "type": "annotated", "title": "The evaluation tiers", "prompt": "Tap each.", "points": [ { "label": "Metric", "value": 2, "note": "SigLIP (images), FVD (video): fast, deterministic, one 0→1 alignment number. Can't say WHY, can't judge beauty." }, { "label": "LLM judge", "value": 3, "note": "Gemini + rubric: multi-dimensional scores with reasoning and feedback. Medium cost, non-deterministic." }, { "label": "Rubric", "value": 3, "note": "Gecko: decompose → verify. Per-element pass/fail; the same questions across candidates makes comparison fair." }, { "label": "Human", "value": 4, "note": "Gold standard for nuance, culture, safety. Expensive; doesn't scale. Spend it last." } ] }
+    },
+    {
+      "title": "The two automated stars",
+      "body": "- **SigLIP** is a **dual encoder**: text and image embedded *independently* into a shared space; sigmoid similarity → 0→1. Perfect as a fast first filter. Mind the **max token limit** — score against a condensed prompt.\n- **Gecko** decomposes the prompt into questions (\"is there a cat?\", \"is it right of the flower?\") and verifies each against the image — **interpretable** per-element results, images *and* video, via the Vertex Gen-AI Evaluation Service."
+    },
+    {
+      "title": "The funnel, closed",
+      "body": "`generate → auto-score → LLM/rubric → human → iterate` — and the insights **feed back into generation**.\n\n> [!key] Evaluation is a continuous mechanism, not a checkpoint. The media agents in this pack move the judge *inside* the generation loop — every asset is born already evaluated."
+    }
+  ],
+  "recap": "**Evaluation is a cost-ordered funnel with feedback.**\n\n- Hard because: subjective, no ground truth, many dimensions, scale vs nuance.\n- Metric (SigLIP/FVD) → LLM judge → rubric (Gecko) → human.\n- SigLIP = dual-encoder similarity; Gecko = decompose → verify.\n- Insights flow back into generation — the loop never really closes."
+}

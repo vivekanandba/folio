@@ -1,0 +1,22 @@
+{
+  "id": "paradigm-classify",
+  "kind": "classify",
+  "title": "Autoregressive or diffusion?",
+  "conceptIds": ["generative-media-map"],
+  "intro": "Sort each trait by the generation paradigm it describes.",
+  "buckets": [
+    { "id": "ar", "label": "Autoregressive", "hint": "Sequential, token by token", "tone": "cool" },
+    { "id": "diff", "label": "Diffusion", "hint": "Noise → refine, whole output", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Builds the output sequentially, predicting the next token", "bucketId": "ar" },
+    { "id": "c2", "text": "The transformer recipe that LLMs made famous", "bucketId": "ar" },
+    { "id": "c3", "text": "Strongest at instruction following and compositional accuracy", "bucketId": "ar" },
+    { "id": "c4", "text": "Pipeline: encode → generate → decode", "bucketId": "ar" },
+    { "id": "c5", "text": "Starts from noise and refines the whole output each pass", "bucketId": "diff" },
+    { "id": "c6", "text": "A denoising network working in latent space", "bucketId": "diff" },
+    { "id": "c7", "text": "Strongest at high-fidelity detail, rich texture, coherence", "bucketId": "diff" },
+    { "id": "c8", "text": "Mental model: a sculptor carving finer detail with every pass", "bucketId": "diff" }
+  ],
+  "debrief": "Autoregressive = sequential prediction (the LLM recipe): its strengths are control — following instructions, getting composition right. Diffusion = iterative denoising of the whole output in latent space: its strengths are fidelity — texture, detail, coherence. The strongest real systems are hybrids: autoregressive for global structure feeding diffusion for finish. When something misbehaves, name the paradigm whose strength is missing — that's where to look for a fix."
+}

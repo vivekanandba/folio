@@ -1,0 +1,16 @@
+{
+  "id": "eval-funnel-sequence",
+  "kind": "sequence",
+  "title": "Order the evaluation funnel",
+  "conceptIds": ["media-evaluation"],
+  "intro": "Each tier filters for the next — and the loop feeds back. Put the funnel in order.",
+  "prompt": "Drag into order, first stage on top.",
+  "steps": [
+    { "id": "generate", "text": "Generate candidates from the prompt" },
+    { "id": "autoscore", "text": "Auto-score with a metric (SigLIP) — discard the clear failures" },
+    { "id": "evaluate", "text": "LLM judge / rubric on the survivors — scores, reasoning, per-element checks" },
+    { "id": "validate", "text": "Human review of the shortlist — nuance, culture, safety" },
+    { "id": "iterate", "text": "Feed the insights back into generation and refine" }
+  ],
+  "debrief": "Cheap and automatic first, scarce and human last: SigLIP filters volume, the judge and rubric explain the survivors, and human judgment lands only on the shortlist. The step everyone forgets is the last one — the funnel is a loop, and what the evaluators learned becomes the next generation's prompt. Skip a tier and you either drown reviewers or ship unexamined output."
+}
