@@ -71,6 +71,17 @@ test('SDD workflow blueprint: the pipeline wins, the vibe-coding wire fails', ()
   assert.ok(passCount(s, nodes, skipSpec) < s.rules.length, 'skipping the feature spec fails')
 })
 
+test('media-agent blueprint: pipeline wins, ungrounded/unevaluated wires fail', () => {
+  const s = loadRules('ai-media-agents-2026/sessions/08-media-agent-blueprint.json')
+  const nodes = [N(1, 'request'), N(2, 'brand'), N(3, 'concepts'), N(4, 'generate'), N(5, 'evaluate'), N(6, 'deliver')]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'the disciplined pipeline passes')
+  // request wired straight to the renderer = ungrounded generation
+  assert.ok(passCount(s, nodes, [...chain, [1, 4]]) < s.rules.length, 'ungrounded generation refused')
+  // generate wired straight to the deliverable = shipping unevaluated
+  assert.ok(passCount(s, nodes, [...chain, [4, 6]]) < s.rules.length, 'unevaluated delivery refused')
+})
+
 /* Pure graph helpers */
 
 test('shortestHops + connectivityAvailability behave analytically', () => {

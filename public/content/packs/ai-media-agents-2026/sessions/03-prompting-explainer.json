@@ -1,0 +1,27 @@
+{
+  "id": "prompting-explainer",
+  "kind": "explainer",
+  "title": "Prompting for images and video",
+  "conceptIds": ["media-prompting"],
+  "intro": "Two formulas, two power-ups, and a workflow where every output becomes the next step's input.",
+  "steps": [
+    {
+      "title": "The image formula",
+      "body": "Six dimensions structure an image prompt: **subject** (who/what), **action** (life and movement), **location** (scene, background), **composition/camera** ('low-angle shot', 'shallow depth of field'), **lighting** ('cinematic lighting'), and **style** ('minimalistic vector art').\n\nKeywords are scaffolding — for you, not the model."
+    },
+    {
+      "title": "The two power-ups",
+      "body": "1. **LLM-enhanced prompting** — the model's language understanding prefers **one rich descriptive paragraph** over a keyword list. Hand the keywords to an LLM and let it weave the paragraph: the LLM is your *director*.\n2. **Reference image** — supply an image with the text as a **blueprint** for palette, texture, and feel → consistency and style."
+    },
+    {
+      "title": "Video adds the time dimensions",
+      "body": "Veo's formula groups keywords in three: **main** (subject, action, scene = where *and when*, style, **temporal** — how the scene changes), **camera** (angle, **movement** — pan/tilt/static, lens effects), and **audio** (dialogue, sound effects — the video ships with native sound).",
+      "viz": { "type": "annotated", "title": "What only exists once time does", "prompt": "Tap each video-only dimension.", "points": [ { "label": "Temporal", "value": 3, "note": "Pacing and flow — 'zoom reveals the diagram'. Stills don't change; videos must." }, { "label": "Camera motion", "value": 3, "note": "The frame itself moves: static, pan left/right, tilt up/down." }, { "label": "Audio", "value": 4, "note": "Dialogue and sound effects are part of the prompt — a ticking clock, key clicks, a spoken line." } ] }
+    },
+    {
+      "title": "The compounding workflow",
+      "body": "Basic prompt → structured keywords → LLM-woven paragraph → + reference image → generate → **save the output**. The saved image becomes the *video's first frame*, keeping the look consistent across lessons.\n\n> [!tip] Video generation is a **long-running operation you poll** (~15s intervals) — asynchronous by nature. Design workflows around that, not around instant responses."
+    }
+  ],
+  "recap": "**Structure with keywords; generate from paragraphs; anchor with references.**\n\n- Image: subject / action / location / camera / lighting / style.\n- Video adds temporal, camera movement, and audio — the time dimensions.\n- LLM-enhanced prompting: keywords → one rich paragraph.\n- Reference image = style blueprint (stills) or first frame (video)."
+}

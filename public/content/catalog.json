@@ -19,6 +19,10 @@
     {
       "id": "ai-sdd-2026",
       "path": "packs/ai-sdd-2026"
+    },
+    {
+      "id": "ai-media-agents-2026",
+      "path": "packs/ai-media-agents-2026"
     }
   ]
 }

@@ -1,0 +1,24 @@
+{
+  "id": "eval-method-classify",
+  "kind": "classify",
+  "title": "Pick the right evaluator",
+  "conceptIds": ["media-evaluation"],
+  "intro": "Eight evaluation needs — match each to the cheapest tier that can actually answer it.",
+  "buckets": [
+    { "id": "metric", "label": "Scoring metric", "hint": "SigLIP/FVD — fast, one number", "tone": "cool" },
+    { "id": "judge", "label": "LLM judge", "hint": "Scores + reasoning + feedback", "tone": "warm" },
+    { "id": "rubric", "label": "Rubric (Gecko)", "hint": "Per-element pass/fail", "tone": "neutral" },
+    { "id": "human", "label": "Human review", "hint": "Nuance, culture, safety", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Discard the worst 80% of 10,000 candidates, cheaply and deterministically", "bucketId": "metric" },
+    { "id": "c2", "text": "A quick first-pass alignment score between prompt and image", "bucketId": "metric" },
+    { "id": "c3", "text": "\"Tell me WHY this mockup fails the brand guide, with feedback I can act on\"", "bucketId": "judge" },
+    { "id": "c4", "text": "Score aesthetics and coherence across five dimensions with reasoning", "bucketId": "judge" },
+    { "id": "c5", "text": "\"Is the cat actually to the RIGHT of the flower?\" — element by element", "bucketId": "rubric" },
+    { "id": "c6", "text": "Compare 50 images fairly using the identical question set", "bucketId": "rubric" },
+    { "id": "c7", "text": "Judge whether the ad reads respectfully in a culture you don't know", "bucketId": "human" },
+    { "id": "c8", "text": "The final safety sign-off before a global campaign ships", "bucketId": "human" }
+  ],
+  "debrief": "The funnel logic: metrics are for volume (fast, deterministic, one number — no why); LLM judges are for explanations (multi-dimensional scores with actionable feedback); rubrics are for interpretability and fairness (same decomposed questions across every candidate); humans are for what automation genuinely can't judge — nuance, culture, safety. The discipline is using the *cheapest tier that answers the question*, and never skipping straight to humans."
+}

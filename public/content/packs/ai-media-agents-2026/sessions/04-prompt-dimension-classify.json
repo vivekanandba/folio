@@ -1,0 +1,23 @@
+{
+  "id": "prompt-dimension-classify",
+  "kind": "classify",
+  "title": "Still, motion, or sound?",
+  "conceptIds": ["media-prompting"],
+  "intro": "The image and video formulas overlap — deliberately confusable. Sort each prompt fragment by the capability it actually needs.",
+  "buckets": [
+    { "id": "still", "label": "Works for a still image", "hint": "Subject, scene, camera position, light, style", "tone": "cool" },
+    { "id": "motion", "label": "Needs video (time)", "hint": "Temporal change, camera movement", "tone": "warm" },
+    { "id": "sound", "label": "Needs video (audio)", "hint": "Dialogue, sound effects", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "\"Low-angle shot with shallow depth of field\"", "bucketId": "still" },
+    { "id": "c2", "text": "\"Minimalistic vector art on a white background\"", "bucketId": "still" },
+    { "id": "c3", "text": "\"Cinematic lighting on the professor's face\"", "bucketId": "still" },
+    { "id": "c4", "text": "\"A slow zoom reveals the diagram piece by piece\"", "bucketId": "motion" },
+    { "id": "c5", "text": "\"The camera pans left as she walks to the board\"", "bucketId": "motion" },
+    { "id": "c6", "text": "\"Pacing builds from a calm open to a rapid finish\"", "bucketId": "motion" },
+    { "id": "c7", "text": "\"A clock ticks; chalk squeaks against the board\"", "bucketId": "sound" },
+    { "id": "c8", "text": "\"She asks: 'so what does the square on the hypotenuse equal?'\"", "bucketId": "sound" }
+  ],
+  "debrief": "Camera *position* (angle, framing, depth of field), lighting, and style live in both formulas — a still can hold them. What a still can't hold is time: temporal pacing and camera *movement* are the video formula's Main and Camera additions, and dialogue + sound effects belong to its Audio group (Veo generates native audio, so sound is genuinely part of the prompt). If a fragment describes change or noise, it needs the video formula."
+}

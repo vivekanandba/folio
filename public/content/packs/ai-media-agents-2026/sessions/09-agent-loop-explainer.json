@@ -1,0 +1,27 @@
+{
+  "id": "agent-loop-explainer",
+  "kind": "explainer",
+  "title": "Two media agents, one discipline",
+  "conceptIds": ["media-agents"],
+  "intro": "ADK's model + tools + instruction, and the evaluate-and-retry loop both agents share.",
+  "steps": [
+    {
+      "title": "The ADK triple",
+      "body": "Every ADK agent is **model + tools + instruction**: the model is the brain that decides which tool to call next; tools are functions it invokes autonomously; the instruction (SYSTEM_PROMPT) sets the rules of orchestration.\n\n> [!tip] Tools return **structured JSON** (`response_schema` + Pydantic) — the loop must be able to parse its own state, or it can't act on it."
+    },
+    {
+      "title": "The image agent",
+      "body": "Four tools: `brand_analysis` (style guide → visual DNA as JSON), `generate_design_concepts` (brief + DNA → distinct concepts with prompts), `generate_idea_image` (Nano Banana renders, guide attached), `evaluate_image` (LLM judge vs the guide).\n\nThe judge scores aesthetics plus the four **CRAP design principles** — Contrast, Repetition, Alignment, Proximity — against a pass threshold, and returns **actionable feedback** that gets folded into the retry prompt (max 1 retry, then a new concept)."
+    },
+    {
+      "title": "The video agent's smarter retry",
+      "body": "`plan_scenes` emits per-scene JSON — `visual_description` (feeds the reference frame), `narration_script` (~20 words ≈ 8 s of speech), `camera_motion`. Then per scene: Nano Banana frame → Veo 8s clip with native audio → `evaluate_scene`.",
+      "viz": { "type": "annotated", "title": "Retry by failure type", "prompt": "Tap each verdict.", "points": [ { "label": "Pass ≥3.0", "value": 2, "note": "Next scene. All passing clips concat (ffmpeg) into one continuous explainer." }, { "label": "Audio fail", "value": 3, "note": "Regenerate the VIDEO only — the reference image was fine, reuse it. Half the cost of a blind retry." }, { "label": "Visual fail", "value": 4, "note": "Regenerate BOTH image and video — the frame itself missed the plan." } ] }
+    },
+    {
+      "title": "Consistency knobs",
+      "body": "Defined once, reused everywhere: **`STYLE_PREFIX`** on every image prompt keeps the *visual* style coherent across scenes; **`VOICE_PROFILE`** on every audio prompt keeps the *voice* coherent.\n\nThe video judge's criteria add the time dimensions: temporal consistency, motion coherence, **narration alignment** (does the spoken audio match the script?), scene continuity."
+    }
+  ],
+  "recap": "**Generate, judge, retry — with the judge inside the loop.**\n\n- ADK agent = model + tools + instruction; tool I/O is schema'd JSON.\n- Image agent: brand DNA → concepts → render → CRAP-judged, feedback-driven retries.\n- Video agent: per-scene plan → frame → clip → judge returns a failure TYPE, and the retry regenerates only what failed.\n- STYLE_PREFIX and VOICE_PROFILE hold the whole thing together."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "media-map-explainer",
+  "kind": "explainer",
+  "title": "The generative media map",
+  "conceptIds": ["generative-media-map"],
+  "intro": "Three axes that tell you which model to reach for — and what you'll pay in quality, latency, and cost.",
+  "steps": [
+    {
+      "title": "Beyond text",
+      "body": "LLMs cracked text and code. **Generative media** extends that to everything else we perceive: image, video, audio, music.\n\nThe practical question is never \"which model is best?\" — it's **which model, for this app, at what quality/latency/cost**. The course's answer: place every model on three axes."
+    },
+    {
+      "title": "Modality and scope",
+      "body": "- **Modality**: *unimodal* (same in → same out, e.g. image super-resolution), *cross-modal* (text→image, text→video), *multimodal* (many in, many out). More modalities, broader apps.\n- **Scope**: *specialized* models go deep on one domain — Lyria for music, Veo for video with audio. *General-purpose* models (Gemini) trade that depth for breadth across tasks."
+    },
+    {
+      "title": "The paradigm axis",
+      "body": "How the pixels actually get made:",
+      "viz": { "type": "annotated", "title": "Autoregressive vs diffusion", "prompt": "Tap each.", "points": [ { "label": "Autoregressive", "value": 3, "note": "Sequential, token by token — the LLM recipe (encode → generate → decode). Excels at instruction following, compositional accuracy, fine control." }, { "label": "Diffusion", "value": 3, "note": "Noise → refine, whole output each pass, in latent space (condition → denoise → decode). A sculptor carving detail. Excels at fidelity, texture, coherence." }, { "label": "Hybrid", "value": 4, "note": "The real power: autoregressive lays global structure, diffusion finishes the detail. Input → [AR] → [diffusion] → output." } ] }
+    },
+    {
+      "title": "Using the map",
+      "body": "Control problems (the model ignores instructions, miscounts objects) point at **autoregressive strengths**. Fidelity problems (mushy textures, incoherent detail) point at **diffusion strengths**.\n\n> [!tip] The axes aren't trivia — they're the vocabulary every later decision uses: what to prompt for, what to evaluate, and where an agent's retries should aim."
+    }
+  ],
+  "recap": "**Three axes place any generative media model.**\n\n- Modality: unimodal / cross-modal / multimodal — breadth of I/O.\n- Scope: specialized (deep) vs general-purpose (broad).\n- Paradigm: autoregressive (control) vs diffusion (fidelity) — hybrids combine both.\n- Every choice is a quality ⚖️ latency ⚖️ cost trade."
+}

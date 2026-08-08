@@ -1,0 +1,27 @@
+{
+  "id": "media-agent-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the image agent",
+  "conceptIds": ["media-agents"],
+  "intro": "Build the mockup agent's pipeline — two wires are forbidden, and each has a name.",
+  "briefing": "Route a client's request to a delivered mockup. The inspector rejects any blueprint where generation runs without the brand's DNA (ungrounded generation) — or where an image reaches the deliverable without passing the judge (nothing ships unevaluated).",
+  "parts": [
+    { "id": "request", "label": "Client request + style guide", "fixed": true },
+    { "id": "brand", "label": "brand_analysis (visual DNA)", "max": 1 },
+    { "id": "concepts", "label": "generate_design_concepts", "max": 1 },
+    { "id": "generate", "label": "generate_idea_image (Nano Banana)", "max": 1 },
+    { "id": "evaluate", "label": "evaluate_image (LLM judge, CRAP)", "max": 1 },
+    { "id": "deliver", "label": "Delivered mockup", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "request", "b": "brand", "label": "The style guide is analysed into brand DNA first" },
+    { "rule": "connected", "a": "brand", "b": "concepts", "label": "Concepts merge the brief with the brand DNA" },
+    { "rule": "connected", "a": "concepts", "b": "generate", "label": "Generation renders a concept's prompt" },
+    { "rule": "connected", "a": "generate", "b": "evaluate", "label": "Every render faces the judge" },
+    { "rule": "connected", "a": "evaluate", "b": "deliver", "label": "Only passing images are delivered" },
+    { "rule": "noDirect", "a": "request", "b": "generate", "label": "No ungrounded generation: the request never reaches the renderer directly" },
+    { "rule": "noDirect", "a": "generate", "b": "deliver", "label": "Nothing ships unevaluated" },
+    { "rule": "pathExists", "from": "request", "to": "deliver", "label": "A request can actually become a deliverable" }
+  ],
+  "debrief": "The chain — request → brand analysis → concepts → generate → evaluate → deliver — is the image agent's SYSTEM_PROMPT drawn as wiring. The two forbidden wires are the two classic shortcuts: generating without the brand DNA (you get pretty pictures that ignore the client), and delivering without the judge (you get whatever the model felt like). In the real agent the evaluate → generate feedback edge closes the retry loop: a failing score returns actionable feedback that's folded into the next prompt, with an attempt cap so the loop can't spin forever."
+}
