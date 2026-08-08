@@ -10,4 +10,4 @@
 - [x] 4. folio.json + catalog.json registration
 - [x] 5. Tests: blueprint case for 08-media-agent-blueprint
 - [x] 6. Verify offline: lint:content + npm test + npm run smoke
-- [ ] 7. Ship via /ship (PR links specs/003-media-agents-pack/)
+- [x] 7. Ship via /ship (PR links specs/003-media-agents-pack/)
