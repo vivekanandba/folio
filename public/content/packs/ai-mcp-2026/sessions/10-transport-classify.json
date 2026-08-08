@@ -1,0 +1,22 @@
+{
+  "id": "transport-classify",
+  "kind": "classify",
+  "title": "stdio or remote HTTP?",
+  "conceptIds": ["mcp-deployment"],
+  "intro": "A transport handles how messages move between client and server. Sort each trait by where it belongs.",
+  "buckets": [
+    { "id": "stdio", "label": "stdio (local)", "hint": "Subprocess, standard input/output", "tone": "cool" },
+    { "id": "http", "label": "HTTP+SSE / streamable HTTP (remote)", "hint": "Independent process, URL", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "The client launches the server as a subprocess", "bucketId": "stdio" },
+    { "id": "c2", "text": "Declared in config as a command + args (uv run …, npx …)", "bucketId": "stdio" },
+    { "id": "c3", "text": "Auth is typically handled with environment variables", "bucketId": "stdio" },
+    { "id": "c4", "text": "Dies with its client session and is simply relaunched next time", "bucketId": "stdio" },
+    { "id": "c5", "text": "Must already be running before any client connects", "bucketId": "http" },
+    { "id": "c6", "text": "Reached by URL — append /sse (or /mcp/ for streamable HTTP)", "bucketId": "http" },
+    { "id": "c7", "text": "Can run stateless (independent requests) or stateful (workflow memory)", "bucketId": "http" },
+    { "id": "c8", "text": "Can authorize users via OAuth 2.1 (since the March 2025 spec)", "bucketId": "http" }
+  ],
+  "debrief": "stdio is the local story: the client owns the server's lifecycle — spawns it from a command in the config, talks over standard I/O, passes secrets as env vars, relaunches at will. Remote HTTP flips ownership: the server is independent infrastructure with a URL (/sse for HTTP+SSE, /mcp/ for streamable HTTP), it must be up before clients arrive, it chooses stateless vs stateful (streamable HTTP allows both — FastMCP('research', stateless_http=True)), and it authenticates properly (OAuth 2.1). Same FastMCP code either way — the transport is a deploy-time decision."
+}

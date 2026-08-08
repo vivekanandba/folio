@@ -1,0 +1,27 @@
+{
+  "id": "architecture-explainer",
+  "kind": "explainer",
+  "title": "Why MCP exists",
+  "conceptIds": ["mcp-architecture"],
+  "intro": "Models are only as good as the context given to them — and before MCP, giving it to them meant custom glue everywhere.",
+  "steps": [
+    {
+      "title": "The analogy that explains everything",
+      "body": "**REST** standardized how web apps talk to backends. **LSP** standardized how IDEs talk to language tools. **MCP** standardizes how AI applications talk to external systems.\n\n> [!key] MCP is an open protocol that standardizes how your LLM applications connect to and work with your tools & data sources."
+    },
+    {
+      "title": "M×N → M+N",
+      "body": "**Without MCP**: AI App 1, 2 and 3 each build custom implementations — custom prompt logic, custom tool calls, custom data access — for every data source. M apps × N sources = M×N integrations.\n\n**With MCP**: one MCP-compatible app connects to a Data-Store server, a CRM server, a version-control server through the same protocol — and the same Google Drive server serves an AI assistant, an AI agent, and an IDE, unchanged. M + N."
+    },
+    {
+      "title": "Host, client, server",
+      "body": "Three roles carry the whole protocol:",
+      "viz": { "type": "annotated", "title": "The client-server architecture", "prompt": "Tap each role.", "points": [ { "label": "Host", "value": 3, "note": "LLM applications that want to access data through MCP — Claude Desktop, IDEs, AI agents." }, { "label": "Client", "value": 3, "note": "Inside the host, maintaining a 1:1 connection with one server over the MCP protocol." }, { "label": "Server", "value": 4, "note": "A lightweight program exposing specific capabilities — tools, resources, prompt templates." } ] }
+    },
+    {
+      "title": "Who wins, and the FAQ",
+      "body": "- **App developers**: connect to any server with zero additional work.\n- **Tool/API developers**: build a server once, adopted everywhere (3,000+ community servers and counting).\n- **Users**: apps with extensive capabilities. **Enterprises**: separation of concerns between AI teams.\n\n> [!tip] \"Isn't this just tool use?\" — With direct API calls you author schemas and functions yourself, every time. **An MCP server ships them already defined** — often by the service provider itself."
+    }
+  ],
+  "recap": "**MCP = REST/LSP for AI apps: one protocol, not M×N glue.**\n\n- Host (wants context) → client (1:1 protocol session) → server (capabilities).\n- Servers are reusable across every MCP-compatible app.\n- The value: schemas + functions defined once, by whoever knows the service best.\n- Ecosystem: thousands of servers, hosts from IDEs to agents."
+}
