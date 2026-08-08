@@ -8,4 +8,4 @@
 - [x] 4. folio.json + catalog.json registration
 - [x] 5. Tests: blueprint case for 05-mcp-blueprint
 - [x] 6. Verify offline: lint:content + npm test + npm run smoke
-- [ ] 7. Ship via /ship (PR links specs/004-mcp-pack/)
+- [x] 7. Ship via /ship (PR links specs/004-mcp-pack/)
