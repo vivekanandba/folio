@@ -1,0 +1,27 @@
+{
+  "id": "foundations-explainer",
+  "kind": "explainer",
+  "title": "Agents before frameworks",
+  "conceptIds": ["agent-foundations"],
+  "intro": "Week 1 builds everything bare-handed — so every framework afterwards reads as convenience, not magic.",
+  "steps": [
+    {
+      "title": "Interchangeable brains",
+      "body": "The first labs hit many models through one shape: **OpenAI-compatible endpoints** — GPT, DeepSeek, Gemini, and local Llama via **Ollama** (a local service exposing the same API). Lesson one is that the model is a swappable part."
+    },
+    {
+      "title": "The pattern that matters most",
+      "body": "**Parallel + judge**: send the task to several models at once, then let an evaluator/picker choose the best answer. The lab's own commercial note: this applies universally \"where accuracy is critical\" — quality is bought with tokens.",
+      "viz": { "type": "annotated", "title": "Single-shot vs parallel+judge", "prompt": "Tap each.", "points": [ { "label": "Single-shot", "value": 2, "note": "One model, one answer — a lottery ticket. Fine for low-stakes work." }, { "label": "Parallel", "value": 3, "note": "N candidates from N models (or N temperatures) — now you have a distribution." }, { "label": "Judge", "value": 4, "note": "An evaluator model picks the winner — accuracy-critical work earns this pattern." } ] }
+    },
+    {
+      "title": "Tools make it agentic",
+      "body": "The week's project — **\"Professionally You\"** — is your career as an agent: it answers questions from your LinkedIn profile and summary, and carries **tools**: record a question it couldn't answer, push a phone notification (Pushover) when a visitor wants contact.\n\nThe ladder: completion → workflow (fixed steps) → **agent** (the model decides which tool, when to loop, when to stop)."
+    },
+    {
+      "title": "Shipped, not sketched",
+      "body": "The project deploys as a real **Gradio app on HuggingFace Spaces** — secrets, keys, redeploys and all.\n\n> [!warn] Autonomy is bought with risk: every freedom granted needs a matching termination condition and guardrail. Every framework in the next five weeks is, in part, a way to formalize that."
+    }
+  ],
+  "recap": "**Agentic behavior is patterns, not a library.**\n\n- Models are swappable behind OpenAI-compatible endpoints (Ollama for local).\n- Parallel + judge is THE accuracy pattern.\n- Tools + the right to decide = an agent; deploy it like real software.\n- Autonomy always ships with termination conditions."
+}

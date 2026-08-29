@@ -1,0 +1,28 @@
+{
+  "id": "autonomy-detective",
+  "kind": "detective",
+  "title": "The agent that wouldn't stop",
+  "conceptIds": ["agent-foundations", "openai-agents-sdk"],
+  "intro": "Monday morning: a $340 API bill from an agent that ran all weekend. Open the clues and name the actual failure.",
+  "facts": [
+    { "label": "The trace", "value": "One run, thousands of steps: search → summarize → 'not quite right' → search again. The same three tool calls cycling for 61 hours.", "signal": 3 },
+    { "label": "The loop condition", "value": "The agent's instructions say 'continue until the report is comprehensive.' No attempt cap, no budget, no timeout anywhere in the run config.", "signal": 3 },
+    { "label": "The evaluator", "value": "There is none. The agent judges its own output inline — and its bar for 'comprehensive' drifts upward every cycle.", "signal": 2 },
+    { "label": "The guardrails", "value": "An input guardrail exists (blocks off-topic requests). Nothing watches the run itself — no output check, no cost check.", "signal": 2 },
+    { "label": "The model", "value": "Same model and temperature as every other successful run this month.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Missing termination/budget", "pct": 70, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Missing external evaluator", "pct": 30, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The model degraded over the weekend",
+    "Unbounded autonomy: no termination cap or budget, and no external evaluator to end the loop",
+    "The input guardrail was too strict",
+    "Search tools are inherently unsafe for agents"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence of unbounded autonomy",
+  "debrief": "The trace shows a healthy agent doing exactly what it was told: 'continue until comprehensive' — a subjective bar, judged by itself, with no cap, no budget, no timeout, and no external evaluator to call time. The input guardrail is real but guards the wrong thing: it judges the request, not the run. The fix is the agentic loop's two most-skipped steps, made concrete: a termination condition (max attempts, token budget, wall-clock cap) and an EXTERNAL judge — an evaluator agent or graph node whose pass/fail ends the loop. Autonomy is granted per run, and every grant needs an expiry."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "ai-agentic-engg-2026",
+  "title": "Agentic AI Engineering — Frameworks in Anger",
+  "subject": "ai-engineering",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from Ed Donner's 'Master AI Agentic Engineering' (Udemy, own completion). Not affiliated; for personal revision only.",
+  "summary": "Six weeks, four frameworks, one taxonomy: bare-handed agentic patterns, the OpenAI Agents SDK, CrewAI's org charts, LangGraph's state machines, AutoGen's runtime — and MCP spent in anger on an autonomous trading floor.",
+  "tags": ["agents", "agentic", "openai-sdk", "crewai", "langgraph", "autogen", "mcp", "ai-engineering"],
+  "concepts": [
+    "agent-foundations",
+    "openai-agents-sdk",
+    "crewai",
+    "langgraph",
+    "autogen",
+    "agentic-mcp"
+  ],
+  "sessions": [
+    "01-foundations-explainer.json",
+    "02-pattern-classify.json",
+    "03-agentic-loop-sequence.json",
+    "04-sdk-explainer.json",
+    "05-agentic-blueprint.json",
+    "06-crew-explainer.json",
+    "07-crew-build-sequence.json",
+    "08-langgraph-explainer.json",
+    "09-coordination-classify.json",
+    "10-autogen-explainer.json",
+    "11-framework-classify.json",
+    "12-autonomy-detective.json",
+    "13-agentic-mcp-explainer.json",
+    "14-autonomy-decision.json",
+    "15-agentic-quiz.json"
+  ]
+}

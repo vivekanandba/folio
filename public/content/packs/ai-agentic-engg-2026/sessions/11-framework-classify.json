@@ -1,0 +1,24 @@
+{
+  "id": "framework-classify",
+  "kind": "classify",
+  "title": "Which framework for this job?",
+  "conceptIds": ["openai-agents-sdk", "crewai", "langgraph", "autogen"],
+  "intro": "The course's real lesson is a taxonomy. Eight jobs — pick the framework whose model fits.",
+  "buckets": [
+    { "id": "sdk", "label": "Agents SDK", "hint": "Lightest; you orchestrate", "tone": "warm" },
+    { "id": "crew", "label": "CrewAI", "hint": "Org chart: roles + tasks", "tone": "neutral" },
+    { "id": "graph", "label": "LangGraph", "hint": "Explicit state machine", "tone": "cool" },
+    { "id": "autogen", "label": "AutoGen", "hint": "Conversation over a runtime", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "A thin pipeline you control: draft in parallel, pick, send — with a guardrail", "bucketId": "sdk" },
+    { "id": "c2", "text": "One specialist should take over the whole conversation on demand", "bucketId": "sdk" },
+    { "id": "c3", "text": "A research desk: stable roles (finder, researcher, picker) with clean task hand-offs", "bucketId": "crew" },
+    { "id": "c4", "text": "Non-engineers should be able to tune behavior by editing role/goal text", "bucketId": "crew" },
+    { "id": "c5", "text": "A compliance flow where no step may ever be silently skipped, with resume-on-crash", "bucketId": "graph" },
+    { "id": "c6", "text": "Loop until an evaluator node passes, with every branch visible and testable", "bucketId": "graph" },
+    { "id": "c7", "text": "Open-ended brainstorm among several agents, speaker chosen dynamically", "bucketId": "autogen" },
+    { "id": "c8", "text": "Same agent logic must run in-process today, distributed across machines later", "bucketId": "autogen" }
+  ],
+  "debrief": "Match the coordination model to the job: the SDK when you own the orchestration and want minimal abstraction (tools, handoffs, guardrails); CrewAI when the work is an org chart — stable roles, YAML the business can read; LangGraph when control flow is the requirement — explicit edges, checkpoints, determinism you can test; AutoGen when coordination is conversational or when the Runtime's decoupling (in-process today, distributed tomorrow) is the point. None is 'best' — the course's taxonomy is the skill."
+}

@@ -1,0 +1,108 @@
+{
+  "id": "agentic-quiz",
+  "kind": "quiz",
+  "title": "Agentic engineering — check what stuck",
+  "conceptIds": ["agent-foundations", "openai-agents-sdk", "crewai", "langgraph", "autogen", "agentic-mcp"],
+  "intro": "Nine self-check questions written from the course labs (no official quiz exists).",
+  "questions": [
+    {
+      "prompt": "The week-1 pattern for accuracy-critical work is…",
+      "choices": [
+        "One strong model, carefully prompted",
+        "Parallel generation from several models, with an evaluator/picker choosing the best",
+        "Always using the largest local model",
+        "Retrying the same prompt until it looks right"
+      ],
+      "answerIndex": 1,
+      "explanation": "Send the task to multiple models, judge the candidates — the lab's own commercial note: universal where accuracy is critical."
+    },
+    {
+      "prompt": "In the Agents SDK, a handoff differs from a tool because…",
+      "choices": [
+        "Handoffs are faster",
+        "Control transfers: the receiving agent takes over the conversation, instead of returning a result to the caller",
+        "Tools can only be Python functions",
+        "Handoffs don't appear in traces"
+      ],
+      "answerIndex": 1,
+      "explanation": "Tool = consultation (caller stays in charge); handoff = delegation of the whole conversation to a specialist."
+    },
+    {
+      "prompt": "An @input_guardrail is valuable because it…",
+      "choices": [
+        "Makes the agent's answers longer",
+        "Judges the request and can trip BEFORE the expensive pipeline runs",
+        "Replaces the need for traces",
+        "Caches previous runs"
+      ],
+      "answerIndex": 1,
+      "explanation": "A guardrail agent returns GuardrailFunctionOutput on the input — blocking bad runs before money is spent, not after."
+    },
+    {
+      "prompt": "In CrewAI, an agent is defined by…",
+      "choices": [
+        "A graph node and reducer",
+        "role, goal, backstory (and model) in agents.yaml",
+        "A message handler registered with a runtime",
+        "A handoff_description"
+      ],
+      "answerIndex": 1,
+      "explanation": "Crews are org charts: people in agents.yaml, work in tasks.yaml, process in crew.py. Backstories are prompt engineering with a personnel file."
+    },
+    {
+      "prompt": "In LangGraph, a reducer is…",
+      "choices": [
+        "A smaller language model",
+        "The function (named via Annotated) that merges a node's update into the State",
+        "A tool that compresses context",
+        "The final node in every graph"
+      ],
+      "answerIndex": 1,
+      "explanation": "State fields declare how updates combine — add_messages for the common case. Reducers make concurrent updates principled."
+    },
+    {
+      "prompt": "LangGraph's checkpointing (the labs' memory.db) buys you…",
+      "choices": [
+        "Faster model inference",
+        "Resume, replay and persistence per step — the graph remembers where it was",
+        "Automatic prompt optimization",
+        "Free hosting"
+      ],
+      "answerIndex": 1,
+      "explanation": "A SQLite checkpointer persists state at each step — crash recovery and time-travel debugging for long-running flows."
+    },
+    {
+      "prompt": "AutoGen Core's fundamental principle is…",
+      "choices": [
+        "Agents must all use the same model",
+        "Decoupling an agent's logic from how messages are delivered — a Runtime owns delivery and lifecycle",
+        "Replacing Python with JavaScript",
+        "Running only in distributed mode"
+      ],
+      "answerIndex": 1,
+      "explanation": "Core is a framework-agnostic interaction layer: agents do their work; the runtime owns transport — in-process today, distributed tomorrow."
+    },
+    {
+      "prompt": "Equipping an SDK agent with MCP tools takes three moves:",
+      "choices": [
+        "Fork the server, edit its code, redeploy",
+        "Create a client, have it spawn the server, collect the tools",
+        "Write JSON schemas for each tool by hand",
+        "Fine-tune the model on the tool docs"
+      ],
+      "answerIndex": 1,
+      "explanation": "Client → spawn → collect, then hand the tools to an Agent like any others. Capability assembly at config speed."
+    },
+    {
+      "prompt": "In the Autonomous Traders capstone, a trader's investment strategy lives…",
+      "choices": [
+        "Hardcoded in the trader's prompt",
+        "As an MCP resource the agent reads — versioned instructions, separate from tools",
+        "Inside the buy/sell tool code",
+        "In the model's weights"
+      ],
+      "answerIndex": 1,
+      "explanation": "State and instructions are resources; actions are tools. One accounts server serves four traders, and swapping a brain never touches the money logic."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "coordination-classify",
+  "kind": "classify",
+  "title": "Handoff, role, or edge?",
+  "conceptIds": ["openai-agents-sdk", "crewai", "langgraph"],
+  "intro": "Three coordination primitives, easily blurred. Which one is each statement describing?",
+  "buckets": [
+    { "id": "handoff", "label": "SDK handoff", "hint": "Control transfers to a specialist", "tone": "warm" },
+    { "id": "role", "label": "Crew role/task", "hint": "Org chart: people and assigned work", "tone": "neutral" },
+    { "id": "edge", "label": "Graph edge", "hint": "Explicit routing over shared state", "tone": "cool" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "The emailer takes over the conversation from here — the caller is done", "bucketId": "handoff" },
+    { "id": "c2", "text": "Declared as handoffs=[emailer_agent] with a handoff_description", "bucketId": "handoff" },
+    { "id": "c3", "text": "A 'Senior Financial Researcher' with a goal and a backstory picks up the analysis task", "bucketId": "role" },
+    { "id": "c4", "text": "tasks.yaml assigns each piece of work an expected_output and an owner", "bucketId": "role" },
+    { "id": "c5", "text": "A hierarchical process gives the team a manager who delegates", "bucketId": "role" },
+    { "id": "c6", "text": "A conditional function inspects state and routes to retry or finish", "bucketId": "edge" },
+    { "id": "c7", "text": "The loop 'act until the evaluator passes' is drawn between named nodes", "bucketId": "edge" },
+    { "id": "c8", "text": "add_messages merges each node's output into one typed State", "bucketId": "edge" }
+  ],
+  "debrief": "Handoffs move OWNERSHIP of a conversation — delegation between peers, declared per-agent. Crew roles move WORK through an org chart — people-shaped abstraction, YAML-declared, optionally managed. Graph edges move STATE through functions — nothing is delegated, everything is routed, and the routing itself is code you can test. The blur happens because all three end with 'another agent does the next part' — the question to ask is what traveled: the conversation (handoff), the task (role), or the state (edge)."
+}

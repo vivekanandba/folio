@@ -1,0 +1,27 @@
+{
+  "id": "langgraph-explainer",
+  "kind": "explainer",
+  "title": "LangGraph — explicit state machines",
+  "conceptIds": ["langgraph"],
+  "intro": "Five steps, one typed State, and control flow you can point at.",
+  "steps": [
+    {
+      "title": "It's just Python functions",
+      "body": "The lab's own point: **LangGraph is all about Python functions — it doesn't need LLMs.** Nodes are plain functions over a shared **State**; agents are just nodes that happen to call a model."
+    },
+    {
+      "title": "State and reducers",
+      "body": "State is a TypedDict or Pydantic model. The subtlety is **`Annotated`**: each field can name a **reducer** — the function LangGraph calls to merge a node's update into existing state (`add_messages` for the common chat case). Reducers make concurrent updates principled instead of last-write-wins."
+    },
+    {
+      "title": "The five steps",
+      "body": "1. Define the **State** (with reducers) → 2. start the **Graph Builder** → 3. add **nodes** (functions) → 4. add **edges** (conditional edges = your branches) → 5. **compile**, then invoke.",
+      "viz": { "type": "annotated", "title": "What the graph buys", "prompt": "Tap each.", "points": [ { "label": "Explicitness", "value": 3, "note": "Branches, retries, escalations live in named edges — not buried in a prompt." }, { "label": "Checkpoints", "value": 4, "note": "SQLite checkpointer (the labs' memory.db): resume, replay, time-travel. The graph remembers where it was." }, { "label": "Determinism", "value": 3, "note": "The same property folio's blueprints assert: a flow that must never skip a step should be drawn, not implied." } ] }
+    },
+    {
+      "title": "Sidekick",
+      "body": "The week's project: a personal co-worker — an LLM node with tools (including **Playwright browser automation**), a **success-evaluator node**, and conditional edges looping until the evaluator passes the user's criteria. The week-1 judge pattern, rebuilt as an explicit, checkpointed graph.\n\n> [!tip] Choose by control-flow certainty: handoffs delegate a conversation, crews delegate to roles, **graphs delegate nothing** — they route state through functions you named."
+    }
+  ],
+  "recap": "**State first, reducers before nodes, loops in edges.**\n\n- Nodes = plain functions; agents are nodes that call LLMs.\n- Annotated reducers define how updates merge.\n- Checkpointing (memory.db) buys resume/replay.\n- Draw the flow when it must never silently skip a step."
+}
