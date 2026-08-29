@@ -1,0 +1,27 @@
+{
+  "id": "agentic-mcp-explainer",
+  "kind": "explainer",
+  "title": "MCP in practice — the trading floor",
+  "conceptIds": ["agentic-mcp"],
+  "intro": "Week 6 spends the protocol: equip agents from servers, then let four traders loose.",
+  "steps": [
+    {
+      "title": "Three moves inside the SDK",
+      "body": "1. **Create a client**, 2. **have it spawn the server**, 3. **collect the tools** — then hand them to an `Agent` like any other tools. The first lab does it with the fetch server from the MCP course; the same three moves work for every server after."
+    },
+    {
+      "title": "The server shapes",
+      "body": "The course names three kinds:",
+      "viz": { "type": "annotated", "title": "Three kinds of MCP server", "prompt": "Tap each.", "points": [ { "label": "All-local", "value": 3, "note": "The knowledge-graph memory server: persistent entities, observations, relationships — your agent remembers across sessions." }, { "label": "Local + web", "value": 3, "note": "Runs locally, calls a service: Brave Search, financial data. A thin authenticated bridge." }, { "label": "Remote", "value": 2, "note": "Fully remote services — the MCP pack's territory; here they're a consumer's choice." } ] }
+    },
+    {
+      "title": "Autonomous Traders",
+      "body": "The capstone: **four trader agents + a researcher**, each equipped with the home-made **Accounts MCP server** (balance/holdings/buy/sell **tools**, plus **resources**: `accounts://…` account state and an investment-strategy resource), fetch, memory, search, and market data.\n\nTraders read their strategy *as a resource*, research *via tools*, and act — autonomously, on a loop."
+    },
+    {
+      "title": "What the capstone asserts",
+      "body": "The money logic lives in a **server**, not in any agent — so one accounts server serves four different traders, and swapping a trader's brain never touches the accounting. State is **resources**; actions are **tools**; instructions are a **versioned resource**, not vibes.\n\n> [!warn] Four autonomous agents with buy/sell tools is the course's most honest risk demo: this is where budgets, termination caps, and guardrails stop being theory."
+    }
+  ],
+  "recap": "**Equip agents from servers; keep state, actions and instructions separated.**\n\n- Client → spawn server → collect tools → hand to Agent.\n- Server shapes: all-local (memory), local+web (search/data), remote.\n- Accounts server: tools for actions, resources for state and strategy.\n- Autonomy at capstone scale = budgets and guardrails, mandatory."
+}

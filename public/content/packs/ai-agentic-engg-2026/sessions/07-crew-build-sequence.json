@@ -1,0 +1,17 @@
+{
+  "id": "crew-build-sequence",
+  "kind": "sequence",
+  "title": "Order the crew build",
+  "conceptIds": ["crewai"],
+  "intro": "From idea to a running crew, the way every week-3 project does it.",
+  "prompt": "Drag into build order, first step on top.",
+  "steps": [
+    { "id": "roles", "text": "Define the people: agents.yaml — role, goal, backstory, llm" },
+    { "id": "tasks", "text": "Define the work: tasks.yaml — description, expected_output, agent" },
+    { "id": "wire", "text": "Wire crew.py: agents + tasks + process (sequential/hierarchical)" },
+    { "id": "extras", "text": "Attach what the job needs: tools, memory, Pydantic output types" },
+    { "id": "kickoff", "text": "kickoff with template inputs ({sector}) interpolated into the YAML" },
+    { "id": "review", "text": "Read the output/ artifacts and tighten roles, tasks, expected outputs" }
+  ],
+  "debrief": "People before work, work before wiring, wiring before extras: the YAML pair is the design document, and crew.py stays thin on purpose. The interpolation step is what makes the crew reusable — kickoff({'sector': 'energy'}) reruns the same machine on new input. And the loop closes with review: crews are steered by editing role/goal/backstory text, which is why treating the YAML as the source of truth (not scattered prompt strings) pays compound interest."
+}

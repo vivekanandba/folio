@@ -93,6 +93,15 @@ test('MCP ecosystem blueprint: chain wins, glue and protocol-bypass wires fail',
   assert.ok(passCount(s, nodes, [...chain, [2, 4]]) < s.rules.length, 'client\u2192tool bypass refused')
 })
 
+test('agentic blueprint: guarded chain wins, unguarded and agent-less wires fail', () => {
+  const s = loadRules('ai-agentic-engg-2026/sessions/05-agentic-blueprint.json')
+  const nodes = [N(1, 'goal'), N(2, 'agent'), N(3, 'tools'), N(4, 'guardrail'), N(5, 'output')]
+  const chain: Edge[] = [[1, 2], [2, 3], [2, 4], [4, 5]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'the guarded pipeline passes')
+  assert.ok(passCount(s, nodes, [...chain, [2, 5]]) < s.rules.length, 'unguarded agent\u2192output refused')
+  assert.ok(passCount(s, nodes, [...chain, [1, 3]]) < s.rules.length, 'goal\u2192tools (nobody decided) refused')
+})
+
 /* Pure graph helpers */
 
 test('shortestHops + connectivityAvailability behave analytically', () => {

@@ -1,0 +1,27 @@
+{
+  "id": "crew-explainer",
+  "kind": "explainer",
+  "title": "CrewAI — the org chart as code",
+  "conceptIds": ["crewai"],
+  "intro": "Roles in YAML, tasks in YAML, thin wiring in Python — and six projects that each add one capability.",
+  "steps": [
+    {
+      "title": "Three files",
+      "body": "- **agents.yaml** — each agent is a *person*: role, goal, backstory, llm. The stock_picker crew: a trending-company finder (\"always pick new companies — don't pick the same company twice\"), a senior financial researcher, a stock picker.\n- **tasks.yaml** — each task: description, expected_output, assigned agent; tasks chain.\n- **crew.py** — the wiring: agents + tasks + **process** (sequential or hierarchical-with-manager), plus memory, tools, structured outputs."
+    },
+    {
+      "title": "Six projects, one lesson each",
+      "body": "**debate** (two argue, one judges) → **financial_researcher** (search + report) → **stock_picker** (memory + push-notification tool) → **coder** (writes AND executes code) → **engineering_team** (a crew that builds working software: design, code, test roles).",
+      "viz": { "type": "annotated", "title": "Capabilities added per project", "prompt": "Tap each.", "points": [ { "label": "Tools", "value": 2, "note": "Custom tools (the Pushover notification) attach to agents like SDK function tools." }, { "label": "Structure", "value": 3, "note": "Pydantic-typed task outputs — reports as objects, not prose." }, { "label": "Memory", "value": 3, "note": "stock_picker remembers past picks so 'never the same company twice' actually holds." }, { "label": "Hierarchy", "value": 4, "note": "A manager process delegates to workers — the org chart gains a boss." } ] }
+    },
+    {
+      "title": "Templates make crews machines",
+      "body": "`{sector}` in the YAML interpolates at kickoff — one crew definition, many runs. The crew is a **reusable machine with a personnel file**, not a script.\n\n> [!tip] Backstories are prompt engineering wearing an HR badge — they steer tone, caution, and expertise more than most people expect."
+    },
+    {
+      "title": "Where crews chafe",
+      "body": "Crews fit work that decomposes into **stable roles with clean hand-offs**. They chafe when you need precise control flow — retries, branches, checkpoints — which is exactly the gap the next week's explicit graphs fill."
+    }
+  ],
+  "recap": "**Model the org chart, not the algorithm.**\n\n- agents.yaml (people) + tasks.yaml (work) + crew.py (process).\n- Projects ladder: tools → structured outputs → memory → code execution → hierarchy.\n- YAML templating turns a crew into a reusable machine.\n- Need exact control flow? That's a graph, not a crew."
+}

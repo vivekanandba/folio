@@ -1,0 +1,25 @@
+{
+  "id": "agentic-blueprint",
+  "kind": "blueprint",
+  "title": "Wire a guarded agent",
+  "conceptIds": ["openai-agents-sdk"],
+  "intro": "Build the agentic pipeline — two wires are forbidden, and both are how real systems get burned.",
+  "briefing": "Route a goal to a delivered output through an agent that acts via tools and answers to a guardrail. The inspector rejects any blueprint where the agent ships output without the guardrail (unguarded autonomy) — or where the goal is wired straight to tools (tools don't pick themselves; an agent decides).",
+  "parts": [
+    { "id": "goal", "label": "Goal / user request", "fixed": true },
+    { "id": "agent", "label": "Agent (decides next action)", "max": 1 },
+    { "id": "tools", "label": "Tools (act on the world)", "max": 1 },
+    { "id": "guardrail", "label": "Guardrail (judges the run)", "max": 1 },
+    { "id": "output", "label": "Delivered output", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "goal", "b": "agent", "label": "The goal goes to an agent that owns the decisions" },
+    { "rule": "connected", "a": "agent", "b": "tools", "label": "The agent invokes tools — actions flow through it" },
+    { "rule": "connected", "a": "agent", "b": "guardrail", "label": "The run answers to a guardrail" },
+    { "rule": "connected", "a": "guardrail", "b": "output", "label": "Only guarded results are delivered" },
+    { "rule": "noDirect", "a": "agent", "b": "output", "label": "No unguarded autonomy: the agent never ships directly" },
+    { "rule": "noDirect", "a": "goal", "b": "tools", "label": "Tools don't pick themselves — an agent decides" },
+    { "rule": "pathExists", "from": "goal", "to": "output", "label": "The goal can actually become output" }
+  ],
+  "debrief": "The chain — goal → agent → tools, with the guardrail between the agent and anything delivered — is the SDK lab drawn as wiring. The two forbidden wires are the two production burns: agent → output is autonomy without judgment (the cold-email pipeline spending money on a request the guardrail would have blocked), and goal → tools is a workflow cosplaying as an agent (nobody decided anything; the steps just fired). In the real SDK the guardrail can also sit on INPUT — tripping before the expensive path even starts — which is strictly better than judging after the money is spent."
+}

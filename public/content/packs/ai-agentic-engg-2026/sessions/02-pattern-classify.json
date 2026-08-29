@@ -1,0 +1,22 @@
+{
+  "id": "pattern-classify",
+  "kind": "classify",
+  "title": "Workflow, or agent?",
+  "conceptIds": ["agent-foundations"],
+  "intro": "The week-1 ladder: fixed workflows vs genuine agency. Sort each system by which it is.",
+  "buckets": [
+    { "id": "workflow", "label": "Workflow", "hint": "Fixed steps you wrote", "tone": "cool" },
+    { "id": "agent", "label": "Agent", "hint": "The model decides what happens next", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Prompt A always feeds prompt B, then the result is emailed", "bucketId": "workflow" },
+    { "id": "c2", "text": "Three models draft in parallel; a judge model picks — same steps every run", "bucketId": "workflow" },
+    { "id": "c3", "text": "Summarize → translate → format, in that order, always", "bucketId": "workflow" },
+    { "id": "c4", "text": "A pipeline that retries a step exactly twice on failure, per your code", "bucketId": "workflow" },
+    { "id": "c5", "text": "The model chooses whether to call the record-question tool or just answer", "bucketId": "agent" },
+    { "id": "c6", "text": "It loops — act, observe, act again — until it judges the goal met", "bucketId": "agent" },
+    { "id": "c7", "text": "Given a vague goal, it plans its own sequence of tool calls", "bucketId": "agent" },
+    { "id": "c8", "text": "It decides mid-run to push a notification because the visitor asked to connect", "bucketId": "agent" }
+  ],
+  "debrief": "The dividing line is who owns control flow. In a workflow — even a sophisticated one like parallel-plus-judge — every step was decided by you, in code, before the run. In an agent, the model owns decisions at runtime: which tool, whether to loop, when to stop. That ownership is what buys adaptability and what costs you predictability — which is why the agent bucket is exactly where termination conditions and guardrails become mandatory."
+}

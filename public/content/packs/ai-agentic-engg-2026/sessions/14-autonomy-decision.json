@@ -1,0 +1,81 @@
+{
+  "id": "autonomy-decision",
+  "kind": "decision",
+  "title": "How much rope for the trader?",
+  "conceptIds": ["agentic-mcp", "agent-foundations"],
+  "intro": "You're putting an Autonomous Trader into a paper-money simulation that could someday touch real money. Grant autonomy — and watch the safety meter.",
+  "meter": { "label": "Operational safety", "min": 0, "max": 100, "start": 60 },
+  "startId": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "text": "The trader agent is ready: accounts server, market data, search, memory. First decision — how does it receive its investment strategy?",
+      "choices": [
+        {
+          "label": "Bake the strategy into the agent's prompt string",
+          "next": "loop",
+          "effect": -15,
+          "note": "Instructions as vibes: unversioned, per-agent, invisible to review."
+        },
+        {
+          "label": "Serve it as an MCP resource the agent reads each run",
+          "next": "loop",
+          "effect": 15,
+          "note": "Versioned, shared, auditable — the capstone's own design."
+        }
+      ]
+    },
+    {
+      "id": "loop",
+      "text": "Next: the trading loop. The agent researches, decides, and calls buy/sell tools. What bounds the loop?",
+      "choices": [
+        {
+          "label": "'Trade until your strategy is satisfied' — trust the model",
+          "next": "oversight",
+          "effect": -25,
+          "note": "A subjective bar judged by the actor itself — the weekend-bill pattern."
+        },
+        {
+          "label": "Per-run caps: max trades, token budget, wall-clock timeout",
+          "next": "oversight",
+          "effect": 20,
+          "note": "Autonomy granted per run, with an expiry."
+        }
+      ]
+    },
+    {
+      "id": "oversight",
+      "text": "Last call: four traders act in parallel. Where does judgment live?",
+      "choices": [
+        {
+          "label": "Each trader self-assesses its own trades inline",
+          "next": "end-shaky",
+          "effect": -10,
+          "note": "The actor grading its own homework, four times over."
+        },
+        {
+          "label": "Guardrails on the buy/sell tools + an external evaluator reviewing runs",
+          "next": "end-good",
+          "effect": 15,
+          "note": "Judgment outside the actor, at the action boundary."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "Autonomy is an amount, not a switch — grant it per run, bound it with caps, and keep judgment outside the actor.",
+        "debrief": "Strategy as a versioned resource, hard per-run caps, and guardrails at the tool boundary with an external evaluator: that's the capstone's architecture, and it's why four traders can run unattended without the weekend-bill failure. The pattern generalizes to every production agent you'll ship.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-shaky",
+      "ending": {
+        "principle": "An agent judging itself is autonomy without oversight — it works until the day it expensively doesn't.",
+        "debrief": "Self-assessment drifts: the actor's bar moves with its own output. Move judgment outside — guardrails on the money-touching tools, an evaluator that ends runs — and keep the caps regardless. The meter you just watched is the honest summary: every unbounded grant took safety down.",
+        "score": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "sdk-explainer",
+  "kind": "explainer",
+  "title": "The OpenAI Agents SDK",
+  "conceptIds": ["openai-agents-sdk"],
+  "intro": "Agent, Runner, tools, handoffs, guardrails, traces — the lightest framework in the course, in one project.",
+  "steps": [
+    {
+      "title": "The primitives",
+      "body": "```python\nfrom agents import Agent, Runner, trace, function_tool\n\nsales_agent1 = Agent(name=..., instructions=..., model=...)\nresult = Runner.run_streamed(sales_agent1, input=\"Write a cold sales email\")\n```\n\nAny Python function under `@function_tool` becomes a tool. Wrap runs in `trace(\"name\")` and every model call, tool call, and handoff is inspectable at platform.openai.com/traces."
+    },
+    {
+      "title": "The SDR project",
+      "body": "Three differently-styled sales agents draft **in parallel** under one trace; a **picker agent** chooses the best; a tool sends it (SendGrid). Then the upgrade: an **emailer agent** (with a `handoff_description`) takes over formatting-and-sending entirely — via `handoffs=[emailer_agent]`.",
+      "viz": { "type": "annotated", "title": "Tool vs handoff", "prompt": "Tap each.", "points": [ { "label": "Tool", "value": 3, "note": "Consultation: the caller invokes, gets the result, stays in charge of the run." }, { "label": "Handoff", "value": 4, "note": "Delegation: control TRANSFERS — the receiving agent owns the conversation from here." }, { "label": "Trace", "value": 2, "note": "The whole tree — parallel drafts, the pick, the handoff — visible as one trace." } ] }
+    },
+    {
+      "title": "Guardrails and structure",
+      "body": "- **`@input_guardrail`**: a guardrail agent judges the request and returns `GuardrailFunctionOutput` — tripping BEFORE the expensive pipeline runs (the lab blocks requests containing personal names).\n- **Structured outputs**: set a Pydantic `output_type` and get parsed objects back, not prose.\n- **Any model**: `OpenAIChatCompletionsModel` points agents at any OpenAI-compatible endpoint — DeepSeek, Gemini, local."
+    },
+    {
+      "title": "Where it sits",
+      "body": "The lightest of the course's four frameworks: minimal abstraction, explicit control flow — best when *you* orchestrate and agents are competent workers. Teams-of-roles and explicit state machines are the next two weeks.\n\n> [!warn] The lab's ordering is deliberate: the guardrail exists before the pipeline scales. Autonomy without a guardrail is an incident report waiting to happen."
+    }
+  ],
+  "recap": "**Agent + Runner + tools + handoffs + guardrails + traces.**\n\n- Tool = consult; handoff = delegate the conversation.\n- Guardrails are agents about agents, tripping before cost.\n- Pydantic output_type for structure; any OpenAI-compatible model.\n- Never run agents without traces."
+}

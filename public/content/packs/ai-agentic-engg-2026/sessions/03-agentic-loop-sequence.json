@@ -1,0 +1,17 @@
+{
+  "id": "agentic-loop-sequence",
+  "kind": "sequence",
+  "title": "Order the agentic loop",
+  "conceptIds": ["agent-foundations"],
+  "intro": "The loop every framework wraps in its own vocabulary — put it in order.",
+  "prompt": "Drag into order, first step on top.",
+  "steps": [
+    { "id": "goal", "text": "Receive the goal and available tools" },
+    { "id": "plan", "text": "The model decides the next action (answer, or which tool to call)" },
+    { "id": "act", "text": "Execute the tool call" },
+    { "id": "observe", "text": "Feed the tool result back into the context" },
+    { "id": "evaluate", "text": "Judge: goal met, or loop back to deciding the next action?" },
+    { "id": "terminate", "text": "Stop — on success, on failure, or on hitting the attempt/budget cap" }
+  ],
+  "debrief": "Goal → decide → act → observe → evaluate → terminate, with the evaluate step looping back to decide. Two steps get skipped in careless builds: the explicit evaluation (without it the loop runs on vibes) and the termination cap (without it the loop runs on your credit card). Every framework in this pack is a different way to make these six steps reliable — the SDK with guardrails, LangGraph with conditional edges, the capstone with budgets."
+}

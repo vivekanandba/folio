@@ -1,0 +1,27 @@
+{
+  "id": "autogen-explainer",
+  "kind": "explainer",
+  "title": "AutoGen — AgentChat and Core",
+  "conceptIds": ["autogen"],
+  "intro": "The familiar layer, then the genuinely different idea underneath.",
+  "steps": [
+    {
+      "title": "AgentChat: deliberately familiar",
+      "body": "Three concepts — **Model, Message, Agent** — driven with `on_messages`. The lab builds a ticket-price assistant with a local database tool. If it feels like Crew and the Agents SDK, that's the point the course makes explicitly."
+    },
+    {
+      "title": "Core: the different idea",
+      "body": "> [!key] **AutoGen Core decouples an agent's logic from how messages are delivered.** The framework provides the communication infrastructure — a **Runtime** — plus agent lifecycle; agents are responsible only for their own work.\n\nCore is framework-agnostic: you can run AgentChat agents on it, or anything else. The course positions it \"similarly to LangGraph\" — an interaction substrate, not an agent library."
+    },
+    {
+      "title": "The stack",
+      "body": "Three layers, each answering a different question — what agents say, how messages move, and where the processes run:",
+      "viz": { "type": "annotated", "title": "AutoGen's layers", "prompt": "Tap each.", "points": [ { "label": "AgentChat", "value": 3, "note": "High-level, conversation-first: Model + Message + Agent, on_messages. Group chats coordinate by talking." }, { "label": "Core", "value": 4, "note": "Runtime owns message delivery + lifecycle; agent logic never knows the transport." }, { "label": "Distributed", "value": 3, "note": "The same Core abstractions across processes and machines — the runtime becomes a distributed message fabric." } ] }
+    },
+    {
+      "title": "Choosing chat as coordination",
+      "body": "Conversation-based coordination (group chats, speaker selection) is the most **flexible** and least **predictable** model in the course's taxonomy — suited to brainstorm-shaped, open-ended collaboration; risky where a step must never be skipped (that's a graph's job).\n\n> [!tip] The four frameworks in one line each: **SDK** — you orchestrate, agents work. **Crew** — org chart. **LangGraph** — state machine. **AutoGen** — conversation over a runtime."
+    }
+  ],
+  "recap": "**AgentChat is the familiar face; the Runtime is the idea.**\n\n- Model + Message + Agent + on_messages.\n- Core: delivery and lifecycle are infrastructure; agents only do their work.\n- Distributed = same abstractions across machines.\n- Chat coordination for open-ended work; graphs where steps are guaranteed."
+}
