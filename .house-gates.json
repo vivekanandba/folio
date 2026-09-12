@@ -1,0 +1,7 @@
+{
+  "secrets": true,
+  "message": true,
+  "max_bytes": 524288,
+  "protected_branches": [],
+  "_note_protected_branches": "empty means the branch gate is OFF. Set [\"main\"] to require a branch per change, as resumefit does."
+}
