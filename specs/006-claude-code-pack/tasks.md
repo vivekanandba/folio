@@ -9,4 +9,4 @@
 - [x] 4. folio.json + catalog registration
 - [x] 5. Blueprint test case
 - [x] 6. Gates offline (lint, 39 tests, smoke 6/6)
-- [ ] 7. Ship via /ship (PR links specs/006-claude-code-pack/)
+- [x] 7. Ship via /ship (PR links specs/006-claude-code-pack/)
