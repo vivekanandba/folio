@@ -1,0 +1,27 @@
+{
+  "id": "beyond-code-explainer",
+  "kind": "explainer",
+  "title": "Notebooks and mockups — the workflow transfers",
+  "conceptIds": ["cc-beyond-code"],
+  "intro": "The finale swaps codebases for other artifacts: a messy EDA notebook, then a Figma design file.",
+  "steps": [
+    {
+      "title": "The notebook refactor",
+      "body": "One structured prompt on `@EDA.ipynb`: keep the analysis and graphs, then —\n\n- **Inventory first**: what metrics, visualizations, transformations, quality issues exist.\n- **Structure**: named sections (objectives → loading → preparation → metrics → summary), a table of contents, a data dictionary of business terms.\n- **Extraction**: `business_metrics.py` and `data_loader.py` as reusable modules with docstrings.\n- **Visual bar**: every plot gets a descriptive title and labeled axes with units."
+    },
+    {
+      "title": "Then a dashboard",
+      "body": "With clean modules extracted, the dashboard request builds on tested parts instead of notebook cells — the refactor wasn't cosmetic, it was preparation."
+    },
+    {
+      "title": "Figma to running app",
+      "body": "Lesson 8: `npx create-next-app@latest .`, then attach **two MCP servers** — Figma Dev-Mode (enabled in the desktop app, `claude mcp add --transport http figma-dev-mode-mcp-server http://127.0.0.1:3845/mcp`) and Playwright — verified with `/mcp`.",
+      "viz": { "type": "annotated", "title": "The two-server loop", "prompt": "Tap each role.", "points": [ { "label": "Source of truth", "value": 4, "note": "The Figma MCP server lets Claude READ the mockup — components, layout, styles — instead of guessing from a description." }, { "label": "Builder", "value": 3, "note": "One prompt: analyze the mockup, build it in this Next.js app with recharts." }, { "label": "Verifier", "value": 4, "note": "Playwright: 'check how this application looks and verify it matches the mock as closely as possible.' Claude compares its own output against the design." }, { "label": "Real data", "value": 2, "note": "Follow-up: 'populate these charts with real-world data from FRED' — the mockup becomes a live dashboard." } ] }
+    },
+    {
+      "title": "Nothing new — that's the point",
+      "body": "Inventory-first is lesson 2's exploration. Verify-with-Playwright is lesson 3's loop. Structured demands are lesson 4's template. The finale's lesson is **transfer**: notebooks, dashboards and design files are all just codebases with different file extensions."
+    }
+  ],
+  "recap": "**Same discipline, new media.**\n\n- Notebooks: inventory → structure → extraction → visual bar, then the dashboard.\n- Figma: one MCP server reads the truth, another verifies the result.\n- Claude builds AND checks — against artifacts, not adjectives.\n- The workflow transfers to any artifact you can address."
+}

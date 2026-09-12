@@ -1,0 +1,27 @@
+{
+  "id": "worktrees-explainer",
+  "kind": "explainer",
+  "title": "Worktrees — three features at once",
+  "conceptIds": ["cc-parallel-automation"],
+  "intro": "Git worktrees turn one Claude into a team: isolated directories, shared history, parallel sessions.",
+  "steps": [
+    {
+      "title": "What a worktree is",
+      "body": "Git worktrees check out **multiple branches of the same repository into separate directories** — each a full working copy with isolated files, all sharing one git history. No clones, no divergent remotes."
+    },
+    {
+      "title": "The workflow",
+      "body": "1. **Commit any pending changes** — parallelism starts from a clean tree.\n2. `mkdir .trees`\n3. Per feature: `git worktree add .trees/ui_feature` (and `testing_feature`, `quality_feature`).\n4. Open a terminal **in each worktree**, launch Claude Code in each, assign each its feature.\n5. Commit in each worktree; close the sessions.\n6. Back in the main terminal: *\"use the git merge command to merge in all the worktrees of the .trees folder into main and fix any conflicts if there are any.\"*"
+    },
+    {
+      "title": "The three features",
+      "body": "The course runs a **UI feature** (dark/light theme toggle), a **testing feature**, and a **code-quality feature** simultaneously — three Claude sessions, three directories, one repo.",
+      "viz": { "type": "annotated", "title": "Why this works", "prompt": "Tap each property.", "points": [ { "label": "Isolation", "value": 3, "note": "Each session edits its own directory — no stepping on each other's files mid-flight." }, { "label": "Shared history", "value": 3, "note": "All worktrees are branches of one repo — merging is ordinary git, not repo surgery." }, { "label": "Throughput", "value": 4, "note": "Independent features land in parallel wall-clock time; the merge is the only serial step." }, { "label": "Claude merges", "value": 2, "note": "Even conflict resolution is delegated — the final prompt asks Claude to merge all trees and fix conflicts." } ] }
+    },
+    {
+      "title": "When not to",
+      "body": "> [!warn] Worktrees buy throughput only when features are **independent**. Two features touching the same files just move the conflict from your editor to the merge — and a dirty starting tree merges chaos. Commit clean, split independent, merge deliberately."
+    }
+  ],
+  "recap": "**Clean tree → .trees/ per feature → a Claude in each → commit each → Claude merges.**\n\n- Worktrees: isolated directories, one shared history.\n- Three independent features land in parallel.\n- The merge is the serial step — delegate it, but review it.\n- Dependent features don't parallelize; they queue."
+}

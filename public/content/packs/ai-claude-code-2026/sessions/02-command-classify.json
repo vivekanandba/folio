@@ -1,0 +1,23 @@
+{
+  "id": "command-classify",
+  "kind": "classify",
+  "title": "Which control for the job?",
+  "conceptIds": ["cc-workflow"],
+  "intro": "Eight situations from a working session — pick the control each one calls for.",
+  "buckets": [
+    { "id": "memory", "label": "Memory (/init, #)", "hint": "Teach it something permanent", "tone": "warm" },
+    { "id": "context", "label": "Context (/clear, /compact, ESC)", "hint": "Manage the conversation", "tone": "cool" },
+    { "id": "precision", "label": "Precision (@, !, plan mode)", "hint": "Make the next prompt exact", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "First launch in a codebase Claude has never seen", "bucketId": "memory" },
+    { "id": "c2", "text": "It used pip again — this is a uv project", "bucketId": "memory" },
+    { "id": "c3", "text": "It keeps forgetting the vector DB has two collections", "bucketId": "memory" },
+    { "id": "c4", "text": "Done with the bug fix; next task is a totally unrelated feature", "bucketId": "context" },
+    { "id": "c5", "text": "Mid-task, the history is huge but you still need the thread", "bucketId": "context" },
+    { "id": "c6", "text": "It's heading down the wrong path right now, mid-response", "bucketId": "context" },
+    { "id": "c7", "text": "The change must touch exactly backend/search_tools.py and nothing else", "bucketId": "precision" },
+    { "id": "c8", "text": "A risky refactor — you want to review the approach before any code", "bucketId": "precision" }
+  ],
+  "debrief": "Three families: memory controls make knowledge PERMANENT (/init for the whole map, # the moment a mistake repeats — not after the third time); context controls manage the CONVERSATION (/clear between tasks, /compact within one, ESC to interrupt, ESC ESC to rewind); precision controls sharpen the NEXT prompt (@ pins files, ! runs bash, plan mode buys a review before code exists). The classic misfile is c2/c3 into context: clearing doesn't fix a repeated error — teaching does."
+}

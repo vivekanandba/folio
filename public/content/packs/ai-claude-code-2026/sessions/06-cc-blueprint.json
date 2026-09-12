@@ -1,0 +1,25 @@
+{
+  "id": "cc-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the coding session",
+  "conceptIds": ["cc-workflow", "cc-features-mcp"],
+  "intro": "Build the disciplined session the course teaches — two shortcut wires are forbidden.",
+  "briefing": "Route a task to a commit. The inspector rejects any blueprint where implementation starts without a reviewed plan (plan mode exists for a reason) — or where changes reach the commit without verification (tests or Playwright — nothing lands unverified).",
+  "parts": [
+    { "id": "task", "label": "Task (with @-anchored context)", "fixed": true },
+    { "id": "plan", "label": "Plan mode (approach reviewed)", "max": 1 },
+    { "id": "implement", "label": "Implementation", "max": 1 },
+    { "id": "verify", "label": "Verification (tests / Playwright)", "max": 1 },
+    { "id": "commit", "label": "Commit", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "task", "b": "plan", "label": "The task enters plan mode first" },
+    { "rule": "connected", "a": "plan", "b": "implement", "label": "Code follows the reviewed plan" },
+    { "rule": "connected", "a": "implement", "b": "verify", "label": "Every change faces verification" },
+    { "rule": "connected", "a": "verify", "b": "commit", "label": "Only verified work lands" },
+    { "rule": "noDirect", "a": "task", "b": "implement", "label": "No planless YOLO on a real codebase" },
+    { "rule": "noDirect", "a": "implement", "b": "commit", "label": "Nothing lands unverified" },
+    { "rule": "pathExists", "from": "task", "to": "commit", "label": "The task can actually become a commit" }
+  ],
+  "debrief": "Task → plan → implement → verify → commit is every lesson of the course in one wire diagram: plan mode before the citation feature, layered tests before the fix, Playwright before the styling sign-off. The two forbidden wires are the two ways agentic coding goes wrong: skipping the plan trades a minute of review for an hour of untangling, and skipping verification is how a confident change becomes a production incident. Note the shape is the SDD pack's workflow at session scale — same discipline, smaller radius, and folio's own PR gate is this blueprint running in CI."
+}

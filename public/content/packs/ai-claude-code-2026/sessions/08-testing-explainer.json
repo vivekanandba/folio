@@ -1,0 +1,27 @@
+{
+  "id": "testing-explainer",
+  "kind": "explainer",
+  "title": "Tests first, refactors with both worlds",
+  "conceptIds": ["cc-testing-debugging"],
+  "intro": "Lesson 4's two templates: debugging by triangulation, and refactor prompts that state where you are and where you're going.",
+  "steps": [
+    {
+      "title": "The debugging prompt",
+      "body": "The symptom is stated plainly ('query failed' on content questions), then the ask: write tests at **three layers** — the search tool's `execute`, the generator's tool-calling, the system's end-to-end handling — **run them to identify which components fail**, and *propose fixes based on what the tests reveal*. It closes with **Think.**"
+    },
+    {
+      "title": "Why three layers",
+      "body": "Layered tests make the failure localize itself: if the call chain passes and end-to-end merely reports honestly, the anomaly must live in the tool — which is how an engineered `MAX_RESULTS: int = 0` gets found by evidence rather than staring.\n\n> [!tip] 'Fix it' invites a plausible patch to the wrong layer. 'Write tests that identify what's failing' makes the diagnosis the deliverable."
+    },
+    {
+      "title": "The refactor template",
+      "body": "The sequential-tool-calls prompt states **both worlds** plus the boundaries:",
+      "viz": { "type": "annotated", "title": "Refactor prompt anatomy", "prompt": "Tap each part.", "points": [ { "label": "Current", "value": 3, "note": "One tool call → tools removed from params → final response; a second call gets an empty response." }, { "label": "Desired", "value": 3, "note": "Each tool call a separate API round, with reasoning about previous results between rounds." }, { "label": "Example", "value": 3, "note": "A worked flow: outline of course X → lesson 4's title → search by that topic → complete answer." }, { "label": "Termination", "value": 4, "note": "Max 2 rounds; stop on no tool_use blocks or tool failure; preserve context; handle errors. The refactor specifies when the new behavior STOPS." } ] }
+    },
+    {
+      "title": "The agentic echo",
+      "body": "Termination conditions in a refactor prompt are the same rule the agentic course applies to autonomous loops: **every granted freedom ships with its stopping condition.** Specifying them up front prevents the bug you'd otherwise write next."
+    }
+  ],
+  "recap": "**Diagnose with layered tests; refactor with current, desired, example, termination.**\n\n- Three test altitudes triangulate the broken component.\n- The fix follows the evidence, not the hunch.\n- Refactor prompts state both worlds and the stopping rules.\n- Append Think where the problem is genuinely hard."
+}
