@@ -1,0 +1,27 @@
+{
+  "id": "lifecycle-explainer",
+  "kind": "explainer",
+  "title": "Life-cycle funds and the glide path",
+  "conceptIds": ["lifecycle-funds"],
+  "intro": "India's first target-date funds: pick the year, and the fund gets more careful as it approaches.",
+  "steps": [
+    {
+      "title": "One fund, one year",
+      "body": "A life-cycle fund is an open-end scheme built around a **single target year in its name** — 2031, 2036, 2041, 2046, 2051. You pick the year closest to when you'll need the money; the fund handles allocation, rebalancing, and the gradual **equity → debt** shift as the year nears.\n\nThe logic: far from the goal you can carry risk (time absorbs swings); near it, capital preservation wins — an all-equity corpus the year before retirement is exposure at the worst possible moment."
+    },
+    {
+      "title": "Feel it — the machine",
+      "body": "Run the glide, then crash the market early and again near the target. Same crash, wildly different cost — the de-risking *is* the product:",
+      "viz": { "type": "sim", "model": "glidepath", "title": "The glide path, live", "caption": "Each second is a year. The crash button cuts the equity sleeve 30% — watch its cost shrink as the glide de-risks." }
+    },
+    {
+      "title": "SEBI's rulebook",
+      "body": "- **Glide-path bands** the manager must stay within (ranges — two same-year funds can differ).\n- Non-core (gold/silver ETFs, InvITs, ETCDs) capped at **10% combined**.\n- Max **six schemes** per fund house; near maturity, debt limited to **AA+ maturing before target**; merge-on-maturity with consent.\n- **Graded exit loads** (3/2/1% over three years) instead of a lock-in; TER capped at **2.1%**."
+    },
+    {
+      "title": "Context and contrast",
+      "body": "US target-date funds hold ~**$4.8 trillion** as the workplace default (auto-enrolled since 2006). India's **NPS** has offered a glide for years — but locks Tier I money 15 years / to age 60, rewarding patience with a tax break. A life-cycle fund is the **open wrapper**: any dated goal, redeemable after the exit-load window. Different jobs; they can sit side by side.\n\n> [!tip] The category launched **passive-first** (Zerodha; ICICI's active filings follow) — a milestone for index investing in India, and an open question of what active management adds inside fixed bands."
+    }
+  ],
+  "recap": "**Pick the year; the glide handles the rest.**\n\n- Equity → debt automatically as the target approaches; late crashes hurt less.\n- Rules: banded glides, 10% non-core cap, 6 schemes, 3/2/1% exit loads, 2.1% TER cap.\n- NPS = locked, tax-advantaged retirement glide; life-cycle = open wrapper for any dated goal.\n- Same year ≠ same path — check the glide within the bands."
+}

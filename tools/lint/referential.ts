@@ -31,7 +31,7 @@ const BLUEPRINT_RULES = new Set(['minCount', 'maxCount', 'connected', 'noDirect'
 export const SIM_MODELS = new Set([
   'queue', 'failover', 'compound', 'retention',
   'sipVsLump', 'retryStorm', 'fanout', 'marketCycle',
-  'llmServe', 'kvcache',
+  'llmServe', 'kvcache', 'glidepath',
 ])
 const LAB_OPS = new Set(['<', '<=', '>', '>='])
 

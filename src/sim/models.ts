@@ -746,6 +746,90 @@ const kvcache: SimModel = {
   },
 }
 
+/* -------------------------------------------------------------- glidepath --
+ * A life-cycle (target-date) fund: the equity share glides linearly from
+ * equityStart to equityEnd as the target year approaches, then holds. Each
+ * real second ≈ 1 year, integrated monthly. Returns are illustrative fixed
+ * drifts (equity 12%/yr ± noise, debt 6.5%). The "Market crash" action cuts
+ * the EQUITY sleeve by 30% — so the same crash hurts less the further the
+ * glide has de-risked. That asymmetry is the whole lesson.                  */
+const glidepath: SimModel = {
+  id: 'glidepath',
+  title: 'Glide path',
+  params: [
+    { key: 'targetYears', label: 'Years to target', min: 5, max: 30, step: 1, value: 20 },
+    { key: 'equityStart', label: 'Equity at start', min: 50, max: 100, step: 5, value: 90, unit: '%' },
+    { key: 'equityEnd', label: 'Equity at target', min: 0, max: 40, step: 5, value: 20, unit: '%' },
+    { key: 'monthly', label: 'Monthly SIP', min: 2000, max: 100000, step: 1000, value: 15000, unit: '₹' },
+  ],
+  series: [
+    { key: 'corpusL', label: 'Corpus (₹ L)', color: '#4fd1c5' },
+    { key: 'equityPct', label: 'Equity share (%)', color: '#e5b567' },
+  ],
+  readouts: [
+    { key: 'yearsLeft', label: 'Years to target', decimals: 1 },
+    { key: 'equityPct', label: 'Equity now', unit: '%', decimals: 0 },
+    { key: 'corpusL', label: 'Corpus', unit: '₹ L', decimals: 1 },
+    { key: 'crashHit', label: 'Last crash cost', unit: '%', decimals: 1 },
+  ],
+  actions: [
+    {
+      id: 'crash',
+      label: 'Market crash (−30% equity)',
+      apply(state, params) {
+        const t = state.scratch.years as number
+        const target = params.targetYears ?? 20
+        const start = params.equityStart ?? 90
+        const end = params.equityEnd ?? 20
+        const frac = Math.min(1, Math.max(0, t / Math.max(1e-9, target)))
+        const equityShare = (start + (end - start) * frac) / 100
+        const corpus = state.scratch.corpus as number
+        const hit = corpus * equityShare * 0.3
+        state.scratch.corpus = corpus - hit
+        state.scratch.crashHit = corpus > 0 ? (hit / corpus) * 100 : 0
+      },
+    },
+  ],
+  init() {
+    const s = baseState()
+    s.scratch.years = 0
+    s.scratch.corpus = 0
+    s.scratch.crashHit = 0
+    return s
+  },
+  step(state, params, dt) {
+    // 1 real second ≈ 1 year, integrated monthly (same clock as compound).
+    const target = params.targetYears ?? 20
+    const start = params.equityStart ?? 90
+    const end = params.equityEnd ?? 20
+    const monthly = params.monthly ?? 15000
+    const prevYears = state.scratch.years as number
+    const years = prevYears + dt
+    let corpus = state.scratch.corpus as number
+
+    const whole = Math.floor(years * 12) - Math.floor(prevYears * 12)
+    for (let i = 0; i < whole; i++) {
+      const frac = Math.min(1, Math.max(0, (state.scratch.years as number) / Math.max(1e-9, target)))
+      const equityShare = (start + (end - start) * frac) / 100
+      const equityMonthly = (0.12 + (Math.random() - 0.5) * 0.06) / 12
+      const debtMonthly = 0.065 / 12
+      const blended = equityShare * equityMonthly + (1 - equityShare) * debtMonthly
+      corpus = corpus * (1 + blended) + monthly
+    }
+    state.scratch.years = years
+    state.scratch.corpus = corpus
+
+    const frac = Math.min(1, Math.max(0, years / Math.max(1e-9, target)))
+    state.scalars.equityPct = start + (end - start) * frac
+    state.scalars.yearsLeft = Math.max(0, target - years)
+    state.scalars.corpusL = corpus / 100000
+    state.scalars.crashHit = state.scratch.crashHit as number
+    push(state, 'corpusL', corpus / 100000)
+    push(state, 'equityPct', state.scalars.equityPct)
+    state.t += dt
+  },
+}
+
 export const SIM_MODELS: Record<string, SimModel> = {
   queue,
   failover,
@@ -757,4 +841,5 @@ export const SIM_MODELS: Record<string, SimModel> = {
   marketCycle,
   llmServe,
   kvcache,
+  glidepath,
 }

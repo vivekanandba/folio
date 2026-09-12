@@ -60,6 +60,38 @@ test('compound: matches closed-form SIP future value within integration error', 
   assert.ok(s.scalars.netL < s.scalars.grossL, 'fee drag strictly reduces the corpus')
 })
 
+test('glidepath: equity share interpolates exactly; crash damage scales with equity', () => {
+  const m = SIM_MODELS.glidepath
+  const p = { targetYears: 20, equityStart: 90, equityEnd: 20, monthly: 15000 }
+
+  // equity% is deterministic linear interpolation regardless of return noise
+  const s = m.init(p)
+  for (let t = 0; t < 10; t += 0.1) m.step(s, p, 0.1) // 10 years = halfway
+  assert.ok(Math.abs(s.scalars.equityPct - 55) < 1, `halfway equity ≈ 55% (got ${s.scalars.equityPct})`)
+  assert.ok(s.scalars.corpusL > 0, 'corpus accumulates')
+
+  const late = m.init(p)
+  for (let t = 0; t < 20; t += 0.1) m.step(late, p, 0.1)
+  assert.ok(Math.abs(late.scalars.equityPct - 20) < 1, 'at target the glide holds equityEnd')
+  for (let t = 0; t < 5; t += 0.1) m.step(late, p, 0.1)
+  assert.ok(Math.abs(late.scalars.equityPct - 20) < 1, 'past target it stays de-risked')
+
+  // crash cost = 30% × current equity share, exactly
+  const crash = m.actions?.find((a) => a.id === 'crash')
+  assert.ok(crash, 'crash action exists')
+  const early = m.init(p)
+  for (let t = 0; t < 2; t += 0.1) m.step(early, p, 0.1) // equity ≈ 83%
+  crash!.apply(early, p)
+  m.step(early, p, 0.1)
+  const lateHit = m.init(p)
+  for (let t = 0; t < 19; t += 0.1) m.step(lateHit, p, 0.1) // equity ≈ 23.5%
+  crash!.apply(lateHit, p)
+  m.step(lateHit, p, 0.1)
+  assert.ok(early.scalars.crashHit > 20 && early.scalars.crashHit < 28, `early crash costs ~25% (got ${early.scalars.crashHit})`)
+  assert.ok(lateHit.scalars.crashHit < 9, `late crash costs <9% (got ${lateHit.scalars.crashHit})`)
+  assert.ok(early.scalars.crashHit > 2 * lateHit.scalars.crashHit, 'the glide is the protection')
+})
+
 test('retention: exponential decay, review multiplies stability', () => {
   const m = SIM_MODELS.retention
   const p = { stability: 3 }

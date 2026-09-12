@@ -1,0 +1,16 @@
+{
+  "id": "glidepath-lab",
+  "kind": "lab",
+  "title": "Land the corpus safely",
+  "conceptIds": ["lifecycle-funds"],
+  "intro": "A live glide path. Your goal isn't just a corpus — it's arriving de-risked.",
+  "model": "glidepath",
+  "params": { "targetYears": 15, "equityStart": 90, "equityEnd": 40, "monthly": 10000 },
+  "briefing": "You're 15 years from the goal, gliding 90% equity toward 40% — too hot an arrival, and ₹10k a month won't build the corpus either. Reach ₹75 lakh with equity at 30% or below when you get there. Two levers matter; the crash button will show you why the second one exists.",
+  "goals": [
+    { "metric": "corpusL", "op": ">=", "value": 75, "label": "corpus ≥ ₹75 lakh" },
+    { "metric": "equityPct", "op": "<=", "value": 30, "label": "equity share ≤ 30% (arrive de-risked)" }
+  ],
+  "holdSeconds": 4,
+  "debrief": "The two goals pull against each other, which is the design: more equity for longer builds the corpus faster but arrives hot; gliding to 30% or below costs some growth, so the SIP has to carry more — ₹10k doesn't get there, roughly doubling it does. That tension is every life-cycle fund's actual job, resolved monthly and invisibly. And the crash button is the argument for the second goal: −30% on a 90%-equity book erases years; the same crash at 25% equity is a bad quarter. Sequence risk is why the glide exists."
+}

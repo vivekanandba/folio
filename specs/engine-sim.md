@@ -25,7 +25,12 @@
    fee drag strictly reduces the corpus.
 5. `retention`: recall decays as `exp(−t/S)`; the review action strictly
    grows stability.
-6. **Time scale:** the engine seeds ~3 sim-seconds of history on mount — a
+6. `glidepath`: equity share is the exact linear interpolation from
+   equityStart to equityEnd over targetYears (deterministic despite return
+   noise) and holds at equityEnd past target; the crash action costs exactly
+   30% × current equity share — early crashes must hurt >2× more than
+   post-glide ones. *(sim-models: "glidepath")*
+7. **Time scale:** the engine seeds ~3 sim-seconds of history on mount — a
    model's teachable window must survive that (e.g. sipVsLump runs at 1s ≈ 3
    months for this reason). *(convention; enforced by authoring review)*
 
