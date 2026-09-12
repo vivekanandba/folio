@@ -1,0 +1,27 @@
+{
+  "id": "sif-explainer",
+  "kind": "explainer",
+  "title": "SIFs — the upgrade you're paying for?",
+  "conceptIds": ["sif-funds"],
+  "intro": "The cover story: rich people's funds at a ₹10 lakh door — and a first-year audit of whether the freedoms get used.",
+  "steps": [
+    {
+      "title": "What a SIF is",
+      "body": "**Same SEBI oversight as mutual funds**, different investment freedoms: SIF managers can **short securities they don't own**, concentrate on a few sectors, move freely across asset classes, and set their own redemption windows — the sophisticated strategies of PMS and AIFs, at a **₹10 lakh** minimum instead of ₹50 lakh / ₹1 crore.\n\nFor as long as the magazine has existed, that class of product was one most readers 'were never allowed to buy.'"
+    },
+    {
+      "title": "The long-short engine",
+      "body": "Beneath most SIFs: a **long book** of holdings expected to rise, and a **short book** through derivatives to profit from expected fallers. Two opposing bets, one promise — capture the upside, cushion the downside, smooth the ride."
+    },
+    {
+      "title": "The audit",
+      "body": "The story's monthly hit-rate grid vs the Nifty 500 shows the market barely moving most of the year — then breaking in **March–April 2026**. That's when the categories separated:",
+      "viz": { "type": "annotated", "title": "When the market broke", "prompt": "Tap each behavior.", "points": [ { "label": "Protected", "value": 4, "note": "One equity long-short fund cushioned first, chased second — the actual promise, delivered." }, { "label": "Rode rebound", "value": 3, "note": "Another gave little protection when it mattered but rode the rebound to finish ahead of peers — flattering, not protective." }, { "label": "Barely cushioned", "value": 2, "note": "The rest 'barely cushioned at all' — long-short in name, long in behavior." } ] }
+    },
+    {
+      "title": "The verdict that isn't",
+      "body": "> [!key] The headline freedom is **barely being used** — shorting takes conviction and the willingness to be *visibly wrong*, boldly and repeatedly. So early performance can't be read as a verdict on shorting itself.\n\nThe better question for any SIF: is the manager actually spending the freedom you're paying for?"
+    }
+  ],
+  "recap": "**SIFs: MF regulation + PMS freedoms at ₹10L — freedoms mostly parked.**\n\n- Long book + derivative short book = the smoother-ride promise.\n- The test months (Mar–Apr 2026) separated one protector from the rest.\n- Shorting demands visible-wrongness tolerance most managers lack.\n- Pay for freedom only if it's being used."
+}

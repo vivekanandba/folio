@@ -1,0 +1,28 @@
+{
+  "id": "sif-detective",
+  "kind": "detective",
+  "title": "The upgrade that wasn't",
+  "conceptIds": ["sif-funds"],
+  "intro": "An investor pays a SIF's ₹10L entry for the long-short 'smoother ride'. A year later, was the upgrade real? Open the evidence.",
+  "facts": [
+    { "label": "The monthly grid", "value": "Against the Nifty 500, most SIFs and the index barely diverge for most of the year — green and red months track the market.", "signal": 3 },
+    { "label": "March–April 2026", "value": "The market breaks. This is the first genuine test of the short book — and the only stretch where funds separate.", "signal": 3 },
+    { "label": "The one protector", "value": "A single equity long-short SIF cushioned the fall first and chased the rally second — the promise, delivered.", "signal": 2 },
+    { "label": "The rest", "value": "Peers 'barely cushioned at all'. One gave little protection but rode the rebound to finish ahead anyway.", "signal": 3 },
+    { "label": "The mechanics", "value": "Shorting requires conviction and being visibly wrong repeatedly. The category's earliest funds aren't a year old.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Freedom unused", "pct": 70, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Freedom genuinely spent", "pct": 30, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What's the honest reading of SIF year one?",
+  "choices": [
+    "Long-short doesn't work — the category should be avoided",
+    "Most managers barely used the shorting freedom, so early returns aren't a verdict on it — judge by the months that test the short book",
+    "All SIFs protected well in the crash",
+    "SIFs are identical to index funds and always will be"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence the freedoms sit unused",
+  "debrief": "The grid's story is behavioral, not structural: most months show index-hugging because most managers aren't running meaningful short books — and one manager who did delivered exactly the promised shape (protect first, chase second). So year one is a verdict on usage, not on the strategy: the tools work when spent; most won't spend them. The transferable rule: when you pay for a mandate freedom — shorting, duration flexibility, going anywhere — audit whether it's exercised, and judge it on the periods designed to test it."
+}

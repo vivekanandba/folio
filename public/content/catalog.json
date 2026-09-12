@@ -35,6 +35,10 @@
     {
       "id": "ai-claude-code-2026",
       "path": "packs/ai-claude-code-2026"
+    },
+    {
+      "id": "finance-mfi-2026-08",
+      "path": "packs/finance-mfi-2026-08"
     }
   ]
 }

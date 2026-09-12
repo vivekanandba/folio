@@ -1,0 +1,22 @@
+{
+  "id": "wrapper-classify",
+  "kind": "classify",
+  "title": "Life-cycle fund, or NPS?",
+  "conceptIds": ["lifecycle-funds"],
+  "intro": "Two glide paths, two different jobs. File each trait with the wrapper it belongs to.",
+  "buckets": [
+    { "id": "lifecycle", "label": "Life-cycle fund", "hint": "Open wrapper, any dated goal", "tone": "cool" },
+    { "id": "nps", "label": "NPS", "hint": "Locked, tax-advantaged retirement", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Point it at any dated goal — a 2036 education corpus, a 2046 house", "bucketId": "lifecycle" },
+    { "id": "c2", "text": "Redeemable any time once the 3/2/1% exit-load window passes", "bucketId": "lifecycle" },
+    { "id": "c3", "text": "The target year is in the scheme's name; max six per fund house", "bucketId": "lifecycle" },
+    { "id": "c4", "text": "SEBI glide bands; near maturity only AA+ debt maturing before target", "bucketId": "lifecycle" },
+    { "id": "c5", "text": "Tier I money locked for 15 years or until age 60", "bucketId": "nps" },
+    { "id": "c6", "text": "Up to 60% of the corpus withdrawable tax-free on completion", "bucketId": "nps" },
+    { "id": "c7", "text": "Auto Choice has trimmed equity with age for years", "bucketId": "nps" },
+    { "id": "c8", "text": "Built primarily for retirement; joining is voluntary, adoption thin", "bucketId": "nps" }
+  ],
+  "debrief": "Both automate the same glide logic — equity falling as the date nears — but the wrappers differ in purpose. The NPS trades liquidity for a tax break: locked to retirement, rewarded on exit. The life-cycle fund trades the tax break for freedom: any dated goal, exit-loads instead of locks, ordinary fund taxation. The issue's conclusion is the useful one: they overlap but do different jobs, and can sit side by side in one plan — NPS for retirement's tax edge, life-cycle funds for every other dated goal."
+}

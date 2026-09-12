@@ -1,0 +1,28 @@
+{
+  "id": "finance-mfi-2026-08",
+  "title": "Mutual Fund Insight — Aug 2026",
+  "subject": "finance",
+  "category": "Finance",
+  "type": "magazine",
+  "source": "Personal study notes paraphrased from Value Research Mutual Fund Insight, August 2026 (subscription copy). Not affiliated with Value Research; not investment advice.",
+  "summary": "SIFs one year in (the shorting freedom barely used), India's first life-cycle funds and their glide paths — live machine included — plus the dynamic-bond timing audit and the gold-drift discipline.",
+  "tags": ["mutual-funds", "sif", "target-date", "glide-path", "bonds", "discipline", "value-research"],
+  "concepts": [
+    "sif-funds",
+    "lifecycle-funds",
+    "bond-timing",
+    "market-discipline"
+  ],
+  "sessions": [
+    "01-sif-explainer.json",
+    "02-sif-ladder-classify.json",
+    "03-sif-detective.json",
+    "04-lifecycle-explainer.json",
+    "05-glidepath-lab.json",
+    "06-wrapper-classify.json",
+    "07-bond-timing-detective.json",
+    "08-gold-drift-decision.json",
+    "09-discipline-explainer.json",
+    "10-mfi-aug-quiz.json"
+  ]
+}

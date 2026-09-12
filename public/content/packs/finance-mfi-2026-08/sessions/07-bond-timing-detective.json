@@ -1,0 +1,28 @@
+{
+  "id": "bond-timing-detective",
+  "kind": "detective",
+  "title": "The rate call that came late",
+  "conceptIds": ["bond-timing"],
+  "intro": "Dynamic bond funds promise to time the rate cycle for you. The cycle just completed — open the duration data and judge the promise.",
+  "facts": [
+    { "label": "The mandate", "value": "Dynamic bond funds may move across maturities freely — long when rates should fall, short when they should rise. Timing is the entire pitch.", "signal": 2 },
+    { "label": "The duration record", "value": "The category's median duration was modest as yields peaked — and ROSE only after the 10-year yield had already started coming down, touching over eight years late in the move.", "signal": 3 },
+    { "label": "The yield path", "value": "The 10-year bottomed at 6.2% by May 2025 — the big duration gains belonged to positions taken before the fall, not after it began.", "signal": 3 },
+    { "label": "The outcome", "value": "The typical fund caught part of the bond rally. Not the early part.", "signal": 2 },
+    { "label": "The incentive", "value": "Extending duration early is visibly wrong if the view stalls; extending after confirmation is career-safe.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Reactive (followed the move)", "pct": 75, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Anticipatory (front-ran it)", "pct": 25, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What does the duration record show?",
+  "choices": [
+    "Managers called the cycle early and captured the full rally",
+    "Duration rose only after yields had begun falling — flexibility was used to follow the rally, not front-run it",
+    "Dynamic funds never changed duration at all",
+    "The rally never happened"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence the timing was reactive",
+  "debrief": "The pattern is unambiguous: duration extended after the yield decline was underway and peaked late in the move — confirmation-following, not foresight. The funds still caught part of the rally (following works, partially), but the premium you pay for a timing mandate bought reactive positioning. The rhyme with the SIF cover story is the issue's real thesis: mandate freedom — shorting, duration, going anywhere — is capacity, not clairvoyance. Audit *when* a flexible fund moved, not whether it eventually did; and if you hold a rate view, own it directly or hold bonds for carry."
+}

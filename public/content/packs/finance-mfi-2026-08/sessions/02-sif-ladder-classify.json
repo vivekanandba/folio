@@ -1,0 +1,23 @@
+{
+  "id": "sif-ladder-classify",
+  "kind": "classify",
+  "title": "Mutual fund, SIF, or PMS/AIF?",
+  "conceptIds": ["sif-funds"],
+  "intro": "Eight product traits — file each on the right rung of the access ladder.",
+  "buckets": [
+    { "id": "mf", "label": "Mutual fund", "hint": "Long-only, broadest access", "tone": "cool" },
+    { "id": "sif", "label": "SIF", "hint": "₹10L; MF rules + trading freedoms", "tone": "warm" },
+    { "id": "pms", "label": "PMS / AIF", "hint": "₹50L / ₹1cr territory", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Can only buy securities it expects to rise, then wait", "bucketId": "mf" },
+    { "id": "c2", "text": "Anyone can start with a few hundred rupees a month", "bucketId": "mf" },
+    { "id": "c3", "text": "Shorting via derivatives, under the same SEBI oversight as mutual funds", "bucketId": "sif" },
+    { "id": "c4", "text": "₹10 lakh minimum — the new middle rung", "bucketId": "sif" },
+    { "id": "c5", "text": "Can set its own redemption windows and concentrate in a few sectors", "bucketId": "sif" },
+    { "id": "c6", "text": "Asked for ₹50 lakh before they would take your call", "bucketId": "pms" },
+    { "id": "c7", "text": "Category III vehicles starting at ₹1 crore", "bucketId": "pms" },
+    { "id": "c8", "text": "The 'rich people's funds' most readers were never allowed to buy", "bucketId": "pms" }
+  ],
+  "debrief": "The ladder runs on two axes at once: minimum ticket (a few hundred rupees → ₹10L → ₹50L/₹1cr) and mandate freedom (long-only → shorting, concentration, custom redemptions → full hedge-fund latitude). The SIF's pitch is precisely the middle: PMS-style tools with mutual-fund-style regulation at a fraction of the entry price. What the ladder doesn't promise — as the cover story shows — is that the freedoms actually get used."
+}

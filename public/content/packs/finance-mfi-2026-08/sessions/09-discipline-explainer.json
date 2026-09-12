@@ -1,0 +1,27 @@
+{
+  "id": "discipline-explainer",
+  "kind": "explainer",
+  "title": "Statistics that want you to panic",
+  "conceptIds": ["market-discipline"],
+  "intro": "The issue's discipline thread: a scary half-year number, an attention-hungry P&L, and two reframes worth keeping.",
+  "steps": [
+    {
+      "title": "The panic statistic",
+      "body": "The Sensex fell **9.7% in H1 2026** — 'the worst first half since 2020, when Covid wiped out 15%.' The piece's point: a statistic like that **has one job — it wants you to panic**: stop the SIP, sell, wait.\n\n> [!warn] Check the construction: 'worst since 2020' *selects* the comparison that maximizes alarm — and the Covid half it cites was followed by one of the strongest recoveries on record. The statistic's own history refutes its advice."
+    },
+    {
+      "title": "The number built for attention",
+      "body": "Twenty-five years of the same advice: look at your portfolio **less often**. The daily P&L at the top of the screen 'is there to hold your attention rather than inform you' — it measures nothing your plan needs, and it recruits you into reacting."
+    },
+    {
+      "title": "Two reframes",
+      "body": "Two arguments from the issue's columns that outlast the news cycle they answered:",
+      "viz": { "type": "annotated", "title": "Keep these two", "prompt": "Tap each.", "points": [ { "label": "Robots & SIPs", "value": 4, "note": "The Musk retort: if machines do the work, wages shrink — OWNING PRODUCTIVE CAPITAL becomes the only claim on what the robots make. A SIP is that claim, bought monthly." }, { "label": "Recency bias", "value": 3, "note": "The bearish client countering data with other people's gloom — while India adds ~17% of global real GDP growth and sits at ~half China's MSCI EM weight. Mean reversion argues patiently." } ] }
+    },
+    {
+      "title": "What discipline actually is",
+      "body": "Not stoicism — **structure**: a written allocation, SIPs that continue through scary halves, a rebalance rule that trims doubled winners, and an attention diet that starves the daily number.\n\nThe boring machinery does the emotional work so you don't have to."
+    }
+  ],
+  "recap": "**Panic statistics are framings; discipline is structure.**\n\n- 'Worst since X' chooses its window to alarm — its own history usually refutes it.\n- The daily P&L is engineered salience; look less often.\n- A SIP is a monthly claim on productive capital — more valuable, not less, in an automated future.\n- Written rules (allocation, rebalance triggers) beat felt reactions."
+}

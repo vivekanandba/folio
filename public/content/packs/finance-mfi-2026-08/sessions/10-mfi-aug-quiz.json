@@ -1,0 +1,97 @@
+{
+  "id": "mfi-aug-quiz",
+  "kind": "quiz",
+  "title": "August issue — check what stuck",
+  "conceptIds": ["sif-funds", "lifecycle-funds", "bond-timing", "market-discipline"],
+  "intro": "Eight self-check questions from the August 2026 issue.",
+  "questions": [
+    {
+      "prompt": "A SIF differs from a mutual fund in that it…",
+      "choices": [
+        "Escapes SEBI oversight entirely",
+        "Can short, concentrate, move across assets and set redemption windows — at a ₹10 lakh minimum",
+        "Is only sold to institutions",
+        "Guarantees smoother returns"
+      ],
+      "answerIndex": 1,
+      "explanation": "Same SEBI rules as mutual funds, PMS/AIF-style freedoms, at a fraction of their ₹50L/₹1cr entry. The guarantee is the pitch, not the record."
+    },
+    {
+      "prompt": "The cover story's key finding about SIFs' first year:",
+      "choices": [
+        "Shorting caused big losses across the category",
+        "The headline shorting freedom is barely being used — most funds hugged the index except in Mar–Apr 2026",
+        "Every SIF protected capital in the crash",
+        "SIFs beat all mutual funds"
+      ],
+      "answerIndex": 1,
+      "explanation": "Only one long-short fund delivered 'protect first, chase second' when the market broke; early performance is a verdict on usage, not on the strategy."
+    },
+    {
+      "prompt": "A life-cycle fund's defining feature is…",
+      "choices": [
+        "A guaranteed return at the target year",
+        "A glide path shifting equity toward debt as the named target year approaches, within SEBI bands",
+        "A permanent 5-year lock-in",
+        "Investing only in gold ETFs"
+      ],
+      "answerIndex": 1,
+      "explanation": "One target year in the name; the glide automates de-risking. Bands are ranges — two same-year funds can glide differently."
+    },
+    {
+      "prompt": "Life-cycle funds vs NPS:",
+      "choices": [
+        "They're identical products",
+        "NPS locks money to retirement with a tax break; a life-cycle fund is an open wrapper for any dated goal with exit loads instead of locks",
+        "NPS has no glide path",
+        "Life-cycle funds are tax-free"
+      ],
+      "answerIndex": 1,
+      "explanation": "Different jobs, overlapping mechanics — the issue's conclusion is they can sit side by side in one plan."
+    },
+    {
+      "prompt": "Why does the same −30% equity crash hurt less near the target year?",
+      "choices": [
+        "Markets can't fall near target years",
+        "The glide has cut the equity share, so the crash applies to a smaller slice of the corpus",
+        "Exit loads absorb the loss",
+        "Debt returns rise to compensate"
+      ],
+      "answerIndex": 1,
+      "explanation": "Crash cost ≈ 30% × equity share. At 90% equity it erases years; at 25% it's a bad quarter. Sequence risk is why the glide exists."
+    },
+    {
+      "prompt": "The dynamic-bond-fund audit found that median duration…",
+      "choices": [
+        "Rose before yields fell — managers front-ran the rally",
+        "Rose only after yields had already started falling — the funds followed the move rather than timing it",
+        "Never changed through the cycle",
+        "Was illegal to change"
+      ],
+      "answerIndex": 1,
+      "explanation": "Flexibility ≠ foresight: the typical fund caught part of the rally, but not the early part where timing gains live."
+    },
+    {
+      "prompt": "Gold doubles and your 8% insurance sleeve becomes 17%. The issue's advice:",
+      "choices": [
+        "Let the winner run — it's clearly the best asset",
+        "Return to the allocation you set — trim the holding and/or cut the SIP feeding it",
+        "Double the gold SIP to average up",
+        "Sell everything else"
+      ],
+      "answerIndex": 1,
+      "explanation": "The drifted position is 'a bet nobody actually decided to make.' Sell-back is fast (taxed); the SIP cut is slow (tax-free); a written trigger makes either stick."
+    },
+    {
+      "prompt": "'Worst first half since 2020' is best read as…",
+      "choices": [
+        "A signal to stop SIPs until clarity returns",
+        "A framing built to alarm — the window is selected, and the cited precedent was followed by a strong recovery",
+        "Proof that equity no longer works",
+        "A reason to check the portfolio daily"
+      ],
+      "answerIndex": 1,
+      "explanation": "Panic statistics choose their comparisons. The plan's answer is structural: continue the SIP, rebalance by rule, look less often."
+    }
+  ]
+}

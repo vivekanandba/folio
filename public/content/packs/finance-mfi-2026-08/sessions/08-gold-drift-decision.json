@@ -1,0 +1,117 @@
+{
+  "id": "gold-drift-decision",
+  "kind": "decision",
+  "title": "The winner that ate the portfolio",
+  "conceptIds": ["market-discipline"],
+  "intro": "A doubling gold rally has turned your 8% insurance sleeve into 17% of the portfolio. Steer — and watch the allocation-discipline meter.",
+  "meter": { "label": "Allocation discipline", "min": 0, "max": 100, "start": 55 },
+  "startId": "drift",
+  "nodes": [
+    {
+      "id": "drift",
+      "text": "Gold has doubled. The 5–10% you bought as insurance is now 15–20% — 'a bet that nobody actually decided to make.' What do you do?",
+      "choices": [
+        {
+          "label": "Let the winner run — momentum is momentum",
+          "next": "run",
+          "effect": -20,
+          "note": "You now hold a concentrated bet you never chose."
+        },
+        {
+          "label": "Rebalance: sell enough to return to the allocation you set",
+          "next": "rebalance",
+          "effect": 20,
+          "note": "The adviser's version — trim what doubled."
+        },
+        {
+          "label": "Keep the holding, but cut the gold SIP so new money stops feeding the drift",
+          "next": "sipcut",
+          "effect": 10,
+          "note": "Sukanya's version — gentler, tax-free, slower."
+        }
+      ]
+    },
+    {
+      "id": "run",
+      "text": "Six months on, gold corrects 18%. The 'winner' gave back more than the rest of the portfolio earned. The drift was a risk decision made by inattention. Recover?",
+      "choices": [
+        {
+          "label": "Rebalance now and write the rule down for next time",
+          "next": "target",
+          "effect": 15,
+          "note": "Recovered — after paying the tuition."
+        }
+      ]
+    },
+    {
+      "id": "rebalance",
+      "text": "You sell back to 8%. Capital-gains tax is due on the trimmed slice, and gold keeps rising for two more months — the neighbours gloat. Then it corrects. How do you frame the episode?",
+      "choices": [
+        {
+          "label": "Rebalancing means sometimes selling what keeps rising — that's the price of the discipline",
+          "next": "target",
+          "effect": 10,
+          "note": "The point exactly: you can't collect insurance and momentum at once."
+        },
+        {
+          "label": "Regret the sale — next time hold until the exact top",
+          "next": "target",
+          "effect": -15,
+          "note": "Top-timing is the fantasy that causes the drift in the first place."
+        }
+      ]
+    },
+    {
+      "id": "sipcut",
+      "text": "You cut the gold SIP from ₹25k to ₹7k. The allocation drifts back only slowly — but no tax, no timing call. Months later gold is still 14% of the book. Enough?",
+      "choices": [
+        {
+          "label": "Pair the SIP cut with a partial sell-back toward target",
+          "next": "target",
+          "effect": 10,
+          "note": "Flow fixes the future; only selling fixes the present."
+        },
+        {
+          "label": "Leave it — the SIP cut alone will get there eventually",
+          "next": "target",
+          "effect": -5,
+          "note": "Meanwhile you carry double the intended gold risk through whatever comes."
+        }
+      ]
+    },
+    {
+      "id": "target",
+      "text": "Last question: what should trigger the next rebalance?",
+      "choices": [
+        {
+          "label": "A written rule — annual date or a ±5% band breach, whichever first",
+          "next": "end-good",
+          "effect": 15,
+          "note": "Rules act; feelings drift."
+        },
+        {
+          "label": "Whenever the news makes the allocation feel wrong",
+          "next": "end-bad",
+          "effect": -15,
+          "note": "That's how the drift happened."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "Insurance that doubles is no longer insurance — rebalancing by rule returns the portfolio to the risk you actually chose.",
+        "debrief": "The issue's line carries the whole lesson: the drifted allocation is 'a bet nobody actually decided to make.' Both cures work — the sell-back (fast, taxed) and the SIP cut (slow, tax-free) — and pair well. What makes either stick is the written trigger: a date or a band, so the next rally rebalances the portfolio in the right direction.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-bad",
+      "ending": {
+        "principle": "Feelings rebalance portfolios in the wrong direction; rules rebalance them in the right one.",
+        "debrief": "Every step that lost meter points shared one shape: letting attention, momentum or regret make the allocation decision. The mechanics are easy — trim the winner, cut its SIP. The discipline is the written rule that fires without asking how you feel.",
+        "score": 0
+      }
+    }
+  ]
+}
