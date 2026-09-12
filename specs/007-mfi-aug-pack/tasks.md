@@ -10,4 +10,4 @@
 - [x] 4. Sessions 01–10
 - [x] 5. folio.json + catalog registration
 - [x] 6. Gates offline (lint, tests, smoke)
-- [ ] 7. Ship via /ship (PR links specs/007-mfi-aug-pack/)
+- [x] 7. Ship via /ship (PR links specs/007-mfi-aug-pack/)
