@@ -44,6 +44,18 @@ merge is blocked on red. `pages.yml` re-runs lint+test before deploy.
 - [content-contract.md](content-contract.md) — packs, sessions, whitelists
 - [visual-system.md](visual-system.md) — the night gallery's non-negotiables
 
+## Feature specs
+
+The spec-kit lifecycle folders described above. Listed so the registry
+check can see them; each is `spec.md` (+ `plan.md`, `tasks.md`).
+
+- [001-data-storage-machines/](001-data-storage-machines/spec.md) — Data-storage machines (sysarch §6)
+- [002-sdd-pack/](002-sdd-pack/spec.md) — Spec-Driven Development pack
+- [003-media-agents-pack/](003-media-agents-pack/spec.md) — AI media agents pack
+- [004-mcp-pack/](004-mcp-pack/spec.md) — MCP pack (Build Rich-Context AI Apps with Anthropic)
+- [005-agentic-pack/](005-agentic-pack/spec.md) — Agentic AI Engineering pack
+- [006-claude-code-pack/](006-claude-code-pack/spec.md) — Claude Code pack
+
 ## History
 
 An earlier SDD/TDD foundation (PR #5, July 2026) defined per-kind specs and a
