@@ -1,0 +1,32 @@
+{
+  "id": "ai-claude-code-2026",
+  "title": "Claude Code — Agentic Coding in Practice",
+  "subject": "ai-engineering",
+  "category": "AI",
+  "type": "course",
+  "source": "Personal study notes paraphrased from 'Claude Code: A Highly Agentic Coding Assistant' (DeepLearning.AI × Anthropic, own completion). Not affiliated; for personal revision only.",
+  "summary": "The working discipline of agentic coding: CLAUDE.md memory and context budgets, anchored feature prompts, tests-first debugging, parallel worktrees, hooks and slash commands — and the workflow transferring to notebooks and Figma mockups.",
+  "tags": ["claude-code", "agentic-coding", "workflow", "worktrees", "hooks", "mcp", "ai-engineering"],
+  "concepts": [
+    "cc-workflow",
+    "cc-features-mcp",
+    "cc-testing-debugging",
+    "cc-parallel-automation",
+    "cc-beyond-code"
+  ],
+  "sessions": [
+    "01-workflow-explainer.json",
+    "02-command-classify.json",
+    "03-onboarding-sequence.json",
+    "04-features-explainer.json",
+    "05-prompt-anatomy-classify.json",
+    "06-cc-blueprint.json",
+    "07-debugging-detective.json",
+    "08-testing-explainer.json",
+    "09-worktrees-explainer.json",
+    "10-worktree-sequence.json",
+    "11-automation-classify.json",
+    "12-beyond-code-explainer.json",
+    "13-cc-quiz.json"
+  ]
+}

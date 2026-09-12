@@ -1,0 +1,108 @@
+{
+  "id": "cc-quiz",
+  "kind": "quiz",
+  "title": "Claude Code — check what stuck",
+  "conceptIds": ["cc-workflow", "cc-features-mcp", "cc-testing-debugging", "cc-parallel-automation", "cc-beyond-code"],
+  "intro": "Nine self-check questions written from the course notes (no official quiz exists).",
+  "questions": [
+    {
+      "prompt": "/init does what?",
+      "choices": [
+        "Initializes a new git repository",
+        "Scans the codebase and writes CLAUDE.md — auto-loaded project memory covering commands, architecture, and style",
+        "Clears the conversation history",
+        "Installs the VS Code extension"
+      ],
+      "answerIndex": 1,
+      "explanation": "CLAUDE.md is the project's standing memory, included in context every launch — and it's a draft: the course immediately corrects it with # (uv usage, DB schemas)."
+    },
+    {
+      "prompt": "You notice Claude repeating the same mistake (using pip in a uv project). The right move is…",
+      "choices": [
+        "/clear and hope",
+        "# to add a memory the moment the error repeats",
+        "Restart the terminal",
+        "Switch models"
+      ],
+      "answerIndex": 1,
+      "explanation": "# appends a permanent memory to CLAUDE.md in one keystroke. Clearing the conversation doesn't fix a knowledge gap — teaching does."
+    },
+    {
+      "prompt": "/clear vs /compact:",
+      "choices": [
+        "They're synonyms",
+        "/clear wipes history (between unrelated tasks); /compact summarizes it in place (mid-task, bloated context)",
+        "/compact deletes files; /clear doesn't",
+        "/clear only works in plan mode"
+      ],
+      "answerIndex": 1,
+      "explanation": "Context is a budget: wipe it between tasks, compress it within one. ESC interrupts mid-flight; double-ESC rewinds."
+    },
+    {
+      "prompt": "The strongest feature prompts in the course contain…",
+      "choices": [
+        "As few words as possible",
+        "@-anchored files, current AND desired behavior, and explicit constraints",
+        "Only the desired behavior — context wastes tokens",
+        "A request to 'make it better' plus a deadline"
+      ],
+      "answerIndex": 1,
+      "explanation": "The clickable-citations prompt names the files, states where links already live, defines the target behavior, and constrains the result (invisible embeds, matching styles)."
+    },
+    {
+      "prompt": "The Playwright MCP server is attached so that…",
+      "choices": [
+        "Claude can write Playwright tests only",
+        "Claude can visit the running app, take screenshots, and verify visual work itself",
+        "The app deploys automatically",
+        "Permissions are no longer needed"
+      ],
+      "answerIndex": 1,
+      "explanation": "Visual follow-ups become verifiable: 'visit 127.0.0.1:8000, view the button, make it match.' /permissions can allow the screenshot tool by its full name."
+    },
+    {
+      "prompt": "Lesson 4's debugging prompt asks for tests at three layers because…",
+      "choices": [
+        "More tests always means better code",
+        "Layered tests make the failure localize itself before any fix is proposed",
+        "Single tests are not allowed in pytest",
+        "It's faster than reading the config"
+      ],
+      "answerIndex": 1,
+      "explanation": "Tool, generator, and end-to-end tests triangulate: two layers pass honestly, one shows the anomaly — leading straight to MAX_RESULTS = 0. Evidence before surgery."
+    },
+    {
+      "prompt": "Git worktrees let you…",
+      "choices": [
+        "Clone the repo three times with different remotes",
+        "Check out multiple branches of the same repo into separate directories — isolated files, shared history — one Claude session per feature",
+        "Run git without commits",
+        "Avoid merge conflicts entirely"
+      ],
+      "answerIndex": 1,
+      "explanation": "Three independent features (UI, tests, quality) proceed in parallel; the merge back — delegated to Claude — is the only serial step. Start from a clean tree."
+    },
+    {
+      "prompt": "A hook differs from a custom slash command because…",
+      "choices": [
+        "Hooks are written in Python",
+        "A hook fires deterministically at lifecycle points (before/after tools, on finish); a slash command is a packaged prompt you trigger",
+        "Slash commands can't take arguments",
+        "Hooks only run on GitHub"
+      ],
+      "answerIndex": 1,
+      "explanation": "Commands package prompts ($ARGUMENTS for the variable part) and can drift like any instruction; hooks are shell commands the lifecycle guarantees."
+    },
+    {
+      "prompt": "In the Figma lesson, two MCP servers are attached because…",
+      "choices": [
+        "One is a backup for the other",
+        "One reads the source of truth (the mockup); the other verifies the built app against it (Playwright)",
+        "Figma requires two connections",
+        "Next.js needs both to compile"
+      ],
+      "answerIndex": 1,
+      "explanation": "Claude both builds and checks — against artifacts, not adjectives. The follow-up wires real FRED data into the finished dashboard."
+    }
+  ]
+}

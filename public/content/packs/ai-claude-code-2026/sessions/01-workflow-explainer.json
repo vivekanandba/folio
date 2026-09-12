@@ -1,0 +1,26 @@
+{
+  "id": "workflow-explainer",
+  "kind": "explainer",
+  "title": "Memory, context, control",
+  "conceptIds": ["cc-workflow"],
+  "intro": "The foundation the whole course builds on: give Claude Code memory, manage its context, and keep your hands on the controls.",
+  "steps": [
+    {
+      "title": "Project memory",
+      "body": "**`/init`** scans the codebase and writes **CLAUDE.md** — important commands, architecture, coding style — automatically loaded into context on every launch.\n\n**`#`** appends a memory in one keystroke. The course's first two additions: *\"use uv to run python files or add any dependencies\"* (the moment Claude used pip), and the vector database's two collections with their full schemas."
+    },
+    {
+      "title": "Context is a budget",
+      "body": "| Control | Effect |\n|---|---|\n| `/clear` | wipe conversation history |\n| `/compact` | summarize it in place |\n| `ESC` | interrupt and redirect mid-flight |\n| `ESC ESC` | rewind to an earlier point |\n\n> [!tip] Clear between unrelated tasks; compact when the task continues but history bloats. Interrupting early beats arguing with a finished wrong answer."
+    },
+    {
+      "title": "Precision inputs",
+      "body": "**`@file`** pins exact files into a prompt (`@backend/search_tools.py`) — no guessing where changes live. **`!command`** runs bash inline (`!pwd`). Together with plan mode, they make prompts *addressable*: files named, commands run, plans reviewed before code."
+    },
+    {
+      "title": "Explore before you modify",
+      "body": "Lesson 2 spends its entire session asking questions — codebase overview, how documents are chunked (down to the sentence-boundary regex), how the two ChromaDB collections differ, how sessions persist — and correcting Claude's model with `#` as it goes.\n\nOnly after the map is right does any change get requested."
+    }
+  ],
+  "recap": "**/init → correct with # → manage context → explore first.**\n\n- CLAUDE.md is auto-loaded project memory; # patches it the moment an error repeats.\n- /clear between tasks, /compact within them, ESC to redirect, ESC ESC to rewind.\n- @files and !commands make prompts precise.\n- Questions are cheaper than reverts."
+}

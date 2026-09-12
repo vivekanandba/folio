@@ -1,0 +1,17 @@
+{
+  "id": "worktree-sequence",
+  "kind": "sequence",
+  "title": "Order the parallel-feature run",
+  "conceptIds": ["cc-parallel-automation"],
+  "intro": "Lesson 5's exact workflow for landing three features at once — put it in order.",
+  "prompt": "Drag into order, first step on top.",
+  "steps": [
+    { "id": "clean", "text": "Add and commit any pending changes — start from a clean tree" },
+    { "id": "trees", "text": "mkdir .trees, then git worktree add .trees/<feature> per feature" },
+    { "id": "sessions", "text": "Open a terminal in each worktree; launch a Claude Code session in each" },
+    { "id": "implement", "text": "Assign each session its feature; let them work in parallel" },
+    { "id": "commit", "text": "Add and commit the changes inside each worktree; close the sessions" },
+    { "id": "merge", "text": "In the main terminal: have Claude merge all .trees worktrees into main and fix conflicts" }
+  ],
+  "debrief": "Clean first, split second, parallelize third, commit per-tree, merge last. The two steps that get skipped in practice bite hardest: an uncommitted starting tree contaminates every worktree with the same dirt, and forgetting to commit inside a worktree means the merge silently misses that feature. The merge is the only serial step — delegating it to Claude is fine; skipping the review of it is not."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "features-explainer",
+  "kind": "explainer",
+  "title": "Feature prompts and the visual loop",
+  "conceptIds": ["cc-features-mcp"],
+  "intro": "Three features land on the RAG chatbot — and every prompt shares the same skeleton.",
+  "steps": [
+    {
+      "title": "The skeleton",
+      "body": "Lesson 3's clickable-citations prompt, reduced to its bones:\n\n- **Plan mode on** — approach reviewed before code.\n- **@ anchors**: `@backend/document_processor.py`, `@backend/search_tools.py`.\n- **Current behavior**: lesson links already live in the `course_catalog` collection.\n- **Desired behavior**: each source becomes a clickable link opening the lesson in a new tab.\n- **Constraints**: links embedded invisibly — no visible URL text."
+    },
+    {
+      "title": "Iterate with eyes",
+      "body": "The follow-up is a **pasted screenshot**: \"these links are hard to read — make them more visually appealing.\" Visual work iterates on *images*, not adjectives.\n\nThe '+ New Chat' feature repeats the skeleton (clear conversation, new session without reload, cleanup on `@frontend` and `@backend`, match existing styling) — then closes the loop harder:"
+    },
+    {
+      "title": "Let Claude look for itself",
+      "body": "Attach the **Playwright MCP server** (`claude mcp add playwright npx @playwright/mcp@latest`, verify with `/mcp`) and the follow-up becomes: *\"visit 127.0.0.1:8000 and view the '+ New Chat' button… left-aligned, border removed.\"*",
+      "viz": { "type": "annotated", "title": "The visual verification loop", "prompt": "Tap each stage.", "points": [ { "label": "Build", "value": 2, "note": "The feature lands from the skeleton prompt." }, { "label": "Look", "value": 3, "note": "Claude visits the running app through Playwright and takes its own screenshot." }, { "label": "Compare", "value": 4, "note": "Against your ask — alignment, borders, styling — and fixes what differs." }, { "label": "Permit", "value": 2, "note": "/permissions adds an allow rule by full tool name (mcp__playwright__browser_take_screenshot) so the loop runs unprompted." } ] }
+    },
+    {
+      "title": "Features for the AI itself",
+      "body": "Feature 3 adds a **new tool to the chatbot** — an outline tool returning exact lesson titles and links from the `course_metadata` collection. Claude Code can extend your AI system's own toolset — because the prompt explained the data it should build on.\n\n> [!warn] The model is the muscle; the context is still the brain."
+    }
+  ],
+  "recap": "**Anchor files, state both behaviors, constrain the result, verify visually.**\n\n- Plan mode + @files + current→desired + constraints = the skeleton.\n- Screenshots and Playwright MCP close the loop with evidence, not adjectives.\n- /permissions curates what runs unprompted, by full tool name.\n- Well-fed prompts can extend your AI system's own tools."
+}

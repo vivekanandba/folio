@@ -102,6 +102,15 @@ test('agentic blueprint: guarded chain wins, unguarded and agent-less wires fail
   assert.ok(passCount(s, nodes, [...chain, [1, 3]]) < s.rules.length, 'goal\u2192tools (nobody decided) refused')
 })
 
+test('claude-code blueprint: disciplined session wins, shortcut wires fail', () => {
+  const s = loadRules('ai-claude-code-2026/sessions/06-cc-blueprint.json')
+  const nodes = [N(1, 'task'), N(2, 'plan'), N(3, 'implement'), N(4, 'verify'), N(5, 'commit')]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'plan\u2192implement\u2192verify\u2192commit passes')
+  assert.ok(passCount(s, nodes, [...chain, [1, 3]]) < s.rules.length, 'planless YOLO refused')
+  assert.ok(passCount(s, nodes, [...chain, [3, 5]]) < s.rules.length, 'unverified commit refused')
+})
+
 /* Pure graph helpers */
 
 test('shortestHops + connectivityAvailability behave analytically', () => {

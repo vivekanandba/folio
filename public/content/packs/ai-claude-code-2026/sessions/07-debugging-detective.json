@@ -1,0 +1,28 @@
+{
+  "id": "debugging-detective",
+  "kind": "detective",
+  "title": "Query failed",
+  "conceptIds": ["cc-testing-debugging"],
+  "intro": "The RAG chatbot answers 'query failed' to every content question. You asked for tests at three layers before any fix. Open the results and locate the break.",
+  "facts": [
+    { "label": "The symptom", "value": "Every content-related question returns 'query failed'. Outline questions (different tool) still work fine.", "signal": 2 },
+    { "label": "Layer 1 — the search tool", "value": "Tests on CourseSearchTool.execute: the tool runs without errors but returns zero results for queries that should obviously match.", "signal": 3 },
+    { "label": "Layer 2 — the AI generator", "value": "Tests confirm ai_generator.py correctly requests the CourseSearchTool with sensible parameters. The call chain is healthy.", "signal": 3 },
+    { "label": "Layer 3 — the RAG system", "value": "End-to-end tests show the system handles the empty result set by reporting failure — the error message is downstream of an empty search.", "signal": 2 },
+    { "label": "The config", "value": "backend/config.py: MAX_RESULTS: int = 0.", "signal": 3 }
+  ],
+  "composition": [
+    { "label": "Configuration bug", "pct": 80, "revealAfter": 4, "color": "#b91c1c" },
+    { "label": "Logic bug in the layers", "pct": 20, "revealAfter": 4, "color": "#0f766e" }
+  ],
+  "question": "What's broken?",
+  "choices": [
+    "The AI generator calls the wrong tool",
+    "MAX_RESULTS is 0 — the search is asked to return nothing, and every layer above faithfully handles an empty result",
+    "The vector database has lost its collections",
+    "The chatbot's error handling is too aggressive"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence localizing the failure",
+  "debrief": "The layered tests did exactly what they were designed to do: layer 2 exonerated the call chain, layer 3 showed the failure message was honest handling of an empty set, and layer 1 pinned the anomaly — a healthy tool returning nothing. That triangulation points at configuration, and there it is: MAX_RESULTS = 0, a search told to return zero results. The method is the lesson: 'fix the query failure' invites a plausible patch to the wrong layer; tests at three altitudes force the failure to localize itself before anyone proposes a fix."
+}

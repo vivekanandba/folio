@@ -1,0 +1,16 @@
+{
+  "id": "onboarding-sequence",
+  "kind": "sequence",
+  "title": "Order the codebase onboarding",
+  "conceptIds": ["cc-workflow"],
+  "intro": "Lesson 2's exact discipline for meeting a new codebase — put it in order.",
+  "prompt": "Drag into order, first step on top.",
+  "steps": [
+    { "id": "run", "text": "Get the app actually running (follow the README) — keep it up in the background" },
+    { "id": "init", "text": "/init — let Claude scan the codebase and draft CLAUDE.md" },
+    { "id": "explore", "text": "Ask questions: overview, data flow, how chunking works, how sessions persist" },
+    { "id": "correct", "text": "Patch the memory with # (uv usage, the two DB collections and schemas)" },
+    { "id": "change", "text": "Only now: request the first change, with @-anchored files" }
+  ],
+  "debrief": "Run it first — a codebase you can't run is a codebase you can't verify changes against. Then /init for the draft map, exploration to test that map against reality, # to fix what's wrong or missing, and only then modification. The two steps people skip are the first and fourth: working on an app they've never launched, with a CLAUDE.md they never corrected — and both mistakes surface later as confidently wrong changes."
+}

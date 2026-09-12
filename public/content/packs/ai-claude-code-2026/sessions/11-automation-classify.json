@@ -1,0 +1,24 @@
+{
+  "id": "automation-classify",
+  "kind": "classify",
+  "title": "Command, hook, worktree, or @claude?",
+  "conceptIds": ["cc-parallel-automation"],
+  "intro": "Four automation mechanisms, easily conflated. Which one does each situation call for?",
+  "buckets": [
+    { "id": "command", "label": "Custom slash command", "hint": "A prompt you keep retyping", "tone": "warm" },
+    { "id": "hook", "label": "Hook", "hint": "Must happen at a lifecycle moment", "tone": "cool" },
+    { "id": "worktree", "label": "Worktrees", "hint": "Independent features, in parallel", "tone": "neutral" },
+    { "id": "github", "label": "@claude on GitHub", "hint": "The loop lives in PRs and issues", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Every feature request starts with the same 5-line briefing you paste each time", "bucketId": "command" },
+    { "id": "c2", "text": "A markdown file in .claude/commands/ with $ARGUMENTS for the variable part", "bucketId": "command" },
+    { "id": "c3", "text": "The formatter must run after every file edit — even when nobody remembers to ask", "bucketId": "hook" },
+    { "id": "c4", "text": "A shell command fires whenever a subagent finishes its task", "bucketId": "hook" },
+    { "id": "c5", "text": "Theme toggle, test suite, and code cleanup — three unrelated features, one afternoon", "bucketId": "worktree" },
+    { "id": "c6", "text": "Isolated directories sharing one git history, merged at the end", "bucketId": "worktree" },
+    { "id": "c7", "text": "A teammate tags a bug report in an issue and wants a fix PR to appear", "bucketId": "github" },
+    { "id": "c8", "text": "Set up once via /install-github-app; triggered by a mention in a PR comment", "bucketId": "github" }
+  ],
+  "debrief": "The discriminator is what triggers it and where it runs. Slash commands package a prompt YOU trigger ($ARGUMENTS fills the variable part) — instructions, so they can drift. Hooks are shell commands the LIFECYCLE triggers (before/after tools, on subagent finish, on response end) — deterministic, they run whether or not anyone remembers. Worktrees aren't automation at all but parallel capacity for independent features. And @claude moves the whole loop to GitHub, triggered by mentions in PRs and issues. Folio's own repo runs three of the four — /ship, pre-merge hooks, and worktree-parallel PRs."
+}

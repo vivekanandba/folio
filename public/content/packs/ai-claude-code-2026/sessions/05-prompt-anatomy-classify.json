@@ -1,0 +1,23 @@
+{
+  "id": "prompt-anatomy-classify",
+  "kind": "classify",
+  "title": "Strong prompt, or wishful thinking?",
+  "conceptIds": ["cc-features-mcp", "cc-testing-debugging"],
+  "intro": "Fragments from feature and refactor prompts — sort the load-bearing ones from the vibes.",
+  "buckets": [
+    { "id": "anchor", "label": "Anchors & behavior", "hint": "Files, current→desired, examples", "tone": "cool" },
+    { "id": "done", "label": "Defines done", "hint": "Constraints, termination, acceptance", "tone": "warm" },
+    { "id": "vibes", "label": "Wishful thinking", "hint": "Unanchored, unverifiable", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "\"Modify _format_results in @backend/search_tools.py so lesson links are also returned\"", "bucketId": "anchor" },
+    { "id": "c2", "text": "\"Current: 1 tool call, then tools are removed. Desired: each call a separate API round\"", "bucketId": "anchor" },
+    { "id": "c3", "text": "\"Example flow: get course outline → use lesson 4's title → search → answer\"", "bucketId": "anchor" },
+    { "id": "c4", "text": "\"Terminate when: 2 rounds done, no tool_use blocks, or a tool call fails\"", "bucketId": "done" },
+    { "id": "c5", "text": "\"Match existing sections — same font size, color, uppercase formatting\"", "bucketId": "done" },
+    { "id": "c6", "text": "\"Links embedded invisibly — no visible URL text\"", "bucketId": "done" },
+    { "id": "c7", "text": "\"Make the search smarter\"", "bucketId": "vibes" },
+    { "id": "c8", "text": "\"Improve the UI so it feels more modern\"", "bucketId": "vibes" }
+  ],
+  "debrief": "Strong prompts do two jobs: they ANCHOR (exact files via @, current-versus-desired behavior, a worked example flow) and they DEFINE DONE (styling constraints, invisible-embed rules, explicit termination conditions). The vibes bucket fails both — 'smarter' and 'more modern' give the model nothing to aim at and you nothing to verify against. The tell: could Playwright or a test check it? If nothing could ever verify the ask, it isn't an ask yet."
+}

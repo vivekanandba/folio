@@ -31,6 +31,10 @@
     {
       "id": "ai-agentic-engg-2026",
       "path": "packs/ai-agentic-engg-2026"
+    },
+    {
+      "id": "ai-claude-code-2026",
+      "path": "packs/ai-claude-code-2026"
     }
   ]
 }
