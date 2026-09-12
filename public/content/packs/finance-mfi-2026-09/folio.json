@@ -1,0 +1,28 @@
+{
+  "id": "finance-mfi-2026-09",
+  "title": "Mutual Fund Insight — Sep 2026",
+  "subject": "finance",
+  "category": "Finance",
+  "type": "magazine",
+  "source": "Personal study notes paraphrased from Value Research Mutual Fund Insight, September 2026 (subscription copy). Not affiliated with Value Research; not investment advice.",
+  "summary": "The reader-stories special (the almost-paused SIP, the liquidity gap), the yearly four checks, same-50-stocks weighting lesson, the IT de-rating's twist, small caps' three-year truth, and retirement's promised-away money.",
+  "tags": ["mutual-funds", "sip", "discipline", "indexing", "retirement", "value-research"],
+  "concepts": [
+    "investor-lessons",
+    "portfolio-checkups",
+    "market-cycles-2026",
+    "retirement-math"
+  ],
+  "sessions": [
+    "01-lessons-explainer.json",
+    "02-first-crash-decision.json",
+    "03-checkups-explainer.json",
+    "04-signal-noise-classify.json",
+    "05-weighting-explainer.json",
+    "06-cycles-explainer.json",
+    "07-it-detective.json",
+    "08-smallcap-estimate.json",
+    "09-corpus-estimate.json",
+    "10-mfi-sep-quiz.json"
+  ]
+}

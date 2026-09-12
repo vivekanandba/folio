@@ -1,0 +1,26 @@
+{
+  "id": "checkups-explainer",
+  "kind": "explainer",
+  "title": "The yearly four",
+  "conceptIds": ["portfolio-checkups"],
+  "intro": "Feedback that arrives too fast produces action that is mostly noise. Here's what a real checkup contains.",
+  "steps": [
+    {
+      "title": "Four checks, yearly clock",
+      "body": "1. **Contribution** — how much you're putting in each month.\n2. **Drift** — has the allocation moved from what you set?\n3. **True diversification** — what's underneath the surface of the holdings?\n4. **Tax building** — what capital gains are quietly accumulating?\n\n> [!key] These run on a *yearly* clock. The daily number at the top of the screen 'is not a check — it is anxiety with a green-and-red interface.'"
+    },
+    {
+      "title": "Contributions do the heavy lifting",
+      "body": "The issue's two-saver comparison: how much you save matters far more than which fund you pick — the diligent saver with an ordinary fund beats the brilliant picker with a thin SIP for years. **Returns only matter once the base is large enough to compound.**"
+    },
+    {
+      "title": "Volatility vs risk",
+      "body": "The multi-decadal investor (a Harshad Mehta-era survivor) asked his shocked RIA for **quarterly summaries only**. His distinction: **volatility** is a feature of markets; **risk** is a change in what your money can actually do.\n\nMonthly statements measure the former and provoke reactions to it. The four checks measure the latter."
+    },
+    {
+      "title": "What 'underneath the surface' means",
+      "body": "Diversification is a property of **weights**, not counts — five funds can be one bet wearing five names. The issue's cleanest proof is two indices with identical stocks and wildly different results (next session).\n\nCount the overlap; weigh the weights; then call yourself diversified."
+    }
+  ],
+  "recap": "**Contribution, drift, true overlap, tax — once a year.**\n\n- Saving rate beats fund selection until the base is large.\n- Quarterly summaries suffice; the daily number is engineered anxiety.\n- Volatility is weather; risk is structural.\n- Diversification lives in weights, not fund counts."
+}

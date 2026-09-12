@@ -1,0 +1,27 @@
+{
+  "id": "lessons-explainer",
+  "kind": "explainer",
+  "title": "Twelve readers, one syllabus",
+  "conceptIds": ["investor-lessons"],
+  "intro": "The September special hands the microphone to readers — and the stories converge.",
+  "steps": [
+    {
+      "title": "The almost-paused SIP",
+      "body": "Markets fell sharply; confidence fell with them. One minute proudly telling friends about the SIP 'running like clockwork', the next hovering over the pause button.\n\nThe lesson the story earns: the scary months are when the SIP buys the most units — **the plan exists precisely for the moment you want to abandon it**."
+    },
+    {
+      "title": "The liquidity gap",
+      "body": "'We had investments, but no liquidity for an emergency' — long-term corpus everywhere, contributions running, everything responsible *on paper*. Then the emergency arrived and nothing was reachable without breaking the long-term plan.\n\nThe four-pillar gap, lived: growth without liquidity is a plan that only works when life cooperates."
+    },
+    {
+      "title": "Habits that compound",
+      "body": "The quieter stories are the durable ones — four small mechanisms doing decades of work:",
+      "viz": { "type": "annotated", "title": "The quieter stories", "prompt": "Tap each.", "points": [ { "label": "Step-up", "value": 4, "note": "'Each time my income grew, my SIP grew along with it' — the raise routed to the future before lifestyle claims it." }, { "label": "15 minutes", "value": 3, "note": "The habit that changed a financial future wasn't a strategy — it was a small, regular review ritual." }, { "label": "Car vs SIP", "value": 3, "note": "The upgrade deferred; the difference invested. Goals beat gadgets when the choice is explicit." }, { "label": "Saver → investor", "value": 3, "note": "A father's military-precision saving, upgraded a generation later into investing — same discipline, better vehicle." } ] }
+    },
+    {
+      "title": "Risk is discovered, not declared",
+      "body": "At 24, 'on paper, I had every reason to be aggressive. So I…' — every risk questionnaire says the same thing until the first real drawdown administers the actual test.\n\nAnd retirement 'was 20 years away — until it wasn't': one event moved the horizon, and the plan had to already exist to absorb it."
+    }
+  ],
+  "recap": "**The stories teach what the textbooks list.**\n\n- Pre-commit to the SIP before the fall decides for you.\n- Liquidity is its own pillar — investments aren't an emergency fund.\n- Step up contributions with income; make upgrade-vs-invest choices explicit.\n- Risk tolerance is what survives a drawdown, not what a form says."
+}
