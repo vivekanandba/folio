@@ -1,0 +1,97 @@
+{
+  "id": "mfi-sep-quiz",
+  "kind": "quiz",
+  "title": "September issue — check what stuck",
+  "conceptIds": ["investor-lessons", "portfolio-checkups", "market-cycles-2026", "retirement-math"],
+  "intro": "Eight self-check questions from the September 2026 issue.",
+  "questions": [
+    {
+      "prompt": "The four checks that actually matter, per the issue:",
+      "choices": [
+        "Daily P&L, weekly rankings, NFO calendar, star ratings",
+        "Monthly contribution, allocation drift, genuine diversification underneath, and capital-gains tax building",
+        "Fund manager changes, expense ratios, exit loads, benchmarks",
+        "Whatever your app's home screen shows"
+      ],
+      "answerIndex": 1,
+      "explanation": "And they run on a yearly clock. The daily number is 'anxiety with a green-and-red interface' — feedback that arrives too fast produces action that is mostly noise."
+    },
+    {
+      "prompt": "The two-saver comparison shows that…",
+      "choices": [
+        "Fund selection is everything",
+        "How much you save matters far more than which fund you pick — contributions do the heavy lifting until the base can compound",
+        "Brilliant picking beats steady saving from day one",
+        "Returns don't matter at all"
+      ],
+      "answerIndex": 1,
+      "explanation": "The diligent saver beats the brilliant picker for years; the return advantage only matters once the base is large."
+    },
+    {
+      "prompt": "Nifty 50 vs Nifty 50 Equal Weight over the past year:",
+      "choices": [
+        "Identical returns — same stocks, same result",
+        "N50 −2.3% vs Equal Weight +8.2% — same 50 stocks, different weights",
+        "Equal Weight lost more because of small stocks",
+        "They hold different stocks"
+      ],
+      "answerIndex": 1,
+      "explanation": "Top 10 stocks are over half the Nifty 50; every group of ten is ~20% of the Equal Weight index. Weights, not names, set outcomes — and the arithmetic reverses when heavyweights lead."
+    },
+    {
+      "prompt": "The small-cap category's three-year return after the slump:",
+      "choices": [
+        "15% a year — small caps always win eventually",
+        "5.5% a year — less than a liquid fund over the same period",
+        "Exactly zero",
+        "−13.2% a year"
+      ],
+      "answerIndex": 1,
+      "explanation": "−13.2% is the YTD figure. The three-year 5.5%/yr below liquid-fund returns is the number the rally hid: volatility that went unpaid."
+    },
+    {
+      "prompt": "The IT fall (Nifty IT −41.5%) was primarily…",
+      "choices": [
+        "An earnings collapse",
+        "A re-rating: ~28× earnings to under 17× while earnings rose — pricing the AI threat to billable-hours growth",
+        "A currency artifact only",
+        "Caused by SEBI rules"
+      ],
+      "answerIndex": 1,
+      "explanation": "Constant-currency growth at the big five ran low single digits — not what 28× was built on. And the AUM-weighted line above the median shows the largest funds held on more than the typical fund."
+    },
+    {
+      "prompt": "Chollet's bubble framing, as the issue uses it:",
+      "choices": [
+        "Bubbles only happen with fake technology",
+        "A bubble is a property of the people buying — possible even when the tech works and demand is real",
+        "AI cannot be a bubble",
+        "Bubbles are impossible in index funds"
+      ],
+      "answerIndex": 1,
+      "explanation": "Prices, not products, make bubbles. The frame applies to every hot theme in the magazine's pages."
+    },
+    {
+      "prompt": "September's retirement correction says to…",
+      "choices": [
+        "Add up everything you own and multiply by 25",
+        "First subtract the promised-away money (loans past retirement, weddings, parents' care) — the multiple applies only to what's actually yours",
+        "Ignore unwritten family obligations",
+        "Plan for exactly 35 years in all cases"
+      ],
+      "answerIndex": 1,
+      "explanation": "Commit a fifth of the corpus and 350× monthly expenses becomes ~438× on the rest — the correction rises faster than the committed share. Unwritten promises get collected as reliably as a bank's."
+    },
+    {
+      "prompt": "Why does an early hospital bill hurt a retirement plan disproportionately?",
+      "choices": [
+        "Hospitals charge retirees more",
+        "Early withdrawals lose the most compounding years — the corpus stays smaller for longest, and the income gap is widest just after the bill",
+        "It doesn't — timing is irrelevant",
+        "Because insurance never pays"
+      ],
+      "answerIndex": 1,
+      "explanation": "The shock correction: the gap closes only near the end of the plan. Protecting the early years is worth the most."
+    }
+  ]
+}

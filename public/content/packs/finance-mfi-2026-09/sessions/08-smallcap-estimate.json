@@ -1,0 +1,15 @@
+{
+  "id": "smallcap-estimate",
+  "kind": "estimate",
+  "title": "The three-year truth",
+  "conceptIds": ["market-cycles-2026"],
+  "intro": "Small-cap funds: −13.2% this year, −7.8% over one year. Now the number the rally hid.",
+  "prompt": "After the slump, what is the small-cap category's THREE-YEAR return (% per year)? For reference: a liquid fund earned ~6–7% a year over the same period.",
+  "unit": "%/yr",
+  "min": -5,
+  "max": 25,
+  "step": 0.1,
+  "answer": 5.5,
+  "tolerance": 0.15,
+  "debrief": "5.5% a year — LESS than a liquid fund over the same three years. That's the whole risk-premium lesson in one number: three years of small-cap volatility, drawdowns and headlines, paid less than parking the money. It isn't an argument against small caps forever — it's the argument for sizing them as a satellite you can hold through exactly this, and for deep suspicion whenever a hot trailing return is doing the selling."
+}

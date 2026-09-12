@@ -1,0 +1,27 @@
+{
+  "id": "weighting-explainer",
+  "kind": "explainer",
+  "title": "Same 50 stocks, opposite results",
+  "conceptIds": ["portfolio-checkups", "market-cycles-2026"],
+  "intro": "Two indices with identical constituents — one lost money over the year, the other gained 8%. The whole difference is weights.",
+  "steps": [
+    {
+      "title": "The clean experiment",
+      "body": "The **Nifty 50** and the **Nifty 50 Equal Weight**: same 50 companies, same reconstitution schedule, same universe. Over the past year (to July 24, 2026): **Nifty 50 −2.3%, Equal Weight +8.2%**. Over three years: **6.7% vs 14.0% a year**.\n\nNot a single stock tells them apart. Only *how much of each*."
+    },
+    {
+      "title": "Where the weight sits",
+      "body": "In the Nifty 50, the **top 10 stocks are more than half** the index; the bottom 10 contribute **under 7%**. In the Equal Weight index, every group of ten is roughly a fifth.",
+      "viz": { "type": "annotated", "title": "The top 10 steal the show", "prompt": "Tap each slice.", "points": [ { "label": "N50 top 10", "value": 4, "note": "Over half the index — the heavyweights ARE the index. When they stall, the index stalls regardless of the other 40." }, { "label": "N50 bottom 10", "value": 1, "note": "Under 7% combined — forty stocks that barely matter to the number you see." }, { "label": "EW any 10", "value": 2, "note": "Each group of ten ≈ one-fifth: the index actually owns its breadth." } ] }
+    },
+    {
+      "title": "A judgement, not a neutral fact",
+      "body": "> [!key] Every index carries **a judgement about what deserves weight**. Market cap rewards whatever grew — whether fundamentals or fashion drove it. A passive *factor* index makes the judgement explicit; a market-cap index just hides it better.\n\nThis past year the heavyweights lagged and the other forty worked — so equal weight won. When the heavyweights do the work, the same arithmetic reverses."
+    },
+    {
+      "title": "The portfolio echo",
+      "body": "The same lesson one level up: your **portfolio's** result is set by its weights, not its holdings list. Five funds sharing the same top-ten is one concentrated bet in five wrappers — which is exactly why 'genuine diversification underneath the surface' is one of the yearly four checks."
+    }
+  ],
+  "recap": "**Weights, not names, set outcomes.**\n\n- Same 50 stocks: −2.3% vs +8.2% in one year; 6.7 vs 14.0%/yr over three.\n- N50: top 10 > half; bottom 10 < 7%. EW: every ten ≈ 20%.\n- Market-cap weighting is a judgement — own it knowingly.\n- Audit portfolios by weight and overlap, not fund count."
+}

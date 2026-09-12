@@ -1,0 +1,28 @@
+{
+  "id": "it-detective",
+  "kind": "detective",
+  "title": "Who really sold IT?",
+  "conceptIds": ["market-cycles-2026"],
+  "intro": "Nifty IT fell 41.5% over eighteen months. 'Fund managers sold IT' says the headline. Open the evidence — the truth has a twist.",
+  "facts": [
+    { "label": "The fall", "value": "Nifty IT −41.5% from December 2024 to July 2026; nearly two-thirds of the drop came in 2026 alone.", "signal": 2 },
+    { "label": "The re-rating", "value": "The index traded at ~28× earnings in mid-January 2026 and under 17× by early July — while sector earnings ROSE over those months.", "signal": 3 },
+    { "label": "The growth reality", "value": "Big-five June-quarter revenue rose ~14% in rupees — but the rupee lost a tenth against the dollar. Constant-currency growth: Infosys 2.4%, HCL 2.6%, TCS 3.2%.", "signal": 2 },
+    { "label": "The average fund", "value": "Across 177 diversified equity funds, the average IT holding shrank by about 40% — the median manager cut with the tide.", "signal": 3 },
+    { "label": "The AUM-weighted line", "value": "Weight funds by size and the average IT weight sits ABOVE the median line all the way down.", "signal": 3 }
+  ],
+  "composition": [
+    { "label": "De-rating of future growth", "pct": 65, "revealAfter": 3, "color": "#b91c1c" },
+    { "label": "Earnings deterioration", "pct": 35, "revealAfter": 3, "color": "#0f766e" }
+  ],
+  "question": "What actually happened?",
+  "choices": [
+    "IT earnings collapsed, and every fund dumped the sector equally",
+    "A growth de-rating (28× → 17× while earnings rose) — the median fund cut ~40%, but the LARGEST funds held on more, so most of India's equity money stayed heavier in IT",
+    "Funds increased IT across the board to buy the dip",
+    "The fall was entirely a currency effect"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence assembled",
+  "debrief": "Two findings hide under one headline. First, the fall was a RE-RATING: the market cut what it pays per rupee of IT profit by ~40% while profits themselves rose — pricing the AI threat to billable-hours growth (constant-currency growth in low single digits is not what 28× was built on). Second, the selling wasn't uniform: the AUM-weighted line above the median means the biggest funds — holding most of India's equity money — kept more IT than the typical fund all the way down. Your own exposure therefore depends on which kind of fund you own, and the chart to consult is your fund's, not the category's."
+}

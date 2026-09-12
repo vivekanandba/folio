@@ -1,0 +1,93 @@
+{
+  "id": "first-crash-decision",
+  "kind": "decision",
+  "title": "The pause button",
+  "conceptIds": ["investor-lessons"],
+  "intro": "Your first real crash as a SIP investor. The reader who wrote the story hovered exactly here — steer, and watch the compounding meter.",
+  "meter": { "label": "Plan integrity", "min": 0, "max": 100, "start": 60 },
+  "startId": "fall",
+  "nodes": [
+    {
+      "id": "fall",
+      "text": "Markets are down sharply. Your SIP debits tomorrow. The portfolio number is red, friends are quoting scarier numbers, and the pause button is right there.",
+      "choices": [
+        {
+          "label": "Pause the SIP until things look clearer",
+          "next": "paused",
+          "effect": -25,
+          "note": "You just converted a plan into a series of timing calls."
+        },
+        {
+          "label": "Let it run — this is what the plan was built for",
+          "next": "runs",
+          "effect": 20,
+          "note": "Tomorrow's debit buys more units than any debit this year."
+        }
+      ]
+    },
+    {
+      "id": "paused",
+      "text": "Three months later the market has recovered half the fall — without you. 'Clearer' never announced itself. Re-entry now means buying higher than you paused.",
+      "choices": [
+        {
+          "label": "Restart the SIP and write down what the pause cost",
+          "next": "shock",
+          "effect": 15,
+          "note": "Re-entered, tuition paid, lesson recorded."
+        },
+        {
+          "label": "Wait for the retest of the bottom before restarting",
+          "next": "shock",
+          "effect": -15,
+          "note": "Now you're a market timer with no plan at all."
+        }
+      ]
+    },
+    {
+      "id": "runs",
+      "text": "The fall deepens another 8% before turning. Your cost basis kept dropping the whole way. At recovery, the units bought in the trough are the portfolio's best performers. Then life adds its own test:",
+      "choices": [
+        {
+          "label": "Continue — and step the SIP up with this year's raise",
+          "next": "shock",
+          "effect": 10,
+          "note": "The step-up habit compounds the discipline."
+        }
+      ]
+    },
+    {
+      "id": "shock",
+      "text": "A real emergency arrives — six figures, this month. Where does the money come from?",
+      "choices": [
+        {
+          "label": "The emergency fund you kept outside the long-term corpus",
+          "next": "end-good",
+          "effect": 15,
+          "note": "The SIP never even noticed the emergency."
+        },
+        {
+          "label": "Redeem long-term equity — it's all one pot anyway",
+          "next": "end-bad",
+          "effect": -20,
+          "note": "The emergency just taxed your compounding at the worst time."
+        }
+      ]
+    },
+    {
+      "id": "end-good",
+      "ending": {
+        "principle": "The SIP's job is to keep buying when you least want to; liquidity's job is to make sure nothing forces its hand.",
+        "debrief": "Both reader stories in one run: the almost-paused SIP that kept buying cheap units, and the liquidity pillar that absorbed the shock without touching the plan. Neither required prediction — only structure set up before the test arrived.",
+        "score": 1
+      }
+    },
+    {
+      "id": "end-bad",
+      "ending": {
+        "principle": "A plan raided in emergencies and paused in falls is not a plan — it's a mood with a folio number.",
+        "debrief": "The meter's arithmetic was consistent: every choice that made the plan contingent on feelings or events cost integrity. The fixes are structural, not motivational — pre-commitment for the SIP, a separate liquidity floor for the shocks.",
+        "score": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "cycles-explainer",
+  "kind": "explainer",
+  "title": "Reading the flat year",
+  "conceptIds": ["market-cycles-2026"],
+  "intro": "Seven months, zero net movement — and three stories underneath it worth understanding.",
+  "steps": [
+    {
+      "title": "The surface",
+      "body": "2026 so far: flexi-cap **+0.6%**, large-cap **−2.6%**, ELSS **−0.9%**. The average flexi-cap NAV is back exactly where January left it.\n\n'Nothing happened this year' — to the NAV. Plenty happened to the investor: SIPs accumulated, discipline got tested, and the numbers below finally told the truth."
+    },
+    {
+      "title": "The small-cap truth serum",
+      "body": "> [!warn] Small caps: **−13.2%** this year, **−7.8%** over one year — and a three-year return of **5.5% a year, less than a liquid fund** over the same period.\n\nThat last number is the one the rally hid. Anyone 'riding the rally' for three years earned money-market returns with small-cap volatility. The question isn't whether to ride the next one — it's what allocation you'd have wanted through this."
+    },
+    {
+      "title": "The patient counterpoint",
+      "body": "Parag Parikh Flexi Cap's cash: from a peak near **25%** down to **14–15%**, headed for single digits — a famously patient allocator deploying into weakness. The letter says it; **monthly portfolio disclosures will verify it**. Claims are checkable — check them."
+    },
+    {
+      "title": "The bubble frame",
+      "body": "On AI, the issue borrows Chollet: *'A bubble is not a property of the technology. It is a property of the people buying.'* A thing can be a bubble **even if the tech works and demand is real** — prices, not products, make bubbles.\n\nThe frame travels: it's the question to ask of every theme fund, PSU rally, and small-cap surge in this magazine's pages."
+    }
+  ],
+  "recap": "**Flat NAVs, busy truths.**\n\n- Flexi +0.6%, large −2.6%, ELSS −0.9% — a testing year, not a losing one.\n- Small caps' 3-year 5.5%/yr < liquid funds: volatility unpaid.\n- PPFAS deploying cash 25% → single digits — verifiable in disclosures.\n- Bubbles are made by buyers, not technologies."
+}

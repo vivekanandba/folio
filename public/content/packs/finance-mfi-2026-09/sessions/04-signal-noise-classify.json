@@ -1,0 +1,22 @@
+{
+  "id": "signal-noise-classify",
+  "kind": "classify",
+  "title": "Checkup signal, or screen noise?",
+  "conceptIds": ["portfolio-checkups"],
+  "intro": "Eight observations from a portfolio review — file each as one of the four real checks, or as noise.",
+  "buckets": [
+    { "id": "check", "label": "One of the yearly four", "hint": "Contribution, drift, overlap, tax", "tone": "cool" },
+    { "id": "noise", "label": "Green-and-red noise", "hint": "Fast feedback, no decision value", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "The SIP hasn't grown though income rose twice since it was set", "bucketId": "check" },
+    { "id": "c2", "text": "Equity has crept from the planned 60% to 74% after the rally", "bucketId": "check" },
+    { "id": "c3", "text": "Three of your five funds hold the same eight heavyweights", "bucketId": "check" },
+    { "id": "c4", "text": "Unrealized gains have crossed the annual tax-free harvesting limit", "bucketId": "check" },
+    { "id": "c5", "text": "The portfolio is down ₹18,400 since breakfast", "bucketId": "noise" },
+    { "id": "c6", "text": "A fund fell two places in this week's category rankings", "bucketId": "noise" },
+    { "id": "c7", "text": "Today's biggest loser in your folio is flashing red", "bucketId": "noise" },
+    { "id": "c8", "text": "A finfluencer says this month's NFO 'can't be missed'", "bucketId": "noise" }
+  ],
+  "debrief": "The four checks share two properties: they run on a yearly clock, and each one ends in a decision you can actually take (raise the SIP, rebalance, consolidate overlap, harvest gains). The noise bucket shares the opposite: it updates fast, feels urgent, and leads to no decision a plan would endorse. The daily P&L is the purest specimen — 'anxiety with a green-and-red interface.' If an observation can't change what you'd do on a yearly clock, it isn't a check."
+}

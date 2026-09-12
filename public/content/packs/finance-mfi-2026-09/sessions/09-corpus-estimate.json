@@ -1,0 +1,15 @@
+{
+  "id": "corpus-estimate",
+  "kind": "estimate",
+  "title": "Size the corpus",
+  "conceptIds": ["retirement-math"],
+  "intro": "The issue's rule of thumb: a retirement corpus of about 25× your annual spending. A household spends ₹54 lakh a year.",
+  "prompt": "Using the 25× rule, what corpus (₹ crore) does ₹54 lakh a year of spending call for?",
+  "unit": "₹ cr",
+  "min": 2,
+  "max": 40,
+  "step": 0.1,
+  "answer": 13.5,
+  "tolerance": 0.05,
+  "debrief": "25 × ₹54 lakh = ₹13.5 crore — an estimate, not a guarantee (aim higher for lifestyle growth or cushion). And September's sharper correction comes BEFORE this multiplication: subtract the promised-away money first. If a fifth of your headline corpus is committed — a loan running past retirement, a wedding, a parent's care — the multiple on what remains must rise (350× monthly becomes ~438×). Run the rule on the number that's actually yours."
+}
