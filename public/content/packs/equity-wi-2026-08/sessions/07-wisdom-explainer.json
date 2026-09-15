@@ -1,0 +1,26 @@
+{
+  "id": "wisdom-explainer",
+  "kind": "explainer",
+  "title": "The other half of the plan",
+  "conceptIds": ["investor-wisdom"],
+  "intro": "Decumulation, the look-once-a-year discipline, and the rupee question nobody spends an evening on.",
+  "steps": [
+    {
+      "title": "The accumulation obsession",
+      "body": "Indian personal finance has one great obsession: **accumulation**. The SIP is 'almost a civic virtue'; the journey from monthly savings to corpus is celebrated 'with near-religious enthusiasm.'\n\nThe gap: **very little attention to what happens after the corpus is built** — investors are taught to accumulate, not to live off it with confidence."
+    },
+    {
+      "title": "The Desi Retirement Plan",
+      "body": "Kaeley's corrective, distilled:\n\n- The central question: **'Will your money outlive you, or will you outlive your money?'**\n- Retirement is **a life stage, not a numerical milestone**.\n- Money must be split **by job** — different pools for different tasks; one pool can't do every job at once.\n- **Healthcare gets special attention** — in India, medical costs are the retirement wildcard."
+    },
+    {
+      "title": "Look once a year — field-tested",
+      "body": "Last month's column ('a fund portfolio, once assembled with care, is best left largely unwatched') drew a reader's proof: the argument travels beyond funds. The discipline is the same one the [fund side](#/pack/finance-mfi-2026-09/concept/portfolio-checkups) formalized as the yearly four checks — attention is a cost, not a virtue."
+    },
+    {
+      "title": "The rupee's working lifetime",
+      "body": "Early 1980s: **₹9 per dollar**. Today: **~₹96**. Over one working lifetime the rupee lost **more than 90%** of its dollar value — 'yet most Indian investors have never spent a single evening asking why.'\n\n> [!tip] The portfolio consequence: long-term rupee goals silently carry this leak. Some hard-currency-linked earning power — exporters, global funds — is the hedge hiding in plain sight."
+    }
+  ],
+  "recap": "**Accumulation is half a plan.**\n\n- Decumulation: money split by job; healthcare is the wildcard; life stage, not milestone.\n- Look once a year — the discipline transfers from funds to everything.\n- ₹9 → ₹96: a ~5.5%/yr leak most portfolios never price.\n- The question that organizes it all: will the money outlive you?"
+}

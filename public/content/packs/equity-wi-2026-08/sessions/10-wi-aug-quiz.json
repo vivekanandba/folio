@@ -1,0 +1,97 @@
+{
+  "id": "wi-aug-quiz",
+  "kind": "quiz",
+  "title": "August issue — check what stuck",
+  "conceptIds": ["growth-quality", "valuation-lenses", "monday-screens", "investor-wisdom"],
+  "intro": "Eight self-check questions from the August 2026 Wealth Insight.",
+  "questions": [
+    {
+      "prompt": "Arora's Nvidia-vs-Coca-Cola paradox is that…",
+      "choices": [
+        "Nvidia grows slower than Coke",
+        "Nvidia has the lower P/E and far faster growth — yet Coke outperformed this year, because kind, durability and priced-in matter more than rate",
+        "Coca-Cola is a technology company",
+        "P/E ratios are meaningless"
+      ],
+      "answerIndex": 1,
+      "explanation": "'This is not how markets work' — the multiple encodes a durability judgement. Hot, capital-attracting cycles get their growth re-priced; predictable compounding earns a premium."
+    },
+    {
+      "prompt": "HCG's ~400× P/E mostly reflects…",
+      "choices": [
+        "Fraudulent accounts",
+        "Depreciation from ~₹1,700 crore of expansion capex crushing EPS — EV/EBITDA reads the operations honestly, though the 12% ROCE is a real concern",
+        "A perfect business worth any price",
+        "A data error"
+      ],
+      "answerIndex": 1,
+      "explanation": "Match the multiple to the business: P/E breaks on capex-heavy expansion. But the lens-switch must not bury the honest weakness — capital that hasn't yet earned its keep."
+    },
+    {
+      "prompt": "Bank of Baroda at 0.9× book illustrates…",
+      "choices": [
+        "That cheap banks are always broken",
+        "'Poor form has a long afterlife' — the discount persists on remembered sins even as RoA exceeds 1% and RoE reaches mid-teens",
+        "That book value doesn't apply to banks",
+        "An accounting artifact"
+      ],
+      "answerIndex": 1,
+      "explanation": "Banks are read through book value + returns on it — and the afterlife of poor form is where that lens finds its bargains."
+    },
+    {
+      "prompt": "Castrol India's flat decade despite 40%+ return on capital teaches…",
+      "choices": [
+        "Quality guarantees returns",
+        "Quality without growth persists but doesn't compound — a matured market and the EV ceiling capped the future",
+        "Return on capital is irrelevant",
+        "Lubricants are a growth industry"
+      ],
+      "answerIndex": 1,
+      "explanation": "The compromise audit: remove growth and even an exceptional business just persists. (HDFC Bank teaches the valuation leg: a near-perfect record can't rescue the entry price.)"
+    },
+    {
+      "prompt": "A dividend's special information value is that…",
+      "choices": [
+        "It predicts the share price",
+        "Profits can be presented favorably, but sustained cash out the door cannot — dividends tell what income statements often don't",
+        "It's always a warning sign",
+        "It's tax-free"
+      ],
+      "answerIndex": 1,
+      "explanation": "The dividend-honesty framework — with its twin question: is this payout strength, or a business that has stopped reinvesting?"
+    },
+    {
+      "prompt": "The four-bottoms study found that from ordinary correction bottoms (2009/2012/2013/2016)…",
+      "choices": [
+        "Every stock became a multibagger",
+        "Roughly one listed company in ten cleared the outlier hurdle — while 2020's panic prices lifted it to about one in three",
+        "No companies cleared the bar",
+        "Only large caps won"
+      ],
+      "answerIndex": 1,
+      "explanation": "A steady 1-in-10 crop from ordinary corrections; the 2020 anomaly came from the entry discount — the bounce alone packed years of return into quarters. And the winners table stays survivorship-biased throughout."
+    },
+    {
+      "prompt": "The Desi Retirement Plan's central corrective is…",
+      "choices": [
+        "A universal corpus number for every retiree",
+        "India teaches accumulation, not decumulation — retirement is a life stage where money must be split by job, with healthcare the wildcard",
+        "That SIPs are unnecessary",
+        "That equity is unsafe after 60"
+      ],
+      "answerIndex": 1,
+      "explanation": "'Will your money outlive you, or will you outlive your money?' One pool of money cannot do every job at once."
+    },
+    {
+      "prompt": "₹9 per dollar (early 1980s) → ₹96 (today) implies…",
+      "choices": [
+        "About 15% depreciation a year",
+        "About 5.5% a year — a quiet lifetime leak most rupee-only portfolios never price",
+        "The rupee appreciated",
+        "Nothing — exchange rates don't affect investors"
+      ],
+      "answerIndex": 1,
+      "explanation": "(96/9)^(1/44) − 1 ≈ 5.5%/yr. The hedge hiding in plain sight: hard-currency-linked earning power inside the portfolio."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "survivorship-detective",
+  "kind": "detective",
+  "title": "The table of winners",
+  "conceptIds": ["investor-wisdom"],
+  "intro": "A multibagger table makes small-cap fortunes look routine. Before you believe it, open the study behind it.",
+  "facts": [
+    { "label": "The table", "value": "Rows of 100-baggers and 50-baggers, mostly small companies bought cheap at past market bottoms. The apparent ease is striking.", "signal": 2 },
+    { "label": "The missing rows", "value": "The table records the winners; the many small companies that simply failed are not in it.", "signal": 3 },
+    { "label": "The four-bottoms study", "value": "Hurdles for outlier status by 2026: 100× from 2009 (31%/yr), 50× from 2012–13 (32–35%/yr), 25× from 2016 (38%/yr), 10× from 2020 (47%/yr).", "signal": 2 },
+    { "label": "The base rates", "value": "From 2009, 2012, 2013 and 2016: roughly ONE IN TEN listed companies cleared the bar — a steady crop from ordinary corrections. From 2020: close to ONE IN THREE.", "signal": 3 },
+    { "label": "The 2020 anomaly", "value": "Shortest runway, steepest hurdle, highest hit rate — the difference was the distressed prices on offer at entry. The bounce alone packed years of return into quarters.", "signal": 3 }
+  ],
+  "composition": [
+    { "label": "Entry price did the work", "pct": 60, "revealAfter": 4, "color": "#0f766e" },
+    { "label": "Stock selection did the work", "pct": 40, "revealAfter": 4, "color": "#b91c1c" }
+  ],
+  "question": "What's the honest reading of the winners table?",
+  "choices": [
+    "Small caps reliably make fortunes — buy any basket and wait",
+    "Survivorship hides the failures, but bottoms genuinely mint outliers (~1 in 10; ~1 in 3 from 2020's panic prices) — the entry discount, not routine skill, did the heaviest lifting",
+    "Multibaggers are pure luck and the study means nothing",
+    "Only 2009 produced real winners"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence assembled",
+  "debrief": "Two truths at once. The table IS survivorship-biased — its ease is illusory because the failed companies aren't in it. AND the four-bottoms study finds something real: ordinary corrections leave a consistent ~1-in-10 crop of eventual outliers, while 2020's panic pricing lifted the rate to ~1-in-3 despite the steepest hurdle — because buying sound assets at distressed prices packs years of return into the bounce. The synthesis: corrections are the opportunity, base rates are the humility, and the table's job is neither — it's marketing. Pre-decide what you'd buy at the next bottom; expect one-in-ten, not every-row."
+}

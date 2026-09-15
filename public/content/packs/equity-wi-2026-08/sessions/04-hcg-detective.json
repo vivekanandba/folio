@@ -1,0 +1,28 @@
+{
+  "id": "hcg-detective",
+  "kind": "detective",
+  "title": "The easy no at 400×",
+  "conceptIds": ["valuation-lenses"],
+  "intro": "A hospital chain screens at 400 times earnings. Your screen says skip it. Open the books before you agree.",
+  "facts": [
+    { "label": "The multiple", "value": "~400× trailing earnings — among the most expensive-looking stocks in the market.", "signal": 2 },
+    { "label": "The other multiple", "value": "EV/EBITDA is unremarkable for a hospital chain — operating cash generation looks nothing like the P/E suggests.", "signal": 3 },
+    { "label": "The capex decade", "value": "Nearly ₹1,700 crore deployed: beds added, LINACs bought, new cities entered, Milann acquired. Depreciation from all of it flows through the P&L now; the earnings from it arrive later.", "signal": 3 },
+    { "label": "The honest weakness", "value": "Five-year median ROCE: 12% — the deployed capital has not yet earned respectable returns.", "signal": 3 },
+    { "label": "The business", "value": "India's largest cancer-focused hospital chain — structurally growing demand, long asset lives.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Accounting artifact (depreciation)", "pct": 60, "revealAfter": 3, "color": "#0f766e" },
+    { "label": "Genuine capital-efficiency concern", "pct": 40, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What does the 400× actually mean?",
+  "choices": [
+    "The market has gone mad — no business is worth 400× earnings",
+    "P/E is the wrong lens here: heavy capex depresses EPS via depreciation while EBITDA is ordinary — but the 12% ROCE is a real concern the EV/EBITDA lens must not excuse",
+    "It's a bargain — high P/E always means high quality",
+    "The auditors have overstated earnings"
+  ],
+  "answerIndex": 1,
+  "meterLabel": "Evidence assembled",
+  "debrief": "The 400× is mostly an accounting artifact: a decade of expansion capex generates depreciation today and earnings tomorrow, so EPS is crushed exactly when the asset base is newest. EV/EBITDA reads the operations honestly. But the composition chart's second slice is the discipline: 12% median ROCE means the capital hasn't earned its keep yet — the EBITDA lens must carry that question, not bury it. The transferable rule: an absurd multiple is a prompt to find the accounting cause AND the genuine weakness — screens raise questions; only the case work answers them."
+}

@@ -1,0 +1,28 @@
+{
+  "id": "equity-wi-2026-08",
+  "title": "Wealth Insight — Aug 2026",
+  "subject": "equity",
+  "category": "Finance",
+  "type": "magazine",
+  "source": "Personal study notes paraphrased from Value Research Wealth Insight, August 2026 (subscription copy). Not affiliated with Value Research; not investment advice.",
+  "summary": "Arora's Nvidia-vs-Coca-Cola growth lesson, valuation lenses that outsmart the obvious multiple (the 400× P/E detective), five Monday-morning frameworks with the QGV compromise audit, and the survivorship truth behind multibagger tables.",
+  "tags": ["equity", "stocks", "valuation", "screening", "growth", "value-research"],
+  "concepts": [
+    "growth-quality",
+    "valuation-lenses",
+    "monday-screens",
+    "investor-wisdom"
+  ],
+  "sessions": [
+    "01-growth-kind-explainer.json",
+    "02-growth-kind-classify.json",
+    "03-valuation-lenses-explainer.json",
+    "04-hcg-detective.json",
+    "05-screens-explainer.json",
+    "06-compromise-classify.json",
+    "07-wisdom-explainer.json",
+    "08-survivorship-detective.json",
+    "09-rupee-estimate.json",
+    "10-wi-aug-quiz.json"
+  ]
+}

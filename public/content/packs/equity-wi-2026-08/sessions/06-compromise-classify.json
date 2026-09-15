@@ -1,0 +1,23 @@
+{
+  "id": "compromise-classify",
+  "kind": "classify",
+  "title": "Which leg is missing?",
+  "conceptIds": ["monday-screens"],
+  "intro": "Every portfolio compromise has a signature. Diagnose which of the three legs each situation gave up.",
+  "buckets": [
+    { "id": "growth", "label": "Growth missing", "hint": "Quality persists but doesn't compound", "tone": "warm" },
+    { "id": "valuation", "label": "Valuation missing", "hint": "Great record, price already assumed it", "tone": "cool" },
+    { "id": "quality", "label": "Quality missing", "hint": "Cheap and fast, fragile underneath", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "ROC above 40%, beloved brand — and a flat decade as the market matured", "bucketId": "growth" },
+    { "id": "c2", "text": "Exceptional margins in a category that stopped expanding", "bucketId": "growth" },
+    { "id": "c3", "text": "A dominant lubricant maker with EVs slowly capping its future", "bucketId": "growth" },
+    { "id": "c4", "text": "RoE above 15% every year since 2006 — bought at a price that assumed it continues forever", "bucketId": "valuation" },
+    { "id": "c5", "text": "The obviously wonderful franchise everyone already owns at 60× earnings", "bucketId": "valuation" },
+    { "id": "c6", "text": "Revenue doubling yearly, funded by debt, in a business with no pricing power", "bucketId": "quality" },
+    { "id": "c7", "text": "A 5× P/E turnaround whose margins have never survived a downcycle", "bucketId": "quality" },
+    { "id": "c8", "text": "The hot smallcap growing 50% with promoter pledging climbing alongside", "bucketId": "quality" }
+  ],
+  "debrief": "Each compromise has a distinct failure mode: growth-missing holdings (Castrol, Colgate) persist respectably and never compound — you lose to time; valuation-missing holdings (the HDFC Bank lesson) deliver the business performance you expected and still disappoint — you lose to the entry price; quality-missing holdings win the backtest and lose the drawdown — you lose to fragility, usually all at once. The audit's point: everyone claims to want all three, and most give one up without noticing. Find yours."
+}

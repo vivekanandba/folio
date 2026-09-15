@@ -1,0 +1,22 @@
+{
+  "id": "growth-kind-classify",
+  "kind": "classify",
+  "title": "Durable, or borrowed from the cycle?",
+  "conceptIds": ["growth-quality"],
+  "intro": "Eight growth descriptions — sort each by whether the growth is durable franchise compounding or hot-cycle growth the market will re-price.",
+  "buckets": [
+    { "id": "durable", "label": "Durable compounding", "hint": "Predictable, franchise-driven, arrives on schedule", "tone": "cool" },
+    { "id": "cycle", "label": "Hot-cycle growth", "hint": "Real but capital-attracting, rate mean-reverts", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "6–7% a year, every year, from a brand people buy without thinking", "bucketId": "durable" },
+    { "id": "c2", "text": "Volume growth from distribution reaching towns competitors ignore", "bucketId": "durable" },
+    { "id": "c3", "text": "Pricing power that quietly beats inflation each year", "bucketId": "durable" },
+    { "id": "c4", "text": "A decade of double-digit profit growth with RoE above 15% every year", "bucketId": "durable" },
+    { "id": "c5", "text": "60–70% earnings growth at the center of a global capex boom", "bucketId": "cycle" },
+    { "id": "c6", "text": "Margins at all-time highs while three funded rivals build capacity", "bucketId": "cycle" },
+    { "id": "c7", "text": "Revenue doubling because the industry's customers are all upgrading at once", "bucketId": "cycle" },
+    { "id": "c8", "text": "A commodity producer's record year at peak prices", "bucketId": "cycle" }
+  ],
+  "debrief": "The durable bucket shares one property: the growth's CAUSE persists — brands, distribution, pricing power, franchise returns — so next year resembles this year. The hot-cycle bucket's growth is real but its cause is a phase: a capex boom, a simultaneous upgrade wave, peak prices, capacity racing in. Markets price the difference — which is why the fast one can carry the lower multiple and still be the worse buy. The question is never 'how fast?' but 'what happens to the cause?'"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "rupee-estimate",
+  "kind": "estimate",
+  "title": "The rupee's working lifetime",
+  "conceptIds": ["investor-wisdom"],
+  "intro": "Early 1980s: one dollar bought about ₹9. Today it costs roughly ₹96 — over 90% of the rupee's dollar value gone in one working lifetime (~44 years).",
+  "prompt": "What annualized rate of depreciation (% per year) does ₹9 → ₹96 over ~44 years imply?",
+  "unit": "%/yr",
+  "min": 0,
+  "max": 15,
+  "step": 0.1,
+  "answer": 5.5,
+  "tolerance": 0.1,
+  "debrief": "(96/9)^(1/44) − 1 ≈ 5.5% a year — quiet, relentless, and almost never discussed: 'most Indian investors have never spent a single evening asking why.' The lesson isn't panic; it's pricing: every long-horizon rupee goal silently carries this leak against globally-priced costs (education abroad, healthcare technology, travel). Hard-currency-linked earning power — exporters in the portfolio, global funds — is the hedge hiding in plain sight, and 5.5%/yr compounding is exactly the kind of number folio's other machines keep showing our intuition underestimates."
+}
