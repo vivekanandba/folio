@@ -7,4 +7,4 @@
 - [x] 3. Sessions 01–10
 - [x] 4. Registration
 - [x] 5. Gates offline
-- [ ] 6. Ship via /ship (PR links specs/009-wi-aug-pack/)
+- [x] 6. Ship via /ship (PR links specs/009-wi-aug-pack/)
