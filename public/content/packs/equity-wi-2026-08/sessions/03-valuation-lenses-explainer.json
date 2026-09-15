@@ -1,0 +1,26 @@
+{
+  "id": "valuation-lenses-explainer",
+  "kind": "explainer",
+  "title": "Match the multiple to the business",
+  "conceptIds": ["valuation-lenses"],
+  "intro": "Three case studies where the obvious number misleads — and the lens that reads each one honestly.",
+  "steps": [
+    {
+      "title": "The 400× that isn't (only) a joke",
+      "body": "Healthcare Global, India's largest cancer-hospital chain, screens at **~400× earnings** — an easy no. But a decade of **~₹1,700 crore in capex** (beds, LINACs, new cities, the Milann acquisition) loads depreciation onto the P&L, crushing EPS years before the capacity earns. **EV/EBITDA tells a different story.**\n\nThe honest caveat the article keeps: five-year median **ROCE is 12%** — the capital deployed hasn't earned its keep *yet*. Both lenses matter."
+    },
+    {
+      "title": "The bank at 0.9× book",
+      "body": "Bank of Baroda trades at **0.9× book value** — a discount to state-run peers — 'like a batsman whose poor form has a long afterlife.' The remembered sins are real (a painful exposure cleanup over a decade), but the current form is respectable: **RoA above 1%**, **RoE in the mid-teens** (FY26).\n\nBanks are valued on **book + returns on it** — and the afterlife of poor form is where that lens finds its bargains."
+    },
+    {
+      "title": "Demand that queues",
+      "body": "The heat-exchanger coil maker behind the Daikin and Blue Star showrooms: its new plant 'does not need to find its market — much of it was already queuing' (customers had approved samples awaiting supply). Capacity with **pre-sold demand** is a different risk class from capacity chasing a forecast.\n\nAnd the NSE IPO (₹30,000 crore, a decade after the 2016 filing froze in scandal) shows a fourth lens: sometimes the valuation question is **governance history**, not multiples."
+    },
+    {
+      "title": "The rule",
+      "body": "> [!key] Every multiple is a shortcut over assumptions. **P/E** breaks on depreciation-heavy expansion and turnarounds; **EV/EBITDA** sees through depreciation but forgives capital burning — pair it with **ROCE**; **P/B + RoE/RoA** is the banking lens.\n\nThe screen raises the question. The case study answers it."
+    }
+  ],
+  "recap": "**Pick the lens that matches the business model.**\n\n- Capex-heavy: EV/EBITDA + ROCE together (HCG: better than 400× suggests, worse than EBITDA alone flatters).\n- Banks: price-to-book + returns; bargains hide in form's afterlife.\n- Pre-sold capacity ≠ speculative capacity.\n- Optically absurd multiple → find the accounting cause first."
+}

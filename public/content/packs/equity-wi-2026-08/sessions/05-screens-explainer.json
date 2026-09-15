@@ -1,0 +1,27 @@
+{
+  "id": "screens-explainer",
+  "kind": "explainer",
+  "title": "Five situations, five frameworks",
+  "conceptIds": ["monday-screens"],
+  "intro": "Not five stock lists for five personalities — five ways of thinking for the situations every investor actually meets.",
+  "steps": [
+    {
+      "title": "Against the personality quiz",
+      "body": "'Are you a growth chaser or a safety seeker?' sounds useful and quietly misses the point. Good investing isn't a label that fits your temperament — it's **a handful of ways of thinking that work in nearly any market, any year, for any investor.**\n\nBehind all five: thirty years of scoring every listed company on **Quality, Growth, Valuation and Momentum**, each out of 10."
+    },
+    {
+      "title": "The five",
+      "body": "1. **The fallen stock** — a bad year is not a permanent verdict; the screen hunts compounders that kept growing through past slowdowns.\n2. **Earned momentum** — momentum is real; the framework separates momentum earned by results from momentum running on sentiment.\n3. **Dividend honesty** — profits can be presented favorably (revenue timing, depreciation choices); sustained cash out the door cannot.\n4. **The QGV alignment** — the rare business where all three show up at once.\n5. **The compromise audit** — most investors give one up without noticing (next step)."
+    },
+    {
+      "title": "What each compromise costs",
+      "body": "The audit, by counter-example:",
+      "viz": { "type": "annotated", "title": "Remove one leg", "prompt": "Tap each case.", "points": [ { "label": "− Growth", "value": 3, "note": "Castrol India: ROC above 40%, dominant brand, every quality box ticked — and a flat decade. The market matured; EVs capped the future. Quality without growth persists; it doesn't compound. (Colgate rhymes.)" }, { "label": "− Valuation", "value": 4, "note": "HDFC Bank: RoE >15% every year since 2006 (one exception), double-digit growth throughout — the honest answer that a near-perfect record can't rescue an entry price that already assumed it." }, { "label": "− Quality", "value": 3, "note": "Growth + cheapness without quality is the turnaround lottery — the winners table remembers the few that worked." } ] }
+    },
+    {
+      "title": "Using them Monday",
+      "body": "Each framework ends in a checkable question: did earnings grow through the last two corrections? Is the rally out-running results? Is the payout covered by cash, not adjustments? What am I paying for the record?\n\n> [!tip] Diagnose the **situation** in front of you, not your temperament — the situation picks the framework."
+    }
+  ],
+  "recap": "**Frameworks for situations, not labels for people.**\n\n- Fallen compounders, earned momentum, dividend honesty, QGV alignment.\n- Castrol: quality alone persists, doesn't compound. HDFC Bank: quality+growth can't rescue the price.\n- Every framework ends in a checkable question.\n- The situation picks the tool."
+}

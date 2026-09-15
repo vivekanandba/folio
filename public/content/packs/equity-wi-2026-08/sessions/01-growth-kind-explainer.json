@@ -1,0 +1,27 @@
+{
+  "id": "growth-kind-explainer",
+  "kind": "explainer",
+  "title": "Nvidia vs Coca-Cola",
+  "conceptIds": ["growth-quality"],
+  "intro": "Arora's paradox: the faster grower at the lower multiple lost the year. Why that's not a market error.",
+  "steps": [
+    {
+      "title": "The paradox",
+      "body": "Nvidia: earnings growing **60–70%**, at a **lower P/E than Coca-Cola**. Coke: growing **6–7%**.\n\n'Ideally, that should not happen' — a much faster grower at a cheaper multiple should be the obvious buy. And yet **Coca-Cola outperformed Nvidia this year**. Arora's blunt line: *this is not how markets work.*"
+    },
+    {
+      "title": "The three questions",
+      "body": "Headline growth rates answer none of the questions that matter:\n\n1. **What kind** of growth is it — franchise expansion, cyclical windfall, capex surge?\n2. **How durable** is it — does the sector attract capital and competition that mean-revert the rate?\n3. **How much is already priced in** — a multiple is a forecast, not a discount coupon."
+    },
+    {
+      "title": "The two profiles",
+      "body": "Coke's growth is slower but **steadier and easier to predict** — predictability itself earns a premium. Nvidia's growth is real but sits inside a **hot, competitive, capital-attracting cycle** — the market keeps re-pricing its durability.",
+      "viz": { "type": "annotated", "title": "What the multiple encodes", "prompt": "Tap each.", "points": [ { "label": "Rate", "value": 2, "note": "The headline number — the least informative of the three." }, { "label": "Durability", "value": 4, "note": "The market's real question: will year three look like year one? Hot cycles say maybe not — hence the 'cheap' multiple." }, { "label": "Predictability", "value": 3, "note": "Coke's 6–7% arrives on schedule. Scheduled growth compounds plans as well as capital." } ] }
+    },
+    {
+      "title": "Reading the anomaly",
+      "body": "> [!warn] A screen flagging 'high growth + low P/E' as a bargain often collects businesses whose growth the market has correctly diagnosed as perishable. **The anomaly is the message** — investigate it, don't pocket it."
+    }
+  ],
+  "recap": "**Growth has a kind, a durability, and a price already paid.**\n\n- Faster + cheaper lost to slower + steadier this year — by design, not error.\n- The multiple encodes the market's durability judgement.\n- Predictable growth earns its premium.\n- Treat too-cheap fast growers as questions, not gifts."
+}
