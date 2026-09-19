@@ -1,0 +1,26 @@
+{
+  "id": "discontinuity-classify",
+  "kind": "classify",
+  "title": "Gap, hole, or corner?",
+  "conceptIds": ["continuity-differentiability"],
+  "intro": "Sort each case by what it fails at the marked point. Note that the last bucket is still continuous — it just isn't smooth.",
+  "buckets": [
+    { "id": "jump", "label": "Jump discontinuity", "hint": "LHL ≠ RHL — no limit exists", "tone": "warm" },
+    { "id": "removable", "label": "Removable discontinuity", "hint": "Limit exists but isn't f(c)", "tone": "cool" },
+    { "id": "corner", "label": "Continuous, not differentiable", "hint": "No gap, but LHD ≠ RHD", "tone": "neutral" },
+    { "id": "smooth", "label": "Continuous and differentiable", "hint": "Both agree — genuinely smooth", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "A piecewise function equal to x + 1 below 2 and x + 5 from 2 onward, at x = 2", "bucketId": "jump" },
+    { "id": "c2", "text": "Pressure across a normal shockwave, as a function of position", "bucketId": "jump" },
+    { "id": "c3", "text": "An ideal switch modelled as a Heaviside step, at the switching instant", "bucketId": "jump" },
+    { "id": "c4", "text": "(x² - 4)/(x - 2) at x = 2", "bucketId": "removable" },
+    { "id": "c5", "text": "A sampled signal with one dropped frame, where both neighbours agree on the value", "bucketId": "removable" },
+    { "id": "c6", "text": "|x| at x = 0", "bucketId": "corner" },
+    { "id": "c7", "text": "ReLU, max(0, x), at x = 0", "bucketId": "corner" },
+    { "id": "c8", "text": "A triangular wave at its peak", "bucketId": "corner" },
+    { "id": "c9", "text": "x² at x = 0", "bucketId": "smooth" },
+    { "id": "c10", "text": "V(t) = V₀(1 - e^(-t/RC)), the parasitic-RC-smoothed version of that ideal switch", "bucketId": "smooth" }
+  ],
+  "debrief": "The switch appears twice on purpose. As an **ideal** step it is a jump — infinite slew rate, physically impossible, and the limit simply does not exist. Add the parasitic RC that reality supplies and it becomes `V₀(1 - e^(-t/RC))`: continuous, differentiable, and finally something you can compute setup times and propagation delays from. Modelling choices decide which bucket you are in.\n\nThe corner bucket is the one that matters most, because every card in it is **continuous** — nothing is broken, nothing is missing, and the function still fails to have a derivative. |x| has LHD = -1 and RHD = +1; its derivative sign(x) jumps even though |x| itself doesn't. That is why ReLU needs a subgradient at the origin and why a triangular wave's derivative is a square wave full of slowly-decaying harmonics.\n\nAnd the removable cases are the only ones you can *repair*: the limit already knows the right answer, so defining f(2) = 4 closes the hole. A dropped frame whose neighbours agree is the same situation with a different vocabulary — interpolation is just filling in the limit."
+}

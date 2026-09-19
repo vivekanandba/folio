@@ -1,0 +1,45 @@
+{
+  "id": "matrices-explainer",
+  "kind": "explainer",
+  "title": "A matrix is an operator",
+  "conceptIds": ["matrices"],
+  "intro": "Four steps from 'rectangular array' to 'this tells me whether the structure is being damaged'.",
+  "steps": [
+    {
+      "title": "Structure is a physical claim",
+      "body": "Identity ⊂ Scalar ⊂ Diagonal ⊂ Square — the classes **nest**, and each level says something different. A checker that only asks 'are the off-diagonals zero?' calls all three *diagonal* and learns nothing. Report the **most specific** class instead: diagonal means each axis scales independently, scalar means uniform gain `kI`, identity means untouched.",
+      "viz": {
+        "type": "annotated",
+        "title": "What each level means",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Diagonal", "value": 2, "note": "An inertia tensor becomes diagonal exactly when you rotate to the principal axes: pure roll torque then gives pure roll acceleration, with no cross-coupling into pitch and yaw." },
+          { "label": "Scalar", "value": 3, "note": "kI — every channel scaled identically. A balanced attenuator; geometric similarity with no distortion." },
+          { "label": "Identity", "value": 4, "note": "k = 1. The zero-distortion baseline a vertex pipeline resets to before stacking model, view and projection." }
+        ]
+      }
+    },
+    {
+      "title": "Multiplication composes maps",
+      "body": "`AB` is defined **iff** A is m×n and B is n×p. The inner dimension isn't bookkeeping — it says B's output space must *be* A's input space, or the composition is meaningless. Worth making the error message say which: 'cannot multiply (3,2) by (3,4): columns of A (2) must equal rows of B (3)' tells you the composition is backwards."
+    },
+    {
+      "title": "Order is physics",
+      "body": "AB ≠ BA in general. Rotate a square 45° then scale by diag(2, 0.5) and it lands somewhere different from scaling first. In attitude kinematics that is the statement that **yaw-then-pitch is not pitch-then-yaw** — sequential rotations compound as `R_total = R_y(φ)·R_x(θ)`, and swapping them points the aircraft elsewhere. Every real cascade is repeated multiplication: two-port ABCD networks, the model→view→projection stack."
+    },
+    {
+      "title": "The split that separates damage from motion",
+      "body": "Every square A decomposes **uniquely** into `½(A + Aᵀ)` (symmetric, call it P) plus `½(A - Aᵀ)` (skew, Q). Q's diagonal is forced to zero, since `aᵢᵢ = -aᵢᵢ`. For a displacement-gradient tensor the halves mean entirely different things: **P is strain** — real stretch, compression and shear — while **Q is rigid-body rotation**, no deformation at all. A structure can show a large gradient and be under no strain: it turned.",
+      "viz": {
+        "type": "annotated",
+        "title": "Reading the two halves",
+        "prompt": "Tap each half.",
+        "points": [
+          { "label": "P — symmetric", "value": 3, "note": "Mirror across the diagonal. Mechanics: actual strain. Networks: reciprocal, passive R/L/C behaviour." },
+          { "label": "Q — skew", "value": 1, "note": "Anti-mirror, zero diagonal. Mechanics: rotation, costs nothing. Networks: non-reciprocal parts — circulators, gyrators, active devices. And in kinematics, [ω]ₓ v = ω × v: the skew matrix IS the cross-product operator." }
+        ]
+      }
+    }
+  ],
+  "recap": "Classify structure to the most specific level, because the level is the physical claim. Check inner dimensions before composing, and read compositions right to left. And when a gradient tensor looks alarming, decompose before panicking — the skew half is rotation, and only the symmetric half can break anything."
+}

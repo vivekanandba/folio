@@ -1,0 +1,24 @@
+{
+  "id": "system-classify",
+  "kind": "classify",
+  "title": "Unique, infinite, or none",
+  "conceptIds": ["determinants"],
+  "intro": "For AX = B, the determinant opens the question and (adj A)·B closes it. Sort each situation by its consistency verdict.",
+  "buckets": [
+    { "id": "unique", "label": "Unique solution", "hint": "det A ≠ 0 — lines intersect at a point", "tone": "warm" },
+    { "id": "infinite", "label": "Infinitely many", "hint": "det A = 0 and (adj A)·B = 0 — same line twice", "tone": "cool" },
+    { "id": "none", "label": "No solution", "hint": "det A = 0 and (adj A)·B ≠ 0 — parallel lines", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "det A = -14, B = [3, 1, 4]ᵀ", "bucketId": "unique" },
+    { "id": "c2", "text": "A nodal-analysis admittance matrix with a proper ground reference and independent loops", "bucketId": "unique" },
+    { "id": "c3", "text": "An attitude matrix with det = +1, solving for a body-frame vector", "bucketId": "unique" },
+    { "id": "c4", "text": "x + y = 3 and 2x + 2y = 7", "bucketId": "none" },
+    { "id": "c5", "text": "det A = 0, and (adj A)·B comes out non-zero", "bucketId": "none" },
+    { "id": "c6", "text": "A sensor-fusion system given two measurements that contradict each other after calibration drift", "bucketId": "none" },
+    { "id": "c7", "text": "x + y = 3 and 2x + 2y = 6", "bucketId": "infinite" },
+    { "id": "c8", "text": "det A = 0, and (adj A)·B is the zero vector", "bucketId": "infinite" },
+    { "id": "c9", "text": "A floating network: every node equation is expressible from the others, and the sources are consistent with that dependence", "bucketId": "infinite" }
+  ],
+  "debrief": "The pair x + y = 3 with 2x + 2y = 7, against x + y = 3 with 2x + 2y = 6, is the whole lesson in four lines. **Both have det A = 0** — identical coefficient matrices — so the determinant cannot tell them apart. What separates them is the right-hand side: doubling the first equation demands 6, so 7 is a contradiction (parallel lines, no solution) and 6 is a restatement (one line, infinitely many). That is exactly what the `(adj A)·B` test detects. Why it matters in practice: a singular system is **not** automatically unsolvable. 'Infinitely many' means your model is underdetermined — add a constraint, pick a reference node, fix a gauge, and you get an answer. 'No solution' means your inputs disagree, and no amount of extra structure fixes it; something upstream is wrong, like the drifted sensor. Those two call for opposite responses, and the determinant alone would have you treat them the same."
+}

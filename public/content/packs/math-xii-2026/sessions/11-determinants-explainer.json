@@ -1,0 +1,37 @@
+{
+  "id": "determinants-explainer",
+  "kind": "explainer",
+  "title": "One number, four meanings",
+  "conceptIds": ["determinants"],
+  "intro": "The determinant is usually taught as a computation. It is better understood as a verdict.",
+  "steps": [
+    {
+      "title": "The verdict: does an answer exist?",
+      "body": "A square matrix is invertible **iff** det A ≠ 0, and then A⁻¹ is unique. That single test is the boundary between a circuit with one node-voltage solution and a floating network with none; between a mechanism that moves and one that has locked. Compute the determinant *before* reaching for an inverse — if it is zero, the question changes from 'what is X' to 'which regime am I in'."
+    },
+    {
+      "title": "The geometry: area, volume, orientation",
+      "body": "|det| is the factor by which the map scales area (or volume): the unit square becomes a parallelogram of that area. The **sign** is orientation. A valid rotation has det = +1; det = -1 is a reflection — a physically impossible attitude for a rigid body, and in graphics a silent reversal of vertex winding that breaks backface culling.",
+      "viz": {
+        "type": "annotated",
+        "title": "Reading det off a transformation",
+        "prompt": "Tap each regime.",
+        "points": [
+          { "label": "det > 1", "value": 4, "note": "Expands. The unit square maps to something larger." },
+          { "label": "0 < det < 1", "value": 3, "note": "Shrinks, but stays invertible — compressed, not destroyed." },
+          { "label": "det < 0", "value": 2, "note": "Orientation flips. Rotation vs reflection is decided here, and it is why det(R) = +1 is a validity check on any attitude matrix." },
+          { "label": "det = 0", "value": 1, "note": "Collapse to a lower dimension. Area vanishes, the inverse does not exist, and some row was always a combination of the others." }
+        ]
+      }
+    },
+    {
+      "title": "The properties worth carrying",
+      "body": "`det(Aᵀ) = det(A)` · `det(AB) = det(A)·det(B)` · `det(kA) = kⁿ·det(A)` for n×n · and **any identical or proportional pair of rows, or a zero row, forces det = 0**. That last one is the practical detector: a vanishing determinant is almost never a coincidence — it means a redundant equation, a floating node, or a degenerate geometry.\n\nOne shortcut worth more than the formula: a rotation matrix is orthogonal, so `R⁻¹ = Rᵀ`. Flight software inverts attitude by transposing — no determinant, no adjoint, no division."
+    },
+    {
+      "title": "Adjoint → inverse → solution",
+      "body": "Every cofactor `Aᵢⱼ = (-1)^(i+j)·Mᵢⱼ` → assemble the cofactor matrix → **transpose it** (that is the adjoint) → divide by |A|. The transpose is the step people drop, and without it the identity `A·adj A = |A|·I` simply fails.\n\nFor `AX = B`, the determinant alone doesn't finish the story. det A = 0 splits further on the `(adj A)·B` test: non-zero means **no solution** (parallel lines); zero means **infinitely many, or none** (dependent equations, identical lines)."
+    }
+  ],
+  "recap": "det A ≠ 0 decides whether a unique answer exists; |det A| scales area and its sign carries orientation; a zero determinant means a row was redundant all along. And when the determinant does vanish, the (adj A)·B test separates 'inconsistent' from 'underdetermined' — two very different problems that look identical from the determinant alone."
+}

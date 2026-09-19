@@ -113,6 +113,19 @@ test('claude-code blueprint: disciplined session wins, shortcut wires fail', () 
 
 /* Pure graph helpers */
 
+test('recoverable-chain blueprint: the injective chain wins, both many-to-one traps fail', () => {
+  const s = loadRules('math-xii-2026/sessions/19-recoverable-chain-blueprint.json')
+  const nodes = [N(1, 'angle'), N(2, 'resolver'), N(3, 'restrict'), N(4, 'adc'), N(5, 'solver')]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'θ → resolver → restriction → digitiser → solver wins')
+
+  // periodicity trap: an unrestricted resolver reading reaching the log is many-to-one
+  assert.ok(passCount(s, nodes, [...chain, [2, 4]]) < s.rules.length, 'resolver→adc shortcut is rejected')
+
+  // saturation trap: a clamp anywhere on the board destroys injectivity for good
+  assert.ok(passCount(s, [...nodes, N(6, 'clamp')], chain) < s.rules.length, 'placing the saturating stage fails inspection')
+})
+
 test('shortestHops + connectivityAvailability behave analytically', () => {
   const nodes = [N(1, 'a'), N(2, 'm'), N(3, 'm'), N(4, 'b')]
   const parallel: Edge[] = [[1, 2], [2, 4], [1, 3], [3, 4]]

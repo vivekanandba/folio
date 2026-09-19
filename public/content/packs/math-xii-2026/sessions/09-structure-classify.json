@@ -1,0 +1,26 @@
+{
+  "id": "structure-classify",
+  "kind": "classify",
+  "title": "Name the most specific class",
+  "conceptIds": ["matrices"],
+  "intro": "Identity ⊂ Scalar ⊂ Diagonal ⊂ Square. Every card below is square — sort each into the tightest class that fits, not the loosest.",
+  "buckets": [
+    { "id": "identity", "label": "Identity", "hint": "kI with k = 1 — passes through untouched", "tone": "warm" },
+    { "id": "scalar", "label": "Scalar (not identity)", "hint": "kI with k ≠ 1 — uniform gain", "tone": "cool" },
+    { "id": "diagonal", "label": "Diagonal (not scalar)", "hint": "Per-axis scaling, entries differ", "tone": "neutral" },
+    { "id": "general", "label": "Square, not diagonal", "hint": "Non-zero off-diagonals — axes couple", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "diag(3.5, -1.2, 6.0)", "bucketId": "diagonal" },
+    { "id": "c2", "text": "An inertia tensor after rotating the body to its principal axes", "bucketId": "diagonal" },
+    { "id": "c3", "text": "A MIMO channel matrix with perfect antenna isolation and unequal path losses", "bucketId": "diagonal" },
+    { "id": "c4", "text": "diag(0.5, 0.5, 0.5)", "bucketId": "scalar" },
+    { "id": "c5", "text": "A balanced four-channel attenuator dropping every channel by the same 3 dB", "bucketId": "scalar" },
+    { "id": "c6", "text": "The transform a vertex pipeline resets to before stacking model, view and projection", "bucketId": "identity" },
+    { "id": "c7", "text": "The matrix B for which AB = BA = A holds for every square A of that order", "bucketId": "identity" },
+    { "id": "c8", "text": "[[1, 2], [3, 4]]", "bucketId": "general" },
+    { "id": "c9", "text": "An inertia tensor with non-zero products of inertia Iₓᵧ and I_yz", "bucketId": "general" },
+    { "id": "c10", "text": "A rotation matrix for 45° about the z-axis", "bucketId": "general" }
+  ],
+  "debrief": "Every card is diagonal-or-better in some loose sense only if you stop reading early — which is the habit this session is built to break. The three levels carry three different physical claims: **diagonal** means the axes are decoupled (a principal-axis inertia tensor is the whole reason pure roll torque produces pure roll acceleration); **scalar** means every axis gets the *same* treatment (a balanced attenuator, geometric similarity); **identity** means nothing happened at all. The two 'square, not diagonal' cards are the instructive ones. A tensor with non-zero products of inertia is a body whose axes fight each other — roll input bleeds into yaw — and the engineering move is to rotate until those terms vanish. And the 45° rotation is the reminder that *structure is not the same as niceness*: a rotation matrix is orthogonal, beautifully behaved, trivially invertible by transpose — and thoroughly non-diagonal, because rotating is exactly the act of mixing axes."
+}

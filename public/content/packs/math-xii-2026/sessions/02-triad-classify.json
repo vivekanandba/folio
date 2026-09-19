@@ -1,0 +1,25 @@
+{
+  "id": "triad-classify",
+  "kind": "classify",
+  "title": "Which leg of the triad breaks?",
+  "conceptIds": ["relations-functions"],
+  "intro": "Sort each relation by the leg it most clearly breaks — the one you would name in a review.",
+  "buckets": [
+    { "id": "reflexive", "label": "Reflexivity fails", "hint": "Something doesn't relate to itself", "tone": "warm" },
+    { "id": "symmetric", "label": "Symmetry fails", "hint": "The relation points one way", "tone": "cool" },
+    { "id": "transitive", "label": "Transitivity fails", "hint": "Two hops exist; the direct link doesn't", "tone": "neutral" },
+    { "id": "valid", "label": "Valid equivalence", "hint": "All three hold — it partitions", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "'Shares a 0-ohm pathway with', from probe data where pin 1~pin 4 and pin 4~pin 9 were measured but pin 1~pin 9 never was", "bucketId": "transitive" },
+    { "id": "c2", "text": "'Is bolted directly to' across an airframe: brackets touching a common rib are each related to the rib, but not to each other", "bucketId": "transitive" },
+    { "id": "c3", "text": "'Can reach within one network hop' on a routed topology", "bucketId": "transitive" },
+    { "id": "c4", "text": "'Sends telemetry to' between a sensor and its logger", "bucketId": "symmetric" },
+    { "id": "c5", "text": "'Is a strict upstream dependency of' in a build graph", "bucketId": "symmetric" },
+    { "id": "c6", "text": "'Differs from by less than 1 mm' — no part is listed as differing from itself at all", "bucketId": "reflexive" },
+    { "id": "c7", "text": "'Is in the same 10.0.1.0/24 broadcast domain as', over a set of addresses", "bucketId": "valid" },
+    { "id": "c8", "text": "'Belongs to the same rigid structural sub-assembly as': wing box, fuselage, empennage", "bucketId": "valid" },
+    { "id": "c9", "text": "'Has the same remainder mod 8 as', over scan codes", "bucketId": "valid" }
+  ],
+  "debrief": "The valid cases share a shape: each is built from a **partition** already — subnets, sub-assemblies, residue classes — so the triad holds by construction, and the adjacency matrix reorders into clean diagonal blocks. The failures are more interesting. Transitivity breaks whenever the relation is about *direct* contact or *one-hop* reach: touching a common rib doesn't bolt two brackets together, and one hop plus one hop is two hops. Symmetry breaks whenever the relation encodes direction — 'sends to', 'depends on' — which is most of the interesting relations in software. Reflexivity is the strange one, and worth being precise about: a relation that is symmetric and transitive is **automatically reflexive on the elements it actually touches** (aRb gives bRa, and the two together give aRa). So a genuine reflexivity-only failure can't really be constructed — it shows up as a data artifact, like the tolerance case where nobody recorded the trivially-true self-pairs. That's a completeness bug in the extraction, not a claim about the world. Two honest caveats the sorting can't show: several of these break more than one leg (directed relations like 'sends telemetry to' usually fail transitivity as well), and 'differs by less than 1 mm' is the classic non-transitive relation in its own right — near-enough twice is not near-enough. Check all three legs, not the one you suspect; that's how a broken partition ships."
+}

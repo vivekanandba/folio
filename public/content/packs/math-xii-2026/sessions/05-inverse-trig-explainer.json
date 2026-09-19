@@ -1,0 +1,41 @@
+{
+  "id": "inverse-trig-explainer",
+  "kind": "explainer",
+  "title": "Cutting a function down until it can be inverted",
+  "conceptIds": ["inverse-trigonometry"],
+  "intro": "Sine has no inverse. Three steps to what sin⁻¹ actually is, and the two places the branches bite.",
+  "steps": [
+    {
+      "title": "Periodicity kills injectivity",
+      "body": "sin(0) = sin(π) = sin(2π) = 0. Infinitely many inputs, one output — so sine is not injective, not a bijection, and has **no inverse** in the honest sense. The fix is not cleverness, it is amputation: restrict the domain to one strictly monotonic interval where the function *is* a bijection, and invert that instead. The output interval of the result is its **principal value branch**."
+    },
+    {
+      "title": "Three branches, each cut for a reason",
+      "body": "`sin⁻¹: [-1, 1] → [-π/2, π/2]` · `cos⁻¹: [-1, 1] → [0, π]` · `tan⁻¹: ℝ → (-π/2, π/2)`. Cosine cannot share sine's window — it rises then falls there, so it isn't injective on it; `[0, π]` is its nearest monotonic (decreasing) window. Tangent's branch is **open**, because tan blows up at the endpoints; the trade is that its domain is all of ℝ.",
+      "viz": {
+        "type": "annotated",
+        "title": "Why each window",
+        "prompt": "Tap each branch.",
+        "points": [
+          { "label": "sin⁻¹ → [-π/2, π/2]", "value": 3, "note": "Sine climbs monotonically across it and covers [-1, 1] exactly once. Shift the window and you lose either injectivity or coverage." },
+          { "label": "cos⁻¹ → [0, π]", "value": 2, "note": "Decreasing, not increasing. Cosine on [-π/2, π/2] rises then falls — not injective — so cos⁻¹ cannot live there." },
+          { "label": "tan⁻¹ → (-π/2, π/2)", "value": 4, "note": "Open interval: the asymptotes are excluded. In exchange, every real number has an arctangent." }
+        ]
+      }
+    },
+    {
+      "title": "Where the branch bites, twice",
+      "body": "**Quadrant blindness.** `θ = tan⁻¹(y/x)` forms the ratio before the inverse, so (10, 10) and (-10, -10) both return 45° — a target 180° away, with no error raised. `atan2(y, x)` reads the two signs separately and recovers the full (-π, π].\n\n**The sum identity is piecewise.** `tan⁻¹x + tan⁻¹y = tan⁻¹((x+y)/(1-xy))` holds only for xy < 1. Beyond it you add π (both positive) or subtract π (both negative), and at xy = 1 the denominator vanishes — the RF resonance condition, a hard ±π/2.",
+      "viz": {
+        "type": "annotated",
+        "title": "Two bites",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Quadrant blindness", "value": 1, "note": "The division y/x throws away both signs before tan⁻¹ ever runs. The output is a plausible angle that happens to be 180° wrong." },
+          { "label": "The branch jump", "value": 2, "note": "The right-hand side always lands inside (-π/2, π/2), but the true sum need not — so the identity picks up ±π depending on the regime." }
+        ]
+      }
+    }
+  ],
+  "recap": "An inverse trig function is the inverse of a deliberately restricted parent, and its principal branch is not a convention to memorise — it is the record of which restriction was made. Both classic failures follow from that: quadrant blindness, because a ratio discards the signs the branch cannot recover; and the piecewise sum identity, because the identity's output is trapped in a branch the true answer may have left."
+}

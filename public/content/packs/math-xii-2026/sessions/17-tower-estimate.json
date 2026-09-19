@@ -1,0 +1,15 @@
+{
+  "id": "tower-estimate",
+  "kind": "estimate",
+  "title": "Where xˣ bottoms out",
+  "conceptIds": ["continuity-differentiability"],
+  "intro": "The curve y = xˣ (for x > 0) falls, turns, and then climbs very steeply. Neither the power rule nor the exponential rule applies to it — the variable is in both the base and the exponent.",
+  "prompt": "At what value of x does xˣ reach its minimum?",
+  "unit": "x",
+  "min": 0,
+  "max": 2,
+  "step": 0.01,
+  "answer": 0.368,
+  "tolerance": 0.05,
+  "debrief": "Logarithmic differentiation is the only route: `ln y = x·ln x`, differentiate implicitly to get `(1/y)·y′ = ln x + 1`, multiply back by y, and `dy/dx = xˣ(ln x + 1)`.\n\nSetting that to zero is where the structure pays off. xˣ is **never zero** for x > 0, so the bracket must vanish: ln x = -1, giving **x = 1/e ≈ 0.368**, where y = e^(-1/e) ≈ 0.692. A curve that looks like it should bottom out at x = 1 (where y = 1) actually turns well before it, and no amount of eyeballing the graph gets you 1/e.\n\nThe same machinery is the **log-derivative** engineers use as fractional sensitivity, `S = ∂(ln Y)/∂(ln X)`. For Y = X³ it returns a clean dimensionless 3: a 1% change in X produces a 3% change in Y. Same operation, different name, and it's why taking logs before differentiating is worth reaching for whenever a quantity is built from products and powers."
+}
