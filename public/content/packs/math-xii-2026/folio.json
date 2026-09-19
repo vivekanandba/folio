@@ -1,0 +1,39 @@
+{
+  "id": "math-xii-2026",
+  "title": "Class XII Maths — the Engineering Lens",
+  "subject": "mathematics",
+  "category": "Mathematics",
+  "type": "course",
+  "source": "Personal study notes from my own Class XII Mathematics revision project (CBSE chapters 1–5, Days 1–15), where each theorem was verified in NumPy/SymPy and mapped onto aerospace, electronics and computing systems.",
+  "summary": "Five chapters read as engineering structure: the equivalence triad and the leg that fails quietly, domain restriction as the price of an inverse, matrices as operators whose order is physics, the determinant as a verdict on whether an answer exists, and the corner that separates continuity from smoothness.",
+  "tags": ["mathematics", "cbse", "class-xii", "linear-algebra", "calculus", "engineering-maths"],
+  "concepts": [
+    "relations-functions",
+    "inverse-trigonometry",
+    "matrices",
+    "determinants",
+    "continuity-differentiability"
+  ],
+  "sessions": [
+    "01-relations-explainer.json",
+    "02-triad-classify.json",
+    "03-mapping-classify.json",
+    "04-invertibility-detective.json",
+    "05-inverse-trig-explainer.json",
+    "06-radar-detective.json",
+    "07-arctan-sum-estimate.json",
+    "08-matrices-explainer.json",
+    "09-structure-classify.json",
+    "10-strain-detective.json",
+    "11-determinants-explainer.json",
+    "12-adjoint-sequence.json",
+    "13-system-classify.json",
+    "14-triangle-estimate.json",
+    "15-continuity-explainer.json",
+    "16-discontinuity-classify.json",
+    "17-tower-estimate.json",
+    "18-parametric-detective.json",
+    "19-recoverable-chain-blueprint.json",
+    "20-math-xii-quiz.json"
+  ]
+}

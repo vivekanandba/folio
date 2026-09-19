@@ -1,0 +1,17 @@
+{
+  "id": "adjoint-sequence",
+  "kind": "sequence",
+  "title": "From A to X, by hand",
+  "conceptIds": ["determinants"],
+  "intro": "The mechanical route from a coefficient matrix to the solution of AX = B.",
+  "prompt": "Drag into order — the first step at the top.",
+  "steps": [
+    { "id": "det", "text": "Compute |A| — and stop here if it is zero, because the route below does not exist" },
+    { "id": "minors", "text": "Delete row i and column j to get each minor Mᵢⱼ" },
+    { "id": "cofactors", "text": "Sign each minor: Aᵢⱼ = (-1)^(i+j)·Mᵢⱼ, assembling the cofactor matrix" },
+    { "id": "transpose", "text": "Transpose the cofactor matrix — this, and only this, is adj A" },
+    { "id": "inverse", "text": "Divide by the determinant: A⁻¹ = adj A / |A|" },
+    { "id": "solve", "text": "Multiply through: X = A⁻¹B" }
+  ],
+  "debrief": "Two steps in this chain are where the marks and the hours go. **The determinant comes first, not last** — it is a gate, not a divisor you reach for at the end. If |A| = 0 the whole route is invalid, and the question becomes a consistency question rather than an inversion one. **The transpose is not decoration**: adj A is the transpose of the cofactor matrix, and skipping it breaks the fundamental identity `A·adj A = |A|·I` that makes the division legitimate in the first place. Worth knowing when *not* to walk this path: for an orthogonal matrix (any rotation), A⁻¹ = Aᵀ directly — six steps collapse to one. And numerically, solving AX = B by elimination is both faster and better-conditioned than forming A⁻¹ and multiplying. The adjoint route earns its place because it is exact, symbolic, and shows you *where* the singularity is — solve |A(k)| = 0 for a design parameter k and you have found the value at which the system loses its unique solution."
+}

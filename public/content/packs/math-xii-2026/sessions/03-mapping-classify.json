@@ -1,0 +1,23 @@
+{
+  "id": "mapping-classify",
+  "kind": "classify",
+  "title": "Injective, surjective, or clean?",
+  "conceptIds": ["relations-functions"],
+  "intro": "Every system below maps inputs to outputs. Diagnose which algebraic property it loses — and note that the two failures cost you different things.",
+  "buckets": [
+    { "id": "injective", "label": "Injectivity lost", "hint": "Two inputs collide — information destroyed", "tone": "warm" },
+    { "id": "surjective", "label": "Surjectivity lost", "hint": "An output nothing reaches — capacity wasted", "tone": "cool" },
+    { "id": "bijective", "label": "Bijective", "hint": "One-to-one and onto: invertible", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "A keypad encoder where Key_A and Key_B both drive register 0x01", "bucketId": "injective" },
+    { "id": "c2", "text": "A hydraulic ram clipping at ±10°: every stick angle past 5° gives the same deflection", "bucketId": "injective" },
+    { "id": "c3", "text": "A 12-bit quantiser fed a signal with 16 bits of real resolution", "bucketId": "injective" },
+    { "id": "c4", "text": "An API gateway routing /users, /orders and /cart to three distinct services — while PaymentSvc has no route at all", "bucketId": "surjective" },
+    { "id": "c5", "text": "An enum with a case the parser can never emit", "bucketId": "surjective" },
+    { "id": "c6", "text": "A fly-by-wire linkage: three column positions, three distinct actuator extensions, full range swept", "bucketId": "bijective" },
+    { "id": "c7", "text": "Serialize then encrypt: each payload becomes its own packet, and the receiver recovers every one exactly", "bucketId": "bijective" },
+    { "id": "c8", "text": "A lookup table pairing every scan code with exactly one command, and every command with exactly one code", "bucketId": "bijective" }
+  ],
+  "debrief": "The cost structures are genuinely different, which is why the two failures are worth telling apart. **Injectivity failure destroys information**: after two keys collide on 0x01, no downstream stage can tell which was pressed — the quantiser and the saturating ram are the same crime with better press. **Surjectivity failure wastes capacity**: PaymentSvc is deployed, running and billed, and unreachable. It costs money, not correctness, and it usually survives review because nothing fails. Note also what makes the bijective cases bijective: each pairs a domain and a codomain of the same size with nothing left over — which is exactly the condition for an inverse to exist, and the reason a serialize-then-encrypt chain round-trips while an anti-aliasing filter does not."
+}

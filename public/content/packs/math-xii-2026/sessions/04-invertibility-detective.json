@@ -1,0 +1,26 @@
+{
+  "id": "invertibility-detective",
+  "kind": "detective",
+  "title": "The telemetry that couldn't be reconstructed",
+  "conceptIds": ["relations-functions"],
+  "intro": "Post-flight analysis can rebuild the pilot's stick inputs from recorded elevator deflection — except for one band of the envelope, where the reconstruction returns nonsense. Open the clues.",
+  "facts": [
+    { "label": "The symptom", "value": "Below 5° of stick, reconstructed input matches the pilot's recorded commands to within 0.01°. Above 5°, the reconstruction returns a different angle on every run — sometimes 6°, sometimes 9°, from identical recorded data.", "signal": 3 },
+    { "label": "The recorded channel", "value": "Elevator deflection δ, logged at 200 Hz, 16-bit, no dropouts. Every sample in the bad band reads exactly 10.00°.", "signal": 3 },
+    { "label": "The chain", "value": "Stick angle θ → linkage f(θ) = 2θ → hydraulic ram g(x) = clip(x, ±10°) → deflection δ. The ram's mechanical stop is at 10°.", "signal": 3 },
+    { "label": "The sensors", "value": "Calibration certificates current. The deflection sensor was bench-tested at 10.00° and reads 10.00°. No drift, no noise floor issue.", "signal": 1 },
+    { "label": "The solver", "value": "Reconstruction inverts the linkage as θ = δ/2 and is exact in the linear band. It was rewritten twice, in two languages, with identical results.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Injectivity lost at the ram", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The deflection sensor saturates and under-reports above 10°",
+    "Nothing is broken — past 5° of stick the ram is against its stop, so every larger angle produces exactly 10°; the map is no longer injective and the original input is unrecoverable in principle",
+    "The reconstruction solver has a numerical instability that needs a better root-finder",
+    "The 200 Hz log rate aliases the high-rate stick inputs"
+  ],
+  "answerIndex": 1,
+  "debrief": "This is the one failure no amount of engineering downstream can fix, because nothing is broken. The composite g(f(θ)) = clip(2θ, ±10) is a perfectly good function; it simply stops being **injective** at θ = 5°. Past the stop, the preimage of 10° is not a value but a set — every angle from 5° upward maps there. The information about which one occurred was never encoded in δ, so no solver, no root-finder and no second language can recover it. Rewriting the solver twice was the tell: identical results from independent implementations means the input, not the code. Notice how the plausible answers fail: a saturating *sensor* would be a calibration defect (and the bench test rules it out), and aliasing would corrupt the linear band too. The horizontal-line test names it exactly — the line δ = 10° meets the curve infinitely often. The design fix is upstream and structural: keep the recorded path strictly monotonic, or log stick angle directly so the invertible quantity is the one you store."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "triangle-estimate",
+  "kind": "estimate",
+  "title": "Area from a determinant",
+  "conceptIds": ["determinants"],
+  "intro": "An FEA mesh patch has vertices at P₁(1.5, 2.0), P₂(4.0, 7.0) and P₃(6.5, 3.5). Its area scales the aerodynamic force vector applied to that patch, so it needs to be exact — not eyeballed off the mesh.",
+  "prompt": "What is the area of the triangle, in square units?",
+  "unit": "sq units",
+  "min": 0,
+  "max": 40,
+  "step": 0.1,
+  "answer": 10.6,
+  "tolerance": 0.05,
+  "debrief": "Δ = ½·|det [[x₁, y₁, 1], [x₂, y₂, 1], [x₃, y₃, 1]]|. Expanding: 1.5(7 - 3.5) + 4.0(3.5 - 2) + 6.5(2 - 7) = 5.25 + 6.0 - 32.5 = **-21.25**, so the area is 21.25/2 = **10.625 square units**.\n\nThe minus sign is the part worth keeping. Take the absolute value and you get area; keep the sign and you get **winding order** — which vertex ordering the triangle was given in, and therefore which way the face points. A GPU's barycentric test uses exactly this signed value to decide whether a pixel lies inside the triangle and whether the face is front or back; discarding the sign is how backface culling silently inverts.\n\nAnd the degenerate case is a feature, not an error. If the determinant comes out **zero**, the three points are collinear and no triangle is bounded — in trajectory work, three telemetry points going collinear is an intercept path, which is why this determinant is worth computing even when you don't need the area."
+}

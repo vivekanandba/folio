@@ -1,0 +1,27 @@
+{
+  "id": "parametric-detective",
+  "kind": "detective",
+  "title": "The curvature that pointed the wrong way",
+  "conceptIds": ["continuity-differentiability"],
+  "intro": "A camera-motion planner follows a circular arc. The new curvature term reports the path bending outward where it visibly bends inward, and the smoothing controller fights the path. Open the clues.",
+  "facts": [
+    { "label": "The path", "value": "Parametrised as x = a·cos t, y = a·sin t — a plain circle of radius a, traversed at constant parameter rate.", "signal": 2 },
+    { "label": "The reported value", "value": "At t = π/4 with a = 1, the curvature term comes out as +1.00.", "signal": 3 },
+    { "label": "The expected value", "value": "Differentiating dy/dx = -cot t with respect to x gives d²y/dx² = -(1/a)·csc³t, which at t = π/4 is -2.83.", "signal": 3 },
+    { "label": "The implementation", "value": "The code computes second derivatives of x and y with respect to t, then divides one by the other: (d²y/dt²)/(d²x/dt²).", "signal": 3 },
+    { "label": "The first derivative", "value": "dy/dx is computed as (dy/dt)/(dx/dt) and is correct everywhere — verified against finite differences.", "signal": 2 },
+    { "label": "The parametrisation rate", "value": "Constant. The acceleration vector works out to exactly -r(t): centripetal, pointing at the centre, as a circle requires.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Missing dt/dx chain factor", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "Numerical noise in the second-derivative computation",
+    "The parametrisation is singular at t = π/4 and needs reparametrising",
+    "d²y/dx² was computed as (d²y/dt²)/(d²x/dt²) — but dy/dx is a function of t, so differentiating it with respect to x must chain again and divide by dx/dt, not by d²x/dt²",
+    "The radius a was passed in wrongly, scaling the result"
+  ],
+  "answerIndex": 2,
+  "debrief": "The correct form is `d²y/dx² = [d/dt(dy/dx)] / (dx/dt)`. The implemented form drops the dt/dx scaling factor entirely, and on this circle it collapses to (-a sin t)/(-a cos t) = **tan t** — which at t = π/4 is +1.00, against the true -2.83. Wrong in magnitude, and wrong in **sign**: the reported curvature says the path bends away from the centre when it plainly bends toward it, which is why the smoothing controller fights the path rather than following it.\n\nWhat makes this one worth studying is how well it hides. The first derivative is correct — `(dy/dt)/(dx/dt)` genuinely *is* dy/dx, so the obvious pattern-match suggests the second derivative follows the same shape, and it does not. It only fails on the second order, and only obviously when the sign flips; a less symmetric curve would have given a merely-wrong number instead of a visibly-wrong direction, and it would have shipped. The two low-signal clues are the exonerating ones: a constant parametrisation rate with a = -r rules out both the singularity story and the radius story, leaving the formula itself. Sanity-check parametric second derivatives against a case whose physics you know — on a circle, the acceleration must point at the centre."
+}

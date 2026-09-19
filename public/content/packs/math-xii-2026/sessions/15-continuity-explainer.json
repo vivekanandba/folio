@@ -1,0 +1,45 @@
+{
+  "id": "continuity-explainer",
+  "kind": "explainer",
+  "title": "No gaps is easy; no corners is hard",
+  "conceptIds": ["continuity-differentiability"],
+  "intro": "Continuity and differentiability sound like degrees of the same thing. They are not, and the gap between them has a cost.",
+  "steps": [
+    {
+      "title": "Three conditions, not one",
+      "body": "f is continuous at c iff **f(c) is defined**, **the limit exists** (left-hand limit = right-hand limit), and **they are equal**. Drop the second and you have a jump; drop the third and you have a hole. Only one of those is repairable.",
+      "viz": {
+        "type": "annotated",
+        "title": "The failure taxonomy",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Jump", "value": 1, "note": "LHL ≠ RHL — no limit exists at all, so no redefinition can fix it. A shockwave: pressure and density change near-instantaneously across it." },
+          { "label": "Removable", "value": 2, "note": "The limit exists but the function doesn't meet it. (x² - 4)/(x - 2) has limit 4 at x = 2 and no value there — define f(2) = 4 and the hole is gone." },
+          { "label": "Continuous", "value": 3, "note": "All three conditions hold. You could trace the curve through the point without lifting the pen." }
+        ]
+      }
+    },
+    {
+      "title": "Continuity is not enough",
+      "body": "Differentiability asks the difference quotient to agree from both sides: LHD = RHD, finite. **|x| at 0 is continuous** — one unbroken curve, no gap anywhere — and yet LHD = -1 while RHD = +1. Its derivative, sign(x), jumps across zero. The corner is the obstruction, and no amount of continuity removes it. Differentiable ⇒ continuous; the converse is false, and this is the counter-example that proves it."
+    },
+    {
+      "title": "What corners cost",
+      "body": "A sharp corner in a trajectory is an instantaneous velocity change — infinite acceleration, and by F = ma, infinite thruster force. Not uncomfortable: **unachievable**. Real paths are C² splines for exactly this reason. A triangular wave is continuous and non-differentiable at its peaks, and differentiating it through `L·di/dt` produces step jumps and slowly-decaying harmonics — EMI with a mathematical cause. ReLU is a corner at the origin, so backpropagation uses a **subgradient**: the derivative at 0 is simply assigned, 0 or 0.5, by convention. The network trains anyway — but the honest description is 'we picked a number', not 'we differentiated'."
+    },
+    {
+      "title": "Two derivative traps",
+      "body": "**Towers.** When the variable sits in both base and exponent, `y = f(x)^g(x)`, neither the power rule nor the exponential rule applies. Take logs: `ln y = g·ln f`, differentiate implicitly, multiply back by y. For y = xˣ that gives `xˣ(ln x + 1)`, which is zero only where ln x = -1 — a minimum at x = 1/e.\n\n**Parametric second derivatives.** `dy/dx = (dy/dt)/(dx/dt)` is fine. But dy/dx is a function of t, so differentiating it with respect to x chains **again**: divide by dx/dt, never by d²x/dt².",
+      "viz": {
+        "type": "annotated",
+        "title": "The two traps",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Tower", "value": 2, "note": "xⁿ needs a constant exponent; aˣ needs a constant base. x^x has neither, so logarithmic differentiation is not a shortcut — it is the only route." },
+          { "label": "Parametric d²y/dx²", "value": 1, "note": "The tempting (d²y/dt²)/(d²x/dt²) drops the dt/dx scaling entirely. On the circle it gives tan t where the truth is -(1/a)csc³t — at t = π/4, +1.00 against -2.83. Wrong in magnitude and wrong in sign." }
+        ]
+      }
+    }
+  ],
+  "recap": "Continuity needs all three conditions, and its two failures differ: a jump is unrepairable, a hole is one redefinition away. Differentiability is strictly stronger — corners break it while continuity survives, and corners are where infinite forces and EMI harmonics come from. For towers, take logs. For parametric second derivatives, divide by dx/dt and sanity-check the sign against physics."
+}

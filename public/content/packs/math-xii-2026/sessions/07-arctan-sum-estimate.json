@@ -1,0 +1,15 @@
+{
+  "id": "arctan-sum-estimate",
+  "kind": "estimate",
+  "title": "The sum that leaves its branch",
+  "conceptIds": ["inverse-trigonometry"],
+  "intro": "Two cascaded stages contribute phases of tan⁻¹(1) = 45° and tan⁻¹(2) ≈ 63.43°. Here xy = 2, which is greater than 1 — so the bare sum formula is outside its valid regime.",
+  "prompt": "What is tan⁻¹(1) + tan⁻¹(2), in degrees?",
+  "unit": "°",
+  "min": -90,
+  "max": 180,
+  "step": 0.1,
+  "answer": 108.4,
+  "tolerance": 0.05,
+  "debrief": "45° + 63.43° = **108.43°** — which you can see without any identity at all, and that is exactly the point. Now run the formula: (x+y)/(1-xy) = 3/(1-2) = -3, and tan⁻¹(-3) ≈ **-71.57°**. The bare identity is off by precisely 180°, because its output is trapped in the principal branch (-90°, 90°) while the true sum has left it. The correction is the regime rule: xy > 1 with both x and y positive means **add π**, and -71.57° + 180° = 108.43°. ✓\n\nThe trap here is not arithmetic, it is trusting an identity outside its stated domain — a symbolic engine asked to simplify the difference between the two sides will refuse to return zero, and it is right to refuse. Engineering stakes sit at the boundary itself: xy = 1 makes the denominator vanish, giving a hard ±90° whose sign follows x + y. In a cascaded RF design that is the resonance condition, and the reason `atan2` — which bakes the whole case analysis into one call — is the only safe way to add phases in code."
+}

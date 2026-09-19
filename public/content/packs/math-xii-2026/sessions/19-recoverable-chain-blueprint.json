@@ -1,0 +1,26 @@
+{
+  "id": "recoverable-chain-blueprint",
+  "kind": "blueprint",
+  "title": "Wire a recoverable measurement chain",
+  "conceptIds": ["relations-functions", "inverse-trigonometry"],
+  "intro": "Build a telemetry chain whose recorded output can be inverted back to the original angle. Two wirings are forbidden — and they are the two ways invertibility dies.",
+  "briefing": "A control surface angle θ is read by a periodic resolver, digitised, and logged; a solver must later reconstruct θ from the log. The inspector rejects any chain where the resolver reaches the digitiser without passing through a domain restriction (a periodic reading is many-to-one — the angle is unrecoverable), and rejects any chain containing a saturating amplifier at all (past its stop, every larger input maps to one output, and nothing downstream can undo that).",
+  "parts": [
+    { "id": "angle", "label": "Control surface angle θ", "fixed": true },
+    { "id": "resolver", "label": "Periodic resolver (repeats every 2π)", "max": 1 },
+    { "id": "restrict", "label": "Domain restriction (one monotonic branch)", "max": 1 },
+    { "id": "adc", "label": "Digitiser → telemetry log", "max": 1 },
+    { "id": "solver", "label": "Inverse solver (reconstructs θ)", "max": 1 },
+    { "id": "clamp", "label": "Saturating amplifier (clips at its stop)", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "angle", "b": "resolver", "label": "The angle is read by the resolver" },
+    { "rule": "connected", "a": "resolver", "b": "restrict", "label": "A periodic reading is invertible only on one restricted branch" },
+    { "rule": "connected", "a": "restrict", "b": "adc", "label": "The branch-restricted signal is what gets digitised" },
+    { "rule": "connected", "a": "adc", "b": "solver", "label": "The solver works from the telemetry log" },
+    { "rule": "noDirect", "a": "resolver", "b": "adc", "label": "No unrestricted periodic reading: many-to-one, so θ is unrecoverable" },
+    { "rule": "maxCount", "part": "clamp", "count": 0, "label": "No saturating stage anywhere: saturation destroys injectivity for good" },
+    { "rule": "pathExists", "from": "angle", "to": "solver", "label": "θ can actually be reconstructed" }
+  ],
+  "debrief": "The winning chain is θ → resolver → restriction → digitiser → solver, and both forbidden wirings are the same theorem wearing different clothes: **a composite is invertible only if every stage stays injective**.\n\nWiring the resolver straight to the digitiser is the periodicity failure from Chapter 2. A resolver reading 30° cannot be distinguished from 390° or 750°, so the log contains a value with infinitely many preimages. The domain restriction is not a filter or a clean-up step — it is what *creates* the bijection, exactly as restricting sine to [-π/2, π/2] is what makes sin⁻¹ exist at all.\n\nPlacing the saturating amplifier anywhere is the failure from Chapter 1's hydraulic ram. Past its stop, every larger input produces the same output; the preimage stops being a value and becomes a set. Note that the rule bans it from the board entirely rather than just from the solver's wire — because saturation upstream is equally fatal, and 'it isn't directly connected to the solver' is precisely the reasoning that puts unrecoverable data in a flight recorder.\n\nThe general move: before building a chain you intend to invert, name every stage that could go many-to-one — saturation, quantisation, modular wraparound, ratios that discard signs — and either keep it out of the recorded path or restrict its domain until it is one-to-one."
+}

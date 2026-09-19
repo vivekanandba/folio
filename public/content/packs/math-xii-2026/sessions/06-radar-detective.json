@@ -1,0 +1,27 @@
+{
+  "id": "radar-detective",
+  "kind": "detective",
+  "title": "The targets that shared an angle",
+  "conceptIds": ["inverse-trigonometry"],
+  "intro": "Two drones, two very different positions, one bearing on the display. The fire-control solution points at empty sky. Open the clues.",
+  "facts": [
+    { "label": "The display", "value": "Both tracks read a bearing of 45.0°. Operators assumed a merge and a duplicate track.", "signal": 2 },
+    { "label": "The telemetry", "value": "Track A is at (x, y) = (10, 10) km. Track B is at (-10, -10) km. The two are 28 km apart, on opposite sides of the station.", "signal": 3 },
+    { "label": "The computation", "value": "Bearing is computed as θ = tan⁻¹(y/x), evaluated in double precision.", "signal": 3 },
+    { "label": "The ratio", "value": "y/x = 1.0 for both tracks. The value handed to tan⁻¹ is identical.", "signal": 3 },
+    { "label": "The library", "value": "The arctangent implementation is the platform's standard one, accurate to the last bit on its documented range of (-π/2, π/2).", "signal": 1 },
+    { "label": "The tests", "value": "Unit tests cover bearings from 0° to 89°, all first-quadrant. Every one passes.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Quadrant information destroyed by the ratio", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "Floating-point precision loss in the division y/x",
+    "The arctangent library is inaccurate outside the first quadrant",
+    "Forming the ratio y/x discarded both signs before tan⁻¹ ran — and tan⁻¹'s principal branch (-π/2, π/2) cannot represent a third-quadrant bearing at all, so the answer is 180° wrong with no error raised",
+    "The two tracks genuinely merged and the radar is correct"
+  ],
+  "answerIndex": 2,
+  "debrief": "The damage is done one step before the function everyone suspects. (10, 10) and (-10, -10) have the same ratio, so tan⁻¹ receives a single number and answers it perfectly — it is asked the wrong question, not answered badly. And even if the signs survived, the principal branch **(-π/2, π/2)** has no room for a 225° bearing: half the plane is unrepresentable by construction. The two innocent-looking clues are the ones that explain how this reached the field — a bit-accurate library (accurate on a range that excludes the answer) and a test suite entirely inside the first quadrant, where the bug cannot appear. The fix is `atan2(y, x)`: it takes x and y separately, inspects both signs, and returns the full (-π, π]. That is not a numerical refinement — it restores the injectivity the division threw away. Rule of thumb worth carrying: whenever a ratio is formed *before* an inverse trig call, look for a lost sign."
+}

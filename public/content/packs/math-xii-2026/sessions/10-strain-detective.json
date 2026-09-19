@@ -1,0 +1,27 @@
+{
+  "id": "strain-detective",
+  "kind": "detective",
+  "title": "The wing that wasn't deforming",
+  "conceptIds": ["matrices"],
+  "intro": "A structural monitoring rig reports a large displacement-gradient tensor on a wing section during a turn, and the dashboard flags it as strain approaching limits. The strain gauges disagree. Open the clues.",
+  "facts": [
+    { "label": "The alert", "value": "The monitoring system computes the displacement-gradient tensor from optical markers and reports a magnitude well above the strain threshold. It fires every time the aircraft banks.", "signal": 2 },
+    { "label": "The gauges", "value": "Bonded strain gauges on the same section read near zero throughout the manoeuvre. Two independent gauge sets agree with each other.", "signal": 3 },
+    { "label": "The tensor", "value": "Symmetric part P = ½(A + Aᵀ) is essentially zero. Skew part Q = ½(A - Aᵀ) carries almost the entire magnitude, with a clean zero diagonal.", "signal": 3 },
+    { "label": "The manoeuvre", "value": "The alert magnitude tracks bank rate, not aerodynamic load. In steady level flight at high load factor, the alert is silent.", "signal": 3 },
+    { "label": "The markers", "value": "Optical marker tracking calibrated this month; residuals within tolerance. The markers are tracked in the ground frame, not the body frame.", "signal": 2 },
+    { "label": "The threshold", "value": "The strain limit was taken from the material spec and has not changed since the rig was commissioned.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Rigid rotation misread as strain", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The strain gauges have debonded and are under-reporting",
+    "The dashboard measures the raw gradient tensor, whose skew part is rigid-body rotation, not deformation — decomposing A = P + Q shows the strain half is near zero and nothing is being damaged",
+    "The material strain limit was transcribed wrongly and is too low",
+    "Optical marker calibration has drifted during high-g manoeuvres"
+  ],
+  "answerIndex": 1,
+  "debrief": "The decomposition answers this in one line: `A = ½(A + Aᵀ) + ½(A - Aᵀ)`, and the split is **unique**. The symmetric half P is deformation — stretch, compression, shear, the thing that fatigues metal. The skew half Q is rigid-body rotation, which moves every marker and damages nothing. Here P ≈ 0 and Q carries the magnitude, so the wing turned; it did not stretch. The marker clue explains why: tracking in the **ground frame** means a banking aircraft produces a large gradient purely from the frame rotating underneath it. Two details make this a clean diagnosis rather than a guess. Q's diagonal is exactly zero, which is forced by skew-symmetry (aᵢᵢ = -aᵢᵢ) and is the signature of rotation rather than a small strain. And the alert tracks **bank rate rather than load factor** — strain follows aerodynamic load, so a signal that ignores load and follows rotation was never strain. Two independent gauge sets agreeing is the corroboration; suspecting them was always the weaker hypothesis. Fix the dashboard to report P, and the alert becomes meaningful instead of merely loud."
+}

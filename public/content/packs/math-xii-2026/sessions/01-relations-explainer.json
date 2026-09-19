@@ -1,0 +1,45 @@
+{
+  "id": "relations-explainer",
+  "kind": "explainer",
+  "title": "The triad, and the leg that fails quietly",
+  "conceptIds": ["relations-functions"],
+  "intro": "Four steps from 'these things are related' to 'this system can be reversed'.",
+  "steps": [
+    {
+      "title": "A relation earns the name",
+      "body": "Reflexive, symmetric, transitive — pass all three and the relation **partitions** the set into disjoint classes. That partition is the whole payoff: you stop reasoning about individual parts and start reasoning about groups. Build the 0/1 adjacency matrix and each leg becomes a matrix test: diagonal all ones, `M == Mᵀ`, and wherever two-step reach exists there is already a direct edge.",
+      "viz": {
+        "type": "annotated",
+        "title": "Which leg does the work",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Reflexive", "value": 1, "note": "Diagonal all 1s. Almost free — most engineering relations are reflexive by definition ('shares a subnet with' includes itself)." },
+          { "label": "Symmetric", "value": 2, "note": "M equals its transpose. Also usually free: physical relations rarely point one way." },
+          { "label": "Transitive", "value": 3, "note": "The expensive one. It asserts something about pairs you never measured — which is exactly why it is the leg that fails." }
+        ]
+      }
+    },
+    {
+      "title": "The PCB that wasn't an equivalence",
+      "body": "Continuity probing says pin 1 connects to pin 4, and pin 4 connects to pin 9. Both readings are true. Every pin connects to itself, and the relation is symmetric. But nobody closed **pin 1 ~ pin 9**, so transitivity fails and 'shares a 0-ohm pathway' does not partition the board. The net list built from it is wrong — and nothing in the data looks wrong."
+    },
+    {
+      "title": "Functions fail in two different ways",
+      "body": "Read `f: A → B` as a matrix with rows = codomain, columns = domain. **Injective** = at most one 1 per row; break it and two keys drive one register — ghosting, and the input is unrecoverable. **Surjective** = at least one 1 per row; break it and a service sits deployed with no route reaching it — dead code. One failure destroys information, the other wastes capacity. They are not variations of the same bug."
+    },
+    {
+      "title": "Composition inherits the weakest stage",
+      "body": "`(g ∘ f)(x) = g(f(x))` exists only when Range(f) ⊆ Domain(g). Chain two bijections and the composite inverts exactly — decrypt ∘ deserialize returns the original payload. Put one saturating stage in the chain and it is over: past its stop, a hydraulic ram maps **every** larger stick angle to the same 10° of deflection. The preimage of 10° stops being a value and becomes a set.",
+      "viz": {
+        "type": "annotated",
+        "title": "Two chains, one difference",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Monotonic chain", "value": 4, "note": "Strictly increasing throughout: every horizontal line meets the curve once. Invertible, and the inverse is computable in closed form." },
+          { "label": "Saturating chain", "value": 1, "note": "Flat past the ram's stop. The line δ = 10° meets the curve infinitely often — telemetry in that region cannot be reconstructed by anyone, ever." }
+        ]
+      }
+    }
+  ],
+  "recap": "Transitivity is the leg that fails, and it fails silently because it is a claim about unmeasured pairs. Injectivity failure loses information; surjectivity failure wastes capacity. A composite chain is invertible only if it stays a bijection end to end — so the design question is always 'which stage could go many-to-one?'"
+}

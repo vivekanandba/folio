@@ -1,0 +1,119 @@
+{
+  "id": "math-xii-quiz",
+  "kind": "quiz",
+  "title": "Chapters 1–5 — check what stuck",
+  "conceptIds": ["relations-functions", "inverse-trigonometry", "matrices", "determinants", "continuity-differentiability"],
+  "intro": "Ten self-check questions across the five chapters. These are my own checks against the lessons, not an official paper.",
+  "questions": [
+    {
+      "prompt": "Probing finds pin 1 ~ pin 4 and pin 4 ~ pin 9, but pin 1 ~ pin 9 was never closed. Which property fails?",
+      "choices": [
+        "Reflexivity",
+        "Symmetry",
+        "Transitivity — and so the relation does not partition the board",
+        "None; it is still an equivalence relation"
+      ],
+      "answerIndex": 2,
+      "explanation": "Transitivity is the leg that fails in practice, because it asserts something about pairs nobody measured. Without it there is no partition, and the net list built from the data is wrong."
+    },
+    {
+      "prompt": "A hydraulic ram clips at ±10°, so every stick angle past 5° gives exactly 10° of deflection. Why can't the original angle be reconstructed?",
+      "choices": [
+        "The sensor resolution is too low",
+        "Injectivity is lost — the preimage of 10° is a set, not a value, so the information was never in the recording",
+        "The solver needs a better root-finding algorithm",
+        "The log rate is too slow"
+      ],
+      "answerIndex": 1,
+      "explanation": "Nothing is broken; the composite simply stops being one-to-one. No downstream cleverness recovers information that was never encoded — which is why the fix has to be upstream and structural."
+    },
+    {
+      "prompt": "Why does cos⁻¹ use the branch [0, π] rather than [-π/2, π/2]?",
+      "choices": [
+        "Convention inherited from tables",
+        "Because cosine rises then falls on [-π/2, π/2] — it isn't injective there, so no inverse can be defined",
+        "Because cosine is undefined on [-π/2, π/2]",
+        "To make it agree with sin⁻¹"
+      ],
+      "answerIndex": 1,
+      "explanation": "Every principal branch is chosen for one reason: strictly monotonic ⇒ injective ⇒ invertible. [0, π] is cosine's nearest monotonic (decreasing) window covering all of [-1, 1]."
+    },
+    {
+      "prompt": "Targets at (10, 10) and (-10, -10) both display a bearing of 45°. What went wrong?",
+      "choices": [
+        "Floating-point error in the division",
+        "The arctangent library is inaccurate in the third quadrant",
+        "Forming y/x discarded both signs before tan⁻¹ ran, and the principal branch (-π/2, π/2) cannot represent a third-quadrant bearing anyway",
+        "The targets genuinely merged"
+      ],
+      "answerIndex": 2,
+      "explanation": "The information dies one step before the function everyone suspects. atan2(y, x) takes the two arguments separately, inspects both signs, and recovers the full (-π, π]."
+    },
+    {
+      "prompt": "tan⁻¹(1) + tan⁻¹(2) equals about 108.4°, but the sum formula returns about -71.6°. Why?",
+      "choices": [
+        "The formula is simply wrong",
+        "Here xy = 2 > 1, outside the identity's valid regime; the formula's output is trapped in (-90°, 90°) so the regime correction of +180° applies",
+        "Degrees and radians were mixed up",
+        "tan⁻¹(2) is undefined"
+      ],
+      "answerIndex": 1,
+      "explanation": "The identity holds only for xy < 1. Beyond it you add π (both positive) or subtract π (both negative); at xy = 1 the denominator vanishes — the RF resonance condition."
+    },
+    {
+      "prompt": "Why is 'are all the off-diagonal entries zero?' an inadequate structural check?",
+      "choices": [
+        "It is too slow to compute",
+        "It cannot distinguish diagonal from scalar from identity — and those three make different physical claims",
+        "It fails for non-square matrices",
+        "It gives false positives on rotation matrices"
+      ],
+      "answerIndex": 1,
+      "explanation": "Identity ⊂ Scalar ⊂ Diagonal ⊂ Square. Diagonal means independent per-axis scaling; scalar means uniform gain kI; identity means untouched. Report the most specific class."
+    },
+    {
+      "prompt": "A monitoring rig reports a large displacement-gradient tensor, but its symmetric part is near zero and the skew part carries the magnitude. What is happening?",
+      "choices": [
+        "The structure is close to failure",
+        "The strain gauges have debonded",
+        "The section is rotating, not deforming — the skew half of A = P + Q is rigid-body rotation and does no damage",
+        "The tensor was computed incorrectly"
+      ],
+      "answerIndex": 2,
+      "explanation": "The decomposition A = ½(A + Aᵀ) + ½(A - Aᵀ) is unique, and it separates strain (symmetric) from rotation (skew). Only the symmetric half can damage anything."
+    },
+    {
+      "prompt": "For AX = B with det A = 0, what distinguishes 'no solution' from 'infinitely many'?",
+      "choices": [
+        "The size of the matrix",
+        "Whether (adj A)·B is non-zero (inconsistent — parallel lines) or zero (dependent — infinitely many)",
+        "Whether B is the zero vector",
+        "Nothing; det A = 0 always means no solution"
+      ],
+      "answerIndex": 1,
+      "explanation": "x + y = 3 with 2x + 2y = 7 versus the same pair ending in 6: identical coefficient matrices, opposite verdicts. The two demand opposite responses — add a constraint, or fix the contradicted input."
+    },
+    {
+      "prompt": "|x| at x = 0 is the standard counter-example to which claim?",
+      "choices": [
+        "That continuous functions are bounded",
+        "That continuity implies differentiability — |x| is continuous there, yet LHD = -1 ≠ RHD = +1",
+        "That differentiable functions are continuous",
+        "That limits always exist"
+      ],
+      "answerIndex": 1,
+      "explanation": "Differentiable ⇒ continuous holds; the converse fails. The corner is the obstruction, which is why ReLU needs a subgradient at the origin and why trajectories must be C² splines."
+    },
+    {
+      "prompt": "For a parametric curve, why is d²y/dx² ≠ (d²y/dt²)/(d²x/dt²)?",
+      "choices": [
+        "It is equal; both forms work",
+        "Because dy/dx is a function of t, so differentiating it with respect to x must chain again — dividing by dx/dt, not by d²x/dt²",
+        "Because second derivatives don't exist for parametric curves",
+        "Only when dx/dt = 0"
+      ],
+      "answerIndex": 1,
+      "explanation": "The tempting form drops the dt/dx factor. On x = a cos t, y = a sin t the truth is -(1/a)csc³t while the naive form collapses to tan t — at t = π/4 with a = 1, that is -2.83 against +1.00: wrong in sign as well as magnitude."
+    }
+  ]
+}
