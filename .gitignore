@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 *.pdf
 .preview/
+
+# e2e captures from CI runs (baselines are committed; these are not)
+tests/baselines/*.current.png
