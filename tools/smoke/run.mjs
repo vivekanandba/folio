@@ -10,16 +10,20 @@
 // in CI (preinstalled google-chrome). Zero npm dependencies.
 //
 //   node tools/smoke/run.mjs        (or: npm run smoke)
+//
+// Readiness is a CONDITION, not a duration. This suite used to dump the DOM
+// when `--virtual-time-budget` expired, but that budget runs on a virtual
+// clock the app's own timers burn through, so Chrome sometimes dumped a
+// half-loaded page and the run was reported as "page did not boot". Measured
+// on 2026-09-20: the failing run finished in 1566ms having served 49 requests;
+// the passing run took 2030ms and served 63. The faster run was the broken
+// one. Each check now names the furniture it waits for, via CDP.
 
-import { execFile, execFileSync, execSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { createReadStream, existsSync, globSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join } from 'node:path'
-import { promisify } from 'node:util'
-
-// The static server lives in THIS process: chromium must be spawned async or
-// the blocked event loop can never answer it (a deadlock we shipped first).
-const execFileP = promisify(execFile)
+import { launch } from '../e2e/cdp.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 const PREVIEW = join(ROOT, '.preview')
@@ -66,6 +70,7 @@ function serve(dir, port) {
 const CHECKS = [
   {
     name: 'floor (home) boots with the constellation',
+    ready: "!!document.querySelector('.floor-canvas') && !!document.querySelector('.floor-strip')",
     hash: '#/',
     assert: (dom) => {
       mustMatch(dom, /class="floor-canvas"/, 'floor canvas present')
@@ -75,6 +80,7 @@ const CHECKS = [
   },
   {
     name: 'halls page boots, aurora canvas height is sane',
+    ready: "document.querySelectorAll('.pack-card').length > 0 && !!document.querySelector('.today-panel')",
     hash: '#/halls',
     assert: (dom) => {
       mustMatch(dom, /class="pack-card cinematic"/, 'pack cards render')
@@ -88,6 +94,7 @@ const CHECKS = [
   },
   {
     name: 'concept page boots with live machines',
+    ready: "!!document.querySelector('.sim-machine') && !!document.querySelector('.learn-path')",
     hash: '#/pack/sysarch-lss-2026/concept/quality-attributes',
     assert: (dom) => {
       mustMatch(dom, /Exhibit/, 'plaque present')
@@ -97,6 +104,7 @@ const CHECKS = [
   },
   {
     name: 'pack page lists sessions',
+    ready: "document.querySelectorAll('.session-card-link').length >= 10",
     hash: '#/pack/finance-mfi-2026-07',
     assert: (dom) => {
       const cards = dom.match(/session-card-link/g)?.length ?? 0
@@ -105,6 +113,7 @@ const CHECKS = [
   },
   {
     name: 'SDD pack concept page boots',
+    ready: "!!document.querySelector('.learn-path') && document.body.textContent.includes('plan.md')",
     hash: '#/pack/ai-sdd-2026/concept/feature-cycle',
     assert: (dom) => {
       mustMatch(dom, /Exhibit/, 'plaque present')
@@ -114,6 +123,7 @@ const CHECKS = [
   },
   {
     name: 'curator report boots',
+    ready: "document.body.textContent.includes('The ledger')",
     hash: '#/report',
     assert: (dom) => {
       mustMatch(dom, /Your museum, measured|Curator/, 'report heading present')
@@ -141,36 +151,27 @@ if (!chrome) {
 console.log(`chromium: ${chrome}`)
 
 const server = await serve(PREVIEW, PORT)
+const browser = await launch(chrome)
 let failures = 0
 try {
   for (const check of CHECKS) {
     const url = `http://127.0.0.1:${PORT}/index.html${check.hash}`
-    let dom = ''
+    const page = await browser.newPage()
     try {
-      const { stdout } = await execFileP(chrome, [
-        '--headless', '--disable-gpu', '--no-sandbox', '--dump-dom',
-        '--window-size=1280,900', '--virtual-time-budget=9000', '--timeout=12000', url,
-      ], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, timeout: 45000 })
-      dom = stdout
-    } catch (e) {
-      failures++
-      console.error(`✗ ${check.name}: chromium failed (${e.message})`)
-      continue
-    }
-    if (dom.length < 2000) {
-      failures++
-      console.error(`✗ ${check.name}: page did not boot (DOM ${dom.length} bytes)`)
-      continue
-    }
-    try {
-      check.assert(dom)
+      await page.goto(url)
+      // Wait for the furniture this route is defined by — never for a clock.
+      await page.waitFor(check.ready, { timeoutMs: 15000, label: `${check.name} furniture` })
+      check.assert(await page.content())
       console.log(`✓ ${check.name}`)
     } catch (e) {
       failures++
       console.error(`✗ ${check.name}: ${e.message}`)
+    } finally {
+      await page.close()
     }
   }
 } finally {
+  await browser.close()
   server.close()
 }
 
