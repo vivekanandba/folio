@@ -21,10 +21,18 @@ function safeHref(url: string): string | null {
 
 /** Inline formatting for a single line of text (links, bold, inline code). */
 function inline(s: string): string {
-  return s
+  // Code spans are extracted FIRST and restored last, so their contents never
+  // reach the emphasis rules. Without this, `**kwargs` renders as bold-kwargs
+  // and `a ** b` loses its operator — the code span means "literal", and that
+  // has to hold against our own grammar.
+  const spans: string[] = []
+  const withPlaceholders = s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/`([^`]+)`/g, (_m, code: string) => `\u0000${spans.push(code) - 1}\u0000`)
+
+  return withPlaceholders
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text: string, url: string) => {
       const href = safeHref(url)
       if (!href) return m
@@ -35,7 +43,7 @@ function inline(s: string): string {
     // Italic: require a non-space right after the opening `*` so spaced `a * b`
     // multiplication is left alone while `*word*` still italicises.
     .replace(/\*(\S[^*]*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\u0000(\d+)\u0000/g, (_m, i: string) => `<code>${spans[Number(i)]}</code>`)
 }
 
 const CALLOUTS: Record<string, { cls: string; label: string }> = {
