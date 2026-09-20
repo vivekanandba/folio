@@ -50,3 +50,27 @@ jobs:
         run: npm ci
       - name: Boot smoke over key routes
         run: npm run smoke
+
+  # Can it be INSTALLED on a phone, and does it work on a plane? Neither
+  # question is answerable from unit tests or a boot check. Screenshot
+  # comparison runs informationally here (CI's Chrome renders differently
+  # from the machine that committed the baselines) and is uploaded instead.
+  e2e:
+    runs-on: ubuntu-latest # ships with google-chrome preinstalled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Installability, offline, screenshots
+        run: npm run e2e
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: tests/baselines/*.png
+          if-no-files-found: error
