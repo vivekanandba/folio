@@ -12,6 +12,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { stripTypeScriptTypes } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
+import { patchViteIsms } from './vite-isms.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 const OUT = join(ROOT, '.preview')
@@ -28,16 +29,9 @@ const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
   return d.isDirectory() ? walk(p) : p.endsWith('.ts') ? [p] : []
 })
 for (const file of walk(join(ROOT, 'src'))) {
-  let code = readFileSync(file, 'utf8')
-  code = code.replace(/^import\s+'\.\/style\.css'\s*$/m, '// style.css loaded via <link>')
-  code = code.replace(/import\.meta\.env\.BASE_URL/g, "'/'")
-  // vite-only: import.meta.glob('./*.ts', { eager: true }) → static side-effect imports
-  code = code.replace(/import\.meta\.glob\(\s*'\.\/\*\.ts'[^)]*\)/g, () => {
-    const siblings = readdirSync(dirname(file))
-      .filter((n) => n.endsWith('.ts') && n !== 'index.ts')
-      .map((n) => `import './${n.replace(/\.ts$/, '.js')}'`)
-    return `void 0\n${siblings.join('\n')}`
-  })
+  // The vite-ism patch is shared with the test loader hook so the two cannot
+  // drift — see tools/preview/vite-isms.mjs.
+  let code = patchViteIsms(readFileSync(file, 'utf8'), file, '.js')
   code = stripTypeScriptTypes(code, { mode: 'strip' })
   // relative specifiers → explicit browser paths: './x' → './x.js',
   // directory imports './sessions' → './sessions/index.js'. Covers both

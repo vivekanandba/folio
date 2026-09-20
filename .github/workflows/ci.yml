@@ -28,8 +28,11 @@ jobs:
         run: npm ci
       - name: Lint content
         run: npm run lint:content
-      - name: Test
-        run: npm test
+      # Coverage floor, not just a pass/fail suite. The denominator is the whole
+      # of src/ (tests/import-all.test.ts forces every module to load), so this
+      # number cannot be flattered by only measuring the files a test imported.
+      - name: Test + coverage floor
+        run: npm run test:gate
       - name: Typecheck + build
         run: npm run build
 

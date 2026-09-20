@@ -12,9 +12,11 @@
     "preview:offline": "node --experimental-strip-types tools/preview/build.mjs",
     "author": "node --experimental-strip-types tools/authoring/cli.ts",
     "test": "node --experimental-strip-types --test 'tests/*.test.ts'",
-    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage 'tests/*.test.ts'",
+    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage --test-coverage-include='src/**' 'tests/*.test.ts'",
+    "test:gate": "node --experimental-strip-types --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-lines=38 --test-coverage-functions=39 --test-coverage-branches=74 'tests/*.test.ts'",
     "smoke": "node tools/smoke/run.mjs"
   },
+  "comment:coverage": "test:gate floors are a RATCHET — raise them in the PR that earns the improvement, never lower them to make a build green (CON-COV-002). Destination is 95. Baseline 38.91/74.52/39.41 was set on 2026-09-20, when tests/import-all.test.ts first forced the whole of src/ into the denominator; the previously reported 87.65% measured only the five files some test happened to import.",
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
