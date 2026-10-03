@@ -1,0 +1,27 @@
+{
+  "id": "collision-detective",
+  "kind": "detective",
+  "title": "The conflict alert that never fired",
+  "conceptIds": ["lines-in-space"],
+  "intro": "A separation monitor watches pairs of flight paths and alerts when they come too close. Two aircraft passed within a third of the required minimum and nothing fired. Open the clues.",
+  "facts": [
+    { "label": "The event", "value": "Recorded tracks show the pair closed to well under the separation minimum. No alert was raised at any point.", "signal": 3 },
+    { "label": "The monitor", "value": "For each pair it solves for an intersection point of the two paths. If a solution exists, it computes the time to that point and alerts when the time is short.", "signal": 3 },
+    { "label": "The geometry", "value": "The two paths are skew: neither parallel nor intersecting. The solver correctly reports that no intersection point exists.", "signal": 3 },
+    { "label": "The altitudes", "value": "The aircraft were on crossing headings at different, closely spaced flight levels.", "signal": 2 },
+    { "label": "The arithmetic", "value": "The intersection solver was validated against dozens of crossing-at-the-same-level cases and is exact on every one.", "signal": 1 },
+    { "label": "The alert log", "value": "No error, no exception, no 'no solution' warning. The pair was simply evaluated and passed over.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "A 2-D test applied to a 3-D problem", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The intersection solver has a numerical tolerance that missed a near-intersection",
+    "The monitor asks whether the paths INTERSECT, but skew paths never intersect — in three dimensions the right question is the shortest distance between them, which it never computes",
+    "The altitude data was missing from the track records",
+    "The separation minimum was configured too low"
+  ],
+  "answerIndex": 1,
+  "debrief": "The solver is correct and the geometry is correct. In three dimensions, two paths that are neither parallel nor intersecting are **skew**, and skew lines genuinely have no intersection point — so a monitor built around 'do they intersect?' has nothing to report, and says nothing.\n\nThe right question is the **shortest distance** `d = |(a₂ − a₁) · (b₁ × b₂)| / |b₁ × b₂|`, with an alert when d falls below the separation minimum. That number exists for every pair of non-parallel lines, including the ones that never meet, which is exactly why it is the one to threshold on.\n\nThe clue that explains how this survived testing is the quiet one: the solver was validated against **crossing-at-the-same-level** cases — all of which genuinely intersect. A test suite built entirely from the intersecting case cannot discover that the skew case is unhandled. That is a 2-D intuition baked into a 3-D system, and the coplanar test data preserved it.\n\nThe broader move: when a model has a case that only appears in higher dimensions, the fixtures have to include it deliberately. Nothing in the lower-dimensional data will ever produce it."
+}

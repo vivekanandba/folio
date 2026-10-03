@@ -1,0 +1,27 @@
+{
+  "id": "mission-blueprint",
+  "kind": "blueprint",
+  "title": "Wire the mission loop",
+  "conceptIds": ["systems-integration"],
+  "intro": "Chain the four engines so each one's output is the next one's boundary condition. Two wirings are forbidden — and both are a stage trusting something that doesn't mean what it thinks.",
+  "briefing": "A mission goes from a requirement to a committed decision through four stages: linear programming allocates the budget, calculus integrates the burn into a Δv, vectors orient that Δv in space, and Bayes fuses a noisy observation to confirm the result. The inspector rejects any blueprint where the allocation reaches the decision without the physics running (an allocation is optimal under its constraints, not a measured outcome), and rejects any where the orientation reaches the decision without fusion (a prediction is not a confirmation).",
+  "parts": [
+    { "id": "mission", "label": "Mission requirement", "fixed": true },
+    { "id": "allocate", "label": "LP: allocate the budget", "max": 1 },
+    { "id": "integrate", "label": "Calculus: integrate the burn → Δv", "max": 1 },
+    { "id": "orient", "label": "Vectors: orient Δv in space", "max": 1 },
+    { "id": "fuse", "label": "Bayes: fuse the noisy observation", "max": 1 },
+    { "id": "commit", "label": "Committed decision", "max": 1 }
+  ],
+  "rules": [
+    { "rule": "connected", "a": "mission", "b": "allocate", "label": "The requirement sets the optimisation" },
+    { "rule": "connected", "a": "allocate", "b": "integrate", "label": "The allocation becomes the burn's input" },
+    { "rule": "connected", "a": "integrate", "b": "orient", "label": "Δv is a magnitude until vectors give it a direction" },
+    { "rule": "connected", "a": "orient", "b": "fuse", "label": "The prediction becomes the prior" },
+    { "rule": "connected", "a": "fuse", "b": "commit", "label": "Only a fused posterior justifies committing" },
+    { "rule": "noDirect", "a": "allocate", "b": "commit", "label": "An allocation is not a result — the physics has to run" },
+    { "rule": "noDirect", "a": "orient", "b": "commit", "label": "A prediction is not a confirmation — fuse the observation first" },
+    { "rule": "pathExists", "from": "mission", "to": "commit", "label": "The requirement can actually reach a decision" }
+  ],
+  "debrief": "The winning chain is requirement → allocate → integrate → orient → fuse → commit, and both forbidden wires are the same mistake in different costumes: **a stage treating an upstream output as something stronger than it is.**\n\n`allocate → commit` skips the physics. An LP result is optimal *under its constraints* — a statement about the model, not a measurement of the world. Wire it straight to a decision and a modelling error becomes a committed action with nothing in between to catch it. The integration step is where the allocation meets actual dynamics and gets a chance to be wrong out loud.\n\n`orient → commit` skips the fusion. A predicted orbit is a prediction: it carries uncertainty, and the whole point of the Bayes stage is to update it against what was actually observed. Commit on the prediction and you have asserted that the model is reality — which is exactly the base-rate error from the probability concept, one layer up.\n\nThe general move is the same one that runs through this whole pack: before a stage consumes an input, ask what that input *is*. An allocation, a magnitude, a prediction and a posterior are four different kinds of claim, and every integration bug worth the name is one of them being mistaken for another."
+}

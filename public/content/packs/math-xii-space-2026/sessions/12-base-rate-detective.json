@@ -1,0 +1,27 @@
+{
+  "id": "base-rate-detective",
+  "kind": "detective",
+  "title": "The alert that was probably wrong",
+  "conceptIds": ["probability-bayes"],
+  "intro": "A screening system flags one unit in a batch as defective and reports 95% confidence. The unit is pulled, tested exhaustively, and found fine. The vendor insists the detector meets spec. Open the clues.",
+  "facts": [
+    { "label": "The claim", "value": "The dashboard reads '95% confidence: defective'. Operators have been treating that as near-certainty and scrapping the unit.", "signal": 3 },
+    { "label": "The detector spec", "value": "95% sensitive — it catches 95% of genuine defects — with a 5% false-positive rate on good units. Independently verified; the vendor is right that it meets spec.", "signal": 3 },
+    { "label": "The base rate", "value": "This line's genuine defect rate is about 1%. 99 units in 100 leave the line perfectly good.", "signal": 3 },
+    { "label": "The reported number", "value": "The 95% on the dashboard is the detector's sensitivity, copied straight through. No prior enters the calculation anywhere.", "signal": 3 },
+    { "label": "The follow-up record", "value": "Of the units pulled on this alert over the last quarter, roughly five in six tested fine on the bench.", "signal": 2 },
+    { "label": "The hardware", "value": "Calibration current, optics clean, no drift. Two independent detectors agree with each other on the same units.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Sensitivity reported as posterior", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The detector has drifted out of calibration and under-performs its specification",
+    "The dashboard reports the detector's SENSITIVITY as though it were the probability the unit is defective — with a 1% base rate the actual posterior is about 16%, so most flagged units are good",
+    "The defect rate is far higher than 1% and the sample is unrepresentative",
+    "The two detectors are correlated and their agreement is meaningless"
+  ],
+  "answerIndex": 1,
+  "debrief": "The detector is fine. The vendor is right. The number on the dashboard is simply **the wrong quantity**.\n\n95% is `P(positive | defective)` — the detector's sensitivity. What an operator needs is `P(defective | positive)`, which is a different conditional and requires the base rate:\n\n- True positives: `0.01 × 0.95 = 0.0095`\n- False positives: `0.99 × 0.05 = 0.0495`\n- Posterior: `0.0095 / 0.0590 ≈ **16%**`\n\nSo roughly **five in six flagged units are good** — which is precisely what the follow-up record in clue five already showed. The data was sitting there agreeing with the arithmetic before anyone did the arithmetic.\n\nThe exonerating clue is the last one: two independent detectors agreeing rules out drift and makes a hardware fault the weakest hypothesis, not the strongest. And note that the alert is still **useful** — it lifted the probability from 1% to 16%, a sixteen-fold update, which absolutely justifies a bench test. What it does not justify is scrapping the unit.\n\nThe fix is to report the posterior and carry the base rate explicitly. 'Sixteen percent, up from one' is an honest, actionable sentence. 'Ninety-five percent confident' is neither."
+}

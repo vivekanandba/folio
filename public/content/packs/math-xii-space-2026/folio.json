@@ -1,0 +1,35 @@
+{
+  "id": "math-xii-space-2026",
+  "title": "Vectors, Space & Uncertainty — Class XII, Chapters 10–13",
+  "subject": "mathematics",
+  "category": "Mathematics",
+  "type": "course",
+  "source": "Personal study notes from my own Class XII Mathematics revision project (Days 27–33, including the capstone), where each theorem was verified in NumPy/SymPy and mapped onto aerospace, electronics and computing.",
+  "summary": "Direction as a number and the two products that answer different questions; the skew case that only exists in three dimensions and the collision screening built on it; the corner-point theorem and the solver that confidently answers the opposite question; base rates that survive strong evidence; and the capstone where four engines become one pipeline.",
+  "tags": ["mathematics", "cbse", "class-xii", "vectors", "linear-programming", "probability", "bayes"],
+  "concepts": [
+    "vector-algebra",
+    "lines-in-space",
+    "linear-programming",
+    "probability-bayes",
+    "systems-integration"
+  ],
+  "sessions": [
+    "01-vectors-explainer.json",
+    "02-dot-cross-classify.json",
+    "03-direction-cosine-estimate.json",
+    "04-lines-explainer.json",
+    "05-line-pair-classify.json",
+    "06-skew-distance-estimate.json",
+    "07-collision-detective.json",
+    "08-lp-explainer.json",
+    "09-lp-detective.json",
+    "10-lp-estimate.json",
+    "11-bayes-explainer.json",
+    "12-base-rate-detective.json",
+    "13-posterior-estimate.json",
+    "14-integration-explainer.json",
+    "15-mission-blueprint.json",
+    "16-space-quiz.json"
+  ]
+}

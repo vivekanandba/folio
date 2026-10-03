@@ -1,0 +1,15 @@
+{
+  "id": "lp-estimate",
+  "kind": "estimate",
+  "title": "The best corner",
+  "conceptIds": ["linear-programming"],
+  "intro": "Split power between a CPU and an NPU to maximise throughput Z = 30x + 50y, subject to x + 2y ≤ 40 (power budget), 3x + y ≤ 60 (thermal ceiling), and x, y ≥ 0. The feasible vertices are (0, 0), (20, 0), (0, 20) and (16, 12).",
+  "prompt": "What is the maximum achievable throughput, in teraFLOPS?",
+  "unit": "teraFLOPS",
+  "min": 0,
+  "max": 2000,
+  "step": 10,
+  "answer": 1080,
+  "tolerance": 0.02,
+  "debrief": "Evaluate at each corner — that is the whole method, and it is complete rather than approximate:\n\n| Vertex | Z = 30x + 50y |\n|---|---|\n| (0, 0) | 0 |\n| (20, 0) | 600 |\n| (0, 20) | 1000 |\n| **(16, 12)** | **1080** |\n\nThe winner is where the two constraints **intersect**, with both binding: `16 + 2(12) = 40` exactly, and `3(16) + 12 = 60` exactly. The power budget and the thermal ceiling are *simultaneously* exhausted, which is the characteristic shape of an LP optimum — at the best point you have usually run out of more than one thing at once.\n\nNotice (0, 20) scoring 1000, within 8% of the optimum while using only one of the two resources fully. If the NPU allocation carried a risk the model doesn't capture, that corner might be the better engineering choice despite the lower objective. The LP answers the question posed; whether it is the right question is a judgement it cannot make for you.\n\nAnd this table is the defence against the sign-inversion trap: a solver reporting 0 as its optimum is returning the *worst* row here, which no maximiser can do."
+}

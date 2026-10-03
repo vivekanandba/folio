@@ -1,0 +1,32 @@
+{
+  "id": "vectors-explainer",
+  "kind": "explainer",
+  "title": "Direction as a number, and two products",
+  "conceptIds": ["vector-algebra"],
+  "intro": "Why there are exactly two vector products, and how to tell which question you're asking.",
+  "steps": [
+    {
+      "title": "Direction cosines, and a free integrity check",
+      "body": "For `r = 3î - 4ĵ + 12k̂`, `|r| = √(9 + 16 + 144) = 13`, so the direction cosines are clean thirteenths: `(3/13, -4/13, 12/13)`.\n\nCheck: `(9 + 16 + 144)/169 = 1`. ✓\n\n**l² + m² + n² = 1 always.** That makes it a free integrity test on any direction you are handed — a normalised direction whose squares don't sum to one has a dropped sign, a stale component, or a skipped normalisation. Attitude software checks it every cycle for exactly that reason.",
+      "viz": {
+        "type": "annotated",
+        "title": "Two products, two questions",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "a · b", "value": 2, "note": "A scalar: how much of a points along b. Zero means perpendicular — it is the orthogonality test." },
+          { "label": "a × b", "value": 3, "note": "A vector perpendicular to both; its magnitude is the parallelogram's area. Zero means parallel." },
+          { "label": "l² + m² + n² = 1", "value": 4, "note": "Always true for direction cosines, so always worth asserting." }
+        ]
+      }
+    },
+    {
+      "title": "The dot product is a test, not just a formula",
+      "body": "`a · b = |a||b|cos θ`, and `[2,0,0] · [0,5,0] = 0` — perpendicular, as the axes should be.\n\n**Diffuse lighting** is `max(0, n̂ · ℓ̂)`: face the light and the dot is 1, turn edge-on and it falls to 0, turn further and it goes **negative** because the surface now faces away. The `max(0, …)` is there to stop back-facing surfaces being lit by negative light — not for tidiness.\n\nThe same ratio normalised is **cosine similarity**: king · queen ≈ 0.99, king · banana ≈ 0.28. A vector's direction cosines are just its cosine similarity with each axis."
+    },
+    {
+      "title": "The cross product is orientation and area",
+      "body": "`a × b` is perpendicular to both, magnitude `|a||b|sin θ` — the parallelogram's area. For perpendicular vectors of length 2 and 5, that area is 10.\n\nTwo laws **are** cross products. **Torque** `τ = r × F`: push along the spanner and nothing turns, because r and F are parallel and sin θ = 0. **Lorentz force** `F = q(v × B)`: perpendicular to both velocity and field, which is why a charged particle circles in a uniform field instead of being pushed along it.\n\nChoosing is a question about the answer's **type**. Want a scalar saying 'how aligned?' — dot. Want a vector perpendicular to both — cross."
+    }
+  ],
+  "recap": "Direction cosines are a unit vector's components and always satisfy l² + m² + n² = 1, which is worth asserting rather than assuming. The dot product projects and tests orthogonality; the cross product orients and measures area. If the type of your answer is wrong, you reached for the wrong product."
+}

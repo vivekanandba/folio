@@ -1,0 +1,27 @@
+{
+  "id": "lp-detective",
+  "kind": "detective",
+  "title": "The solver that maximised nothing",
+  "conceptIds": ["linear-programming"],
+  "intro": "A capacity planner allocates power between two processors to maximise throughput. It returns instantly, reports success, and recommends spending almost nothing. Open the clues.",
+  "facts": [
+    { "label": "The recommendation", "value": "Allocate 0 W to the CPU and 0 W to the NPU, for a reported objective of 0 teraFLOPS. The solver reports status: optimal.", "signal": 3 },
+    { "label": "The call", "value": "The objective coefficients [30, 50] are passed to scipy.optimize.linprog exactly as written, with the constraint matrix and bounds.", "signal": 3 },
+    { "label": "The library", "value": "linprog strictly MINIMISES. There is no maximise option in its signature.", "signal": 3 },
+    { "label": "The constraints", "value": "x + 2y ≤ 40 and 3x + y ≤ 60, both correct, both verified against the hardware limits.", "signal": 1 },
+    { "label": "The corner table", "value": "Feasible vertices are (0,0), (20,0), (0,20) and (16,12), giving Z = 0, 600, 1000 and 1080.", "signal": 3 },
+    { "label": "The behaviour", "value": "No exception, no warning, sub-second runtime. The result is self-consistent: (0,0) really is feasible and really does give Z = 0.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "Minimised instead of maximised", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The constraints are too tight and the feasible region collapsed to the origin",
+    "The objective was handed to a minimiser unchanged, so the solver answered the opposite question — correctly — and returned the worst corner as if it were the best",
+    "The solver hit an iteration limit and returned its starting point",
+    "The objective coefficients are in the wrong units"
+  ],
+  "answerIndex": 1,
+  "debrief": "The solver did exactly what it was asked. `linprog` minimises, the objective was passed unchanged, and the minimum of `30x + 50y` over a feasible region anchored at the origin is **zero at (0, 0)**. Status: optimal — and it is optimal, for the question actually asked.\n\nThe corner table is what makes this unmistakable. Four vertices giving 0, 600, 1000 and 1080: the solver returned the **worst** one. A maximiser cannot return the minimum of its own corner table, so the direction of the optimisation is the only thing left.\n\nThe fix is the two-step inversion: pass `−c`, solve, then **negate the returned optimal value** to recover max Z = 1080 at (16, 12). Doing the first step and forgetting the second gives the right allocation with a sign error — annoying but visible. Doing neither gives this: a confident, internally consistent, completely inverted answer.\n\nWhat makes it dangerous is in the last clue. Nothing failed. No exception, no warning, fast, and self-consistent. The only defence is an **independent check on the answer's direction** — the corner table takes seconds on a two-variable problem and catches it immediately. A result that passes every internal consistency check can still be the answer to a question nobody asked."
+}

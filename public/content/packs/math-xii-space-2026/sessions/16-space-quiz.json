@@ -1,0 +1,108 @@
+{
+  "id": "space-quiz",
+  "kind": "quiz",
+  "title": "Chapters 10–13 + capstone — check what stuck",
+  "conceptIds": ["vector-algebra", "lines-in-space", "linear-programming", "probability-bayes", "systems-integration"],
+  "intro": "Nine self-check questions closing the Class XII track. My own checks against the lessons, not an official paper.",
+  "questions": [
+    {
+      "prompt": "What do direction cosines always satisfy, and why is that useful?",
+      "choices": [
+        "l + m + n = 1, which normalises the vector",
+        "l² + m² + n² = 1 — a free integrity check on any direction you are handed",
+        "l·m·n = 1, which fixes the scale",
+        "Nothing in particular; it varies with the vector"
+      ],
+      "answerIndex": 1,
+      "explanation": "They are the unit vector's components, so their squares sum to one. A direction that fails it has a dropped sign, a stale component, or a skipped normalisation."
+    },
+    {
+      "prompt": "You need the area of the parallelogram two edges span. Which product?",
+      "choices": [
+        "Dot — it returns a scalar, and area is a scalar",
+        "Cross — its magnitude |a||b|sin θ IS that area",
+        "Either; they differ only by sign",
+        "Neither; area needs a determinant instead"
+      ],
+      "answerIndex": 1,
+      "explanation": "Dot gives alignment, cross gives orientation and area. The giveaway is what type of answer the question demands — though here the cross product's MAGNITUDE is the scalar you want."
+    },
+    {
+      "prompt": "Two flight paths are neither parallel nor intersecting. What are they, and what should a monitor compute?",
+      "choices": [
+        "Coincident; compute the overlap",
+        "Skew — a 3-D-only possibility — and the monitor must compute the shortest distance, since skew lines have no intersection point to find",
+        "Parallel at a tolerance; compute the offset",
+        "An error state; reject the input"
+      ],
+      "answerIndex": 1,
+      "explanation": "A monitor built around 'do they intersect?' silently says nothing for skew pairs. The shortest distance exists for every non-parallel pair, which is why it is the thing to threshold on."
+    },
+    {
+      "prompt": "In the Cartesian form of a line, a direction ratio of zero means…",
+      "choices": [
+        "The line is undefined",
+        "That coordinate is frozen — the line lies in the plane where it is constant",
+        "You must divide by a small epsilon instead",
+        "The line passes through the origin"
+      ],
+      "answerIndex": 1,
+      "explanation": "It is a constraint to write explicitly, not a division to work around."
+    },
+    {
+      "prompt": "Why is enumerating the corners of an LP's feasible region a complete method?",
+      "choices": [
+        "Because the region is small",
+        "Because the objective has a constant gradient, so its contours sweep to a last point of contact at a vertex — the corner-point theorem",
+        "Because interior points are infeasible",
+        "It isn't complete; it's an approximation"
+      ],
+      "answerIndex": 1,
+      "explanation": "Infinitely many feasible points, finitely many corners, and the optimum guaranteed among them. That is what makes LP tractable."
+    },
+    {
+      "prompt": "A planner maximising Z = 30x + 50y returns (0, 0) with Z = 0 and reports 'optimal'. The feasible corners give 0, 600, 1000 and 1080. What happened?",
+      "choices": [
+        "The constraints collapsed the region to the origin",
+        "The objective went to a MINIMISER unchanged, so the solver answered the opposite question correctly and returned the worst corner",
+        "The solver hit an iteration limit",
+        "The coefficients are in the wrong units"
+      ],
+      "answerIndex": 1,
+      "explanation": "linprog strictly minimises. Maximising means passing −c and negating the result. A maximiser cannot return the minimum of its own corner table, which is why the table catches it instantly."
+    },
+    {
+      "prompt": "A condition affects 1%. A 95%-sensitive test with a 5% false-positive rate reads positive. The probability it is present is about…",
+      "choices": [
+        "95%",
+        "16% — the false positives from 99 good units outnumber the true positives more than five to one",
+        "50%",
+        "5%"
+      ],
+      "answerIndex": 1,
+      "explanation": "0.01×0.95 / (0.01×0.95 + 0.99×0.05) ≈ 0.161. The evidence is worth a sixteen-fold update AND the condition is still probably absent; both are true."
+    },
+    {
+      "prompt": "With a low base rate, which improvement raises the posterior more?",
+      "choices": [
+        "Raising sensitivity from 95% to 100%",
+        "Halving the false-positive rate from 5% to 2.5%",
+        "They are equivalent",
+        "Neither changes the posterior"
+      ],
+      "answerIndex": 1,
+      "explanation": "Halving false positives takes it from 16.1% to 27.7%; perfect sensitivity only reaches 16.8%. When the thing is rare, false alarms dominate the denominator."
+    },
+    {
+      "prompt": "In an integrated pipeline, where does the expensive bug usually live?",
+      "choices": [
+        "In a wrong formula inside one stage",
+        "In the handoffs — a correct stage fed something that doesn't mean what it assumes: an allocation as a measurement, a magnitude as a vector, a prediction as an observation",
+        "In floating-point accumulation",
+        "In the choice of programming language"
+      ],
+      "answerIndex": 1,
+      "explanation": "Every stage can test clean in isolation while the pipeline is wrong, because the defect is in what one stage means and the next one assumes."
+    }
+  ]
+}

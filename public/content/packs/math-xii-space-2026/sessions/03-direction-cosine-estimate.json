@@ -1,0 +1,15 @@
+{
+  "id": "direction-cosine-estimate",
+  "kind": "estimate",
+  "title": "The magnitude behind clean direction cosines",
+  "conceptIds": ["vector-algebra"],
+  "intro": "A spacecraft's burn direction is recorded as the vector 3î − 4ĵ + 12k̂. Before it can be used as an attitude command it has to be normalised, which means dividing by its magnitude.",
+  "prompt": "What is |r| for r = 3î − 4ĵ + 12k̂?",
+  "unit": "units",
+  "min": 0,
+  "max": 30,
+  "step": 0.1,
+  "answer": 13,
+  "tolerance": 0.02,
+  "debrief": "`|r| = √(3² + 4² + 12²) = √(9 + 16 + 144) = √169 = **13**` — one of the Pythagorean quadruples, which is why the direction cosines come out as clean thirteenths: `(3/13, −4/13, 12/13)`.\n\nNow run the check that makes this worth doing: `(9 + 16 + 144)/169 = 169/169 = 1`. ✓\n\n**l² + m² + n² = 1 is free and it is always available.** Any direction handed to you can be audited in three multiplications and two additions, and a result that isn't 1 tells you something upstream is broken — a sign dropped, a component stale, a normalisation skipped — before that direction is used to point anything expensive.\n\nThe habit generalises beyond attitude. Any quantity with a known invariant should have that invariant asserted at the boundary where it arrives, not assumed because the producer is trusted."
+}

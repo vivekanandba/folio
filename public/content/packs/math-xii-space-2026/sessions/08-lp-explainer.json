@@ -1,0 +1,32 @@
+{
+  "id": "lp-explainer",
+  "kind": "explainer",
+  "title": "The optimum is always at a corner",
+  "conceptIds": ["linear-programming"],
+  "intro": "Why a region with infinitely many points has only finitely many candidates.",
+  "steps": [
+    {
+      "title": "Corners are enough",
+      "body": "`Z = ax + by` has a constant gradient, so its contours are parallel lines sweeping across the feasible region. Push the sweep as far as the walls allow and the last point of contact is a **vertex** — or, in the tie case, an edge whose endpoints are vertices anyway.\n\nThat is the corner-point theorem, and it is why LP is tractable: infinitely many feasible points, finitely many corners, and the optimum guaranteed to be among them. Enumerating corners is a complete method, not an approximation."
+    },
+    {
+      "title": "A worked allocation",
+      "body": "Maximise `Z = 30x + 50y` subject to `x + 2y ≤ 40`, `3x + y ≤ 60`, `x, y ≥ 0` — splitting watts between a CPU and an NPU under a power budget and a thermal ceiling.\n\n| Vertex | Z |\n|---|---|\n| (0, 0) | 0 |\n| (20, 0) | 600 |\n| (0, 20) | 1000 |\n| **(16, 12)** | **1080** |\n\nThe winner sits where the two constraints **cross** — both binding, both resources fully spent. That is the usual shape of an LP answer, and it has a reading: at the optimum you have generally run out of more than one thing at once.",
+      "viz": {
+        "type": "annotated",
+        "title": "Reading an LP solution",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Interior", "value": 1, "note": "Never optimal — something is unspent and you can still move along the gradient." },
+          { "label": "Edge", "value": 2, "note": "Better, but unless the objective is parallel to it you can still slide to a corner." },
+          { "label": "Vertex (16, 12)", "value": 4, "note": "Z = 1080. Both constraints binding: power budget and thermal ceiling exhausted together." }
+        ]
+      }
+    },
+    {
+      "title": "The trap that ships",
+      "body": "`scipy.optimize.linprog` **minimises**. Always. There is no maximise flag.\n\nTo maximise you pass `−c`, solve, then **negate the returned value** to recover max Z. Skip the negation and you get the right vertex with a sign error. Skip the `−c` entirely and it is far worse: you get the **minimum** — a perfectly valid-looking point, usually where you have allocated almost nothing — with no exception and no warning. A confident answer to the opposite question.\n\nThe defence is the corner table: enumerate the vertices, evaluate Z by hand, and confirm the solver's answer is the best of them. A sign inversion shows up instantly, because the 'optimum' will be sitting at the worst corner in your table."
+    }
+  ],
+  "recap": "The feasible region is convex, so the optimum is at a vertex and the corner table is a complete check. The binding constraints at that vertex tell you what you ran out of. And because the library minimises, maximising is a two-step inversion — with a corner table as the cheap way to catch getting it wrong."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "skew-distance-estimate",
+  "kind": "estimate",
+  "title": "How close do they come?",
+  "conceptIds": ["lines-in-space"],
+  "intro": "Two paths in space: one through (1, 1, 0) in direction (2, −1, 1), the other through (2, 1, −1) in direction (1, −2, 2). They are skew — neither parallel nor meeting — so the only meaningful separation is the shortest distance between them.",
+  "prompt": "What is that shortest distance, in units?",
+  "unit": "units",
+  "min": 0,
+  "max": 5,
+  "step": 0.01,
+  "answer": 0.707,
+  "tolerance": 0.05,
+  "debrief": "The common normal is `n = b₁ × b₂`, perpendicular to both paths, and the gap is the component of `a₂ − a₁` along it:\n\n`d = |(a₂ − a₁) · (b₁ × b₂)| / |b₁ × b₂| = 1/√2 ≈ **0.7071**`\n\nThe lines meet at an angle of 35.26°, and the connecting segment is perpendicular to both — which is the verification worth running, because if it isn't perpendicular the normal was computed wrong and the number is meaningless.\n\nThis is the computation behind **closest point of approach**. Air-traffic conflict detection is a threshold on exactly this value: alert when the separation drops below the minimum. The geometry answers 'how close do they get?' while both aircraft are still far from the conflict, which is the only time the answer is useful.\n\nAnd note what the *sign* convention costs you here. Distance is taken as an absolute value, so the result says how far apart, not which side — fine for separation, insufficient if you need to know which aircraft passes above."
+}

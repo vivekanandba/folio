@@ -1,0 +1,24 @@
+{
+  "id": "dot-cross-classify",
+  "kind": "classify",
+  "title": "Dot or cross?",
+  "conceptIds": ["vector-algebra"],
+  "intro": "Each question below is answered by one of the two products. Sort by which — and notice what type of answer the question demands.",
+  "buckets": [
+    { "id": "dot", "label": "Dot product", "hint": "Wants a scalar: alignment, projection, orthogonality", "tone": "cool" },
+    { "id": "cross", "label": "Cross product", "hint": "Wants a vector: perpendicularity, orientation, area", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Are these two vectors perpendicular?", "bucketId": "dot" },
+    { "id": "c2", "text": "How brightly is this surface lit, given the direction to the light?", "bucketId": "dot" },
+    { "id": "c3", "text": "How similar are these two word embeddings?", "bucketId": "dot" },
+    { "id": "c4", "text": "How much of this force acts along the direction of travel — the work done?", "bucketId": "dot" },
+    { "id": "c5", "text": "What angle separates these two flight paths?", "bucketId": "dot" },
+    { "id": "c6", "text": "What torque does this force produce about that pivot?", "bucketId": "cross" },
+    { "id": "c7", "text": "Which way does the Lorentz force push this charge?", "bucketId": "cross" },
+    { "id": "c8", "text": "What is the area of the parallelogram these two edges span?", "bucketId": "cross" },
+    { "id": "c9", "text": "What is the normal direction of the triangle formed by these points?", "bucketId": "cross" },
+    { "id": "c10", "text": "What is the common normal between two skew lines, needed before measuring the gap?", "bucketId": "cross" }
+  ],
+  "debrief": "The shortcut that never fails: **what type is the answer?** A number — alignment, brightness, work, similarity, an angle — is a dot product. A direction or an area — torque, a normal, a force perpendicular to two things — is a cross product. Reach for the wrong one and the result isn't merely inaccurate, it is the wrong kind of object.\n\nTwo cards repay a second look. **Work** (`W = F · d`) is a dot even though both inputs are vectors, because only the component of force *along* the motion does any: push perpendicular to the direction of travel and you do no work at all. **Torque** (`τ = r × F`) is the mirror image — only the perpendicular component turns anything, and pushing along the spanner achieves nothing. Same two vectors, opposite products, opposite answers to 'which part counts'.\n\nThe last card is the bridge into the next concept: before you can measure the gap between skew lines, you need the direction that is perpendicular to both — and that is exactly what a cross product is for."
+}

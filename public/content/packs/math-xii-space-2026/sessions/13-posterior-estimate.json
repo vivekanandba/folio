@@ -1,0 +1,15 @@
+{
+  "id": "posterior-estimate",
+  "kind": "estimate",
+  "title": "After the positive result",
+  "conceptIds": ["probability-bayes"],
+  "intro": "A condition is present in 1% of units. The test is 95% sensitive — it catches 95% of genuine cases — and has a 5% false-positive rate on good ones. A unit tests positive.",
+  "prompt": "What is the probability the condition is actually present, as a percentage?",
+  "unit": "%",
+  "min": 0,
+  "max": 100,
+  "step": 1,
+  "answer": 16,
+  "tolerance": 0.2,
+  "debrief": "Count where a positive result can come from:\n\n- **True positives**: `0.01 × 0.95 = 0.0095`\n- **False positives**: `0.99 × 0.05 = 0.0495`\n\nPosterior = `0.0095 / (0.0095 + 0.0495) = 0.0095/0.0590 ≈ **16.1%**`.\n\nThe false positives are **more than five times** the true ones, and that ratio is the whole story: a 5% error rate applied to 99 good units produces more alarms than a 95% catch rate applied to 1 bad one. The test is not weak — it is being asked about something rare.\n\nBoth of these are true at once, and holding them together is the skill. The evidence produced a **sixteen-fold update** — 1% to 16% is a lot of information, enough to justify an expensive follow-up. And the most likely state is still 'absent', so acting as though the condition is confirmed will be wrong five times out of six.\n\nThe lever worth noticing: the posterior is far more sensitive to the **false-positive rate** than to sensitivity here. Halving false positives to 2.5% raises the posterior to about 28%; raising sensitivity to 100% barely moves it, to 16.8%. When the base rate is low, reducing false alarms is where the value is."
+}
