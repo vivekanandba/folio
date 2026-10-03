@@ -1,0 +1,36 @@
+{
+  "id": "derivative-apps-explainer",
+  "kind": "explainer",
+  "title": "Three questions one derivative answers",
+  "conceptIds": ["derivative-applications"],
+  "intro": "Rates, direction, and the extreme that lives where the derivative isn't looking.",
+  "steps": [
+    {
+      "title": "Differentiate the relation, not the quantity",
+      "body": "Related rates link two changing things through the geometry that connects them. A sphere inflating at constant volume rate Q: differentiate `V = (4/3)πr³` once to get `dV/dt = 4πr²·(dr/dt)`, so `dr/dt = Q/(4πr²)`.\n\nRead the consequence: with Q constant, **dr/dt falls as the sphere grows**. Volume climbs linearly, radius only as t^(1/3) — the same inflow spread over an ever-larger surface. Tank pressurisation, `I = C·dV/dt`, `V = L·di/dt`: one geometric relation, differentiated once."
+    },
+    {
+      "title": "Direction is the sign of f′",
+      "body": "For `f(x) = x³ - 3x² - 9x + 15`, `f′(x) = 3(x - 3)(x + 1)` — increasing on (-∞, -1), decreasing on (-1, 3), increasing again on (3, ∞). The roots of f′ are the turning points.\n\nA zero of f′ is **not** automatically an extremum. If f′ doesn't change sign across it, the curve pauses and carries on the same way: an inflection, not a peak.",
+      "viz": {
+        "type": "annotated",
+        "title": "Reading f′",
+        "prompt": "Tap each region.",
+        "points": [
+          { "label": "f′ > 0", "value": 3, "note": "Increasing. Still climbing; a loss that is not yet falling." },
+          { "label": "f′ = 0", "value": 2, "note": "A turning point OR an inflection. The sign CHANGE decides which — the zero alone doesn't." },
+          { "label": "f′ < 0", "value": 1, "note": "Decreasing. Monotone discharge; a loss genuinely coming down." }
+        ]
+      }
+    },
+    {
+      "title": "Classifying what you found",
+      "body": "With f′(c) = 0: `f″(c) < 0` is a local **maximum**, `f″(c) > 0` a local **minimum**, and `f″(c) = 0` is **inconclusive** — fall back to the first-derivative test and read the sign change.\n\nThe worked classic: cut x × x corners from an S × S sheet and fold, giving `V(x) = x(S - 2x)²`. The maximum sits at **x = S/6**, which for S = 30 cm is 5 cm and 2000 cm³. The answer being a ratio is what makes it worth knowing — it transfers to any sheet."
+    },
+    {
+      "title": "The extreme at the edge",
+      "body": "On a closed interval, the absolute extreme can sit at an **endpoint**, where f′ says nothing. That same cubic on [-2, 6]:\n\n| Point | f |\n|---|---|\n| x = -2 | 13 |\n| x = -1 (local max) | 20 |\n| x = 3 (local min) | -12 |\n| x = 6 (endpoint) | **69** |\n\nThe interior peak is 20. The actual maximum is **69**, at the right endpoint, where f′(6) = 27 — nowhere near zero. An optimiser that only collects stationary points reports 20 and is wrong by a factor of three."
+    }
+  ],
+  "recap": "Differentiate the relation to link rates. Read direction off the sign of f′ and confirm a turning point by the sign change, not the zero. Classify with f″, falling back when it vanishes. And on a closed interval, evaluate the endpoints — the derivative is blind to them, which is exactly why they get missed."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "integration-explainer",
+  "kind": "explainer",
+  "title": "Undoing a derivative, and what you can't get back",
+  "conceptIds": ["integration-techniques"],
+  "intro": "Integration recovers the shape. The constant has to come from a measurement.",
+  "steps": [
+    {
+      "title": "+ C is a physical quantity",
+      "body": "`∫f dx = F(x) + C` names a **family** of parallel curves — identical slope at every x, different heights. One data point collapses it to one curve: through (0, 5) forces C = 5.\n\nThat constant is what differentiation destroyed, and it has a name in every domain. In navigation it is the **initial velocity**; in electronics the **residual capacitor voltage**; in event sourcing the **genesis balance**. Assuming C = 0 is not a convention — it is a claim that the system started at rest, uncharged, at zero.",
+      "viz": {
+        "type": "annotated",
+        "title": "The family, and the member",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "F(x) + C", "value": 1, "note": "An infinite family. The shape is recoverable; the offset is not." },
+          { "label": "One condition", "value": 3, "note": "f(0) = 5 picks a single curve. One measurement does it — but it has to be made." },
+          { "label": "Assuming C = 0", "value": 0, "note": "A measurement claim wearing the costume of a default." }
+        ]
+      }
+    },
+    {
+      "title": "Substitution: the chain rule backwards",
+      "body": "Spot an inner function **and its derivative** sitting beside it. With u = g(x), `∫f(g(x))·g′(x) dx = ∫f(u) du` — integrate in the easier variable, then substitute back.\n\nThe aim is to reach a standard form (`∫uⁿ`, `∫eᵘ`, `∫sin u`), not to be clever. Velocity-dependent drag, AC power integrals, and the Gaussian normalisation behind softmax are all this one move."
+    },
+    {
+      "title": "Parts, ordered by ILATE",
+      "body": "`∫u dv = uv - ∫v du` reverses the product rule, and the entire skill is picking u so the *remaining* integral is easier. **ILATE** — Inverse-trig, Logarithmic, Algebraic, Trigonometric, Exponential — is the ordering that usually achieves it.\n\nThe instructive case is `∫ln x dx`, which appears to have nothing to split. ILATE says logarithmic outranks algebraic: take u = ln x, dv = dx, and it falls out as `x·ln x - x + C`. Choosing the other way makes it worse — which is the test of whether the rule is understood or memorised."
+    },
+    {
+      "title": "Partial fractions, and why Laplace needs them",
+      "body": "A rational function with a factorable denominator splits into pieces like `A/(x-a) + B/(x-b)`, each integrating straight to a logarithm. The decomposition is the work; the integration after it is trivial.\n\nThis is exactly what makes **Laplace-domain circuit analysis** work: an RLC transfer function is decomposed so each term inverts to a known exponential, which is how the time-domain response comes back out."
+    }
+  ],
+  "recap": "Treat + C as a measurement with a physical name, then go and get it. Reach for substitution when the inner function's derivative is present, and for parts when ILATE can order a product. Verify by differentiating your answer — the round trip is cheap, and it catches the sign error you actually made."
+}

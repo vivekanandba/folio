@@ -1,0 +1,23 @@
+{
+  "id": "ode-classify",
+  "kind": "classify",
+  "title": "Order, degree — or no degree at all",
+  "conceptIds": ["differential-equations"],
+  "intro": "Classify each equation by its degree. Read carefully: one bucket exists because the question sometimes has no answer.",
+  "buckets": [
+    { "id": "deg1", "label": "Degree 1", "hint": "Highest derivative appears to the first power", "tone": "cool" },
+    { "id": "deg2plus", "label": "Degree 2 or more", "hint": "Highest derivative raised to a power", "tone": "warm" },
+    { "id": "undefined", "label": "Degree undefined", "hint": "Not polynomial in its derivatives", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "y′ + 2y = 0", "bucketId": "deg1" },
+    { "id": "c2", "text": "y″ + (y′)² = x — the highest derivative is y″, and it appears linearly", "bucketId": "deg1" },
+    { "id": "c3", "text": "dy/dx = -2xy, the separable equation behind the Gaussian family", "bucketId": "deg1" },
+    { "id": "c4", "text": "(y″)³ + y = 0", "bucketId": "deg2plus" },
+    { "id": "c5", "text": "(dy/dx)² = 4y", "bucketId": "deg2plus" },
+    { "id": "c6", "text": "y′ + cos(y′) = 0", "bucketId": "undefined" },
+    { "id": "c7", "text": "y″ + e^(y′) = x", "bucketId": "undefined" },
+    { "id": "c8", "text": "sin(y″) + y = 0", "bucketId": "undefined" }
+  ],
+  "debrief": "The card doing the real teaching is `y″ + (y′)² = x`. It is tempting to call it degree 2 because there is a square in plain sight — but degree refers to the power of the **highest** derivative, which here is y″, and y″ appears linearly. Degree 1. The squared y′ is a lower-order term and does not enter the definition.\n\nThe undefined bucket is not a dodge. When a derivative sits inside cos, e^x or sin, the equation is not polynomial in its derivatives and degree is **not defined** — not zero, not one, not 'effectively one'. This matters beyond pedantry: order and degree are how you decide which solution method even applies, and a classifier that invents a number there sends you down a method that cannot work. Returning 'undefined' is the informative answer, in the same way that a blank field means 'nobody looked' rather than 'no'.\n\nNote too that order is untroubled by all of this. Every card above has a perfectly well-defined order — it is only degree that can fail to exist."
+}

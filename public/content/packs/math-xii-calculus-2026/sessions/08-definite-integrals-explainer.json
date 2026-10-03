@@ -1,0 +1,36 @@
+{
+  "id": "definite-integrals-explainer",
+  "kind": "explainer",
+  "title": "Boundary states, slices, and a free shortcut",
+  "conceptIds": ["definite-integrals-areas"],
+  "intro": "Accumulation read off two endpoints — and the symmetry check that can settle it before you start.",
+  "steps": [
+    {
+      "title": "Two evaluations settle it",
+      "body": "The Second FTC says `∫ₐᵇ f dx = F(b) - F(a)`: an accumulation read from its boundary states, with nothing in the interior examined. `∫₀⁴(-x² + 4x) dx` has antiderivative `-x³/3 + 2x²`, giving `(-64/3 + 32) - 0 = 32/3 ≈ 10.667`.\n\nThat is why a rocket's **total impulse** `I = ∫F dt = m·Δv` comes from the burn's endpoints, and why a capacitor's `V(t) = (1/C)∫₀ᵗ I dτ + V(0)` carries its initial condition explicitly — the + C from the previous concept, sitting in the formula where it belongs."
+    },
+    {
+      "title": "What software actually does",
+      "body": "Closed-form antiderivatives are a luxury most real integrands don't offer, so solvers slice. The trapezoidal rule on `∫₀⁴(-x² + 4x)`:\n\n| Slices N | Error |\n|---|---|\n| 10 | 0.1067 |\n| 20 | 0.0267 |\n| 40 | 0.0067 |\n\nThe error **quarters as N doubles** — the 1/N² signature, and the honest reason you double resolution rather than nudge it. A PID controller's integral term is this same running sum, accumulating error every clock tick."
+    },
+    {
+      "title": "Check parity before integrating anything",
+      "body": "On symmetric bounds [-a, a], the integrand's symmetry can settle the answer before any work starts. **Odd** (f(-x) = -f(x)) integrates to exactly **0**. **Even** (f(-x) = f(x)) gives `2∫₀ᵃ`, halving the work.\n\nThis is an O(1) guard in front of an O(N) computation — the same instinct as rejecting a collision pair by bounding box before the real test. Across a symmetric delta wing, **lift is even** and accumulates while **roll moment is odd** and cancels; in AC, net voltage over a cycle is odd and vanishes while power is even and piles up, which is why a device with zero average voltage still gets hot.",
+      "viz": {
+        "type": "annotated",
+        "title": "Three routes to the same number",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Second FTC", "value": 4, "note": "F(b) − F(a). Exact and instant — when an antiderivative exists in closed form, which is the part real problems rarely grant." },
+          { "label": "Trapezoid", "value": 2, "note": "Slices; error ~1/N². What numerical libraries do. Converges to the exact value as N grows." },
+          { "label": "Parity", "value": 3, "note": "Odd ⇒ 0 with no computation at all. Even ⇒ half the work. Free, and only available if you look before you integrate." }
+        ]
+      }
+    },
+    {
+      "title": "Area between two curves",
+      "body": "`A = ∫ₐᵇ [upper - lower] dx`, with a and b solved from where the curves cross. Both halves are where mistakes live: picking the wrong curve as upper flips the sign, and guessing the bounds instead of solving for intersections computes a region nobody asked about.\n\nThe standard check: `y = x + 2` against `y = x²` meet at x = -1 and x = 2 and enclose exactly **9/2**. Verify an area routine against closed forms you know — πr² for a circle, πab for an ellipse — because one that gets those wrong will get your airfoil section wrong too, just less visibly."
+    }
+  ],
+  "recap": "The FTC turns accumulation into two evaluations. When no antiderivative exists, slices converge as 1/N². On symmetric bounds, check parity first — odd is zero for free. And for area between curves, solve for the intersections rather than guessing the bounds."
+}

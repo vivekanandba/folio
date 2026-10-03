@@ -1,0 +1,36 @@
+{
+  "id": "odes-explainer",
+  "kind": "explainer",
+  "title": "A family of behaviours, pinned by a measurement",
+  "conceptIds": ["differential-equations"],
+  "intro": "An equation of change describes what is possible. One condition says what happened.",
+  "steps": [
+    {
+      "title": "Read it before solving it",
+      "body": "**Order** is the highest derivative present and tells you how many arbitrary constants the general solution carries — and therefore how many conditions you need. **Degree** is the power of that highest derivative, but only when the equation is **polynomial in its derivatives**.\n\n`y′ + cos(y′) = 0` has order 1 and **no degree at all**. The derivative is trapped inside a transcendental function, so the concept does not apply. 'Undefined' is the correct answer; a classifier that returns a number there is lying rather than failing.",
+      "viz": {
+        "type": "annotated",
+        "title": "Two readings and a trap",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Order", "value": 3, "note": "Highest derivative. Counts the arbitrary constants, hence how many measurements pin the solution down." },
+          { "label": "Degree", "value": 2, "note": "Power of that highest derivative — meaningful only if the equation is polynomial in its derivatives." },
+          { "label": "Undefined", "value": 1, "note": "y′ + cos(y′) = 0. Not zero, not one. The honest answer is that degree does not apply here." }
+        ]
+      }
+    },
+    {
+      "title": "General, then particular",
+      "body": "A second-order equation's general solution carries two arbitrary constants: a whole family of behaviours obeying the same physics. Supply `y(0) = 2` and `y′(0) = 4` and the family collapses to one curve, `y = 2e^(2x)`.\n\nThe reading is the same everywhere. The general solution is the family of conic **orbits**; the boundary conditions are *this* vehicle's position and velocity. The equation is the RLC **ring-down** shape; the conditions are the state at the instant the switch flipped."
+    },
+    {
+      "title": "Verify by substituting, not by looking",
+      "body": "Put the candidate back into the equation and simplify. The residual must be **exactly zero**.\n\nA plausible wrong answer announces itself under this test — substituting sin(2x) into one of these leaves a residual of `-8·sin(2x)`, which is neither zero nor subtle. Checking a solution is mechanical and takes less time than second-guessing it."
+    },
+    {
+      "title": "The two first-order moves",
+      "body": "**Separable** — get it to `f(y) dy = g(x) dx` and integrate both sides. `dy/dx = -2xy` separates to `dy/y = -2x dx`, giving the Gaussian family `y = C·e^(-x²)`, with y(0) = 10 pinning C = 10.\n\n**Homogeneous** — when every term shares the same total degree, the substitution `y = vx` *forces* separability. `dy/dx = (x + y)/x` collapses to `x·dv/dx = 1`, giving `y = x·ln|x| + Cx`.\n\nThen the boundary condition makes it physical: RC discharge `V = 5e^(-1000t)` has τ = 1 ms, with the voltage at t = τ down to exactly `V₀/e ≈ 37%`. Barometric decay `P = 101.3·e^(-h/8.5)` kPa gives about **27.8 kPa** at 11 km — roughly a quarter of sea level."
+    }
+  ],
+  "recap": "Order counts the constants you must supply; degree only exists when the equation is polynomial in its derivatives. The general solution is a family, and a measurement selects the member. Separable and homogeneous are the two first-order moves, and substitution is how you check you got it right."
+}

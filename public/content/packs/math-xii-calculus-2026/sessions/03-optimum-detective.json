@@ -1,0 +1,27 @@
+{
+  "id": "optimum-detective",
+  "kind": "detective",
+  "title": "The optimum that wasn't",
+  "conceptIds": ["derivative-applications"],
+  "intro": "A design sweep reports the best configuration. The prototype built to the next setting up performs better, and nobody can explain why. Open the clues.",
+  "facts": [
+    { "label": "The report", "value": "The optimiser names a single best setting and reports an objective value of 20. It has run cleanly for months on unconstrained problems.", "signal": 2 },
+    { "label": "The prototype", "value": "A unit built at the top of the permitted range measures 69 on the same objective — more than three times the reported optimum.", "signal": 3 },
+    { "label": "The method", "value": "The optimiser solves f′(x) = 0, classifies each root with f″, and returns the best stationary point it finds.", "signal": 3 },
+    { "label": "The range", "value": "The parameter is bounded by the enclosure: [-2, 6]. The objective behaves as x³ - 3x² - 9x + 15 across it.", "signal": 3 },
+    { "label": "The derivative at the top", "value": "f′(6) = 27 — strongly positive. The objective is still climbing when the range runs out.", "signal": 3 },
+    { "label": "The arithmetic", "value": "Both stationary points check out: a local max of 20 at x = -1, a local min of -12 at x = 3. Independently recomputed, twice.", "signal": 1 }
+  ],
+  "composition": [
+    { "label": "Endpoints never evaluated", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "The second-derivative test misclassified the stationary points",
+    "The objective function is wrong and needs re-deriving from the physics",
+    "Nothing is miscalculated — the search only ever evaluates stationary points, and on a closed interval the absolute maximum can sit at an endpoint where f′ is nowhere near zero",
+    "A numerical tolerance caused the optimiser to miss a third root"
+  ],
+  "answerIndex": 2,
+  "debrief": "Every number in the report is correct. The local maximum really is 20 at x = -1, the local minimum really is -12 at x = 3, and the second-derivative test classified both properly. The search is simply looking in the wrong place: **f′ = 0 cannot find an extreme that lives at a boundary.**\n\nAt x = 6 the objective is 69 and still climbing — f′(6) = 27. The curve does not turn over inside the permitted range; it runs into the wall of the enclosure while rising. The procedure for absolute extrema on [a, b] has three steps, and the third is the one that was skipped: find the interior critical points, classify them, **and evaluate f(a) and f(b)**.\n\nThe exonerating clue is the one marked lowest: the arithmetic was recomputed twice and agrees. When independent recomputation keeps giving the same answer, the defect is in the question being asked, not in the computing. And the reason this survived months of clean runs is in the first clue — unconstrained problems have no boundaries to miss. Constrained ones live at them, which is why the maximum legal payload and the tightest permitted tolerance are so often the answer."
+}

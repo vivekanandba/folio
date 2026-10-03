@@ -1,0 +1,27 @@
+{
+  "id": "navigator-detective",
+  "kind": "detective",
+  "title": "The navigator that drifted",
+  "conceptIds": ["integration-techniques"],
+  "intro": "An inertial navigation unit integrates accelerometer data to track position. Its reported position drifts steadily away from GPS — always in the same direction, always at the same rate. Open the clues.",
+  "facts": [
+    { "label": "The symptom", "value": "Reported position falls behind the true track by a constant amount per second. After an hour the gap is large; after two hours it is exactly twice as large.", "signal": 3 },
+    { "label": "The accelerometer", "value": "Bench-calibrated this month. Bias within spec, noise within spec. Integrating its output over a stationary period yields zero velocity, correctly.", "signal": 2 },
+    { "label": "The arithmetic", "value": "Velocity is obtained by integrating acceleration; position by integrating velocity. Both integrals verified against closed-form test signals and correct to machine precision.", "signal": 2 },
+    { "label": "The start", "value": "The unit was switched on while the vehicle was already moving at cruise, rolling off the end of a transit leg.", "signal": 3 },
+    { "label": "The initialisation", "value": "Velocity is seeded at zero at power-on. There is no field to supply a starting velocity, and nothing in the log records one.", "signal": 3 },
+    { "label": "The shape", "value": "The drift is linear in time, not growing or oscillating. A plot of reported-versus-true position is two parallel lines.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "The integration constant was assumed zero", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "Accelerometer bias is being integrated twice and accumulating",
+    "The integration constant — the initial velocity — was assumed to be zero while the vehicle was already moving, so every velocity since is off by that constant and position drifts linearly",
+    "The numerical integration scheme is accumulating round-off error",
+    "The GPS reference itself is offset"
+  ],
+  "answerIndex": 1,
+  "debrief": "The arithmetic is exact and the sensor is healthy. What was lost is **+ C** — and in this system + C has a name: the **initial velocity**.\n\nIntegrating acceleration gives velocity *up to a constant*. Seeding that constant at zero asserts the vehicle was stationary at power-on. It was not; it was already at cruise. Every velocity since is short by that fixed amount, and integrating a constant velocity error gives a position error that grows **linearly** with time — which is precisely the shape in the last clue. Two parallel lines is the signature of a missing constant, not of a noisy sensor.\n\nThe clue that rules out the usual suspect is the bench calibration: an accelerometer *bias* integrated twice produces error growing with t², a curve that accelerates away. This one does not bend. Nor can round-off produce a perfectly steady, single-direction offset.\n\nThe fix is not better integration. It is a measurement: seed the velocity from GPS, or from the known state at power-on. That is the lesson underneath the whole concept — the shape is recoverable from the data, the offset never is, and a default of zero is a claim about the world that someone has to be willing to defend."
+}

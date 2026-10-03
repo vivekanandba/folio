@@ -1,0 +1,108 @@
+{
+  "id": "calculus-quiz",
+  "kind": "quiz",
+  "title": "Chapters 6–9 — check what stuck",
+  "conceptIds": ["derivative-applications", "integration-techniques", "definite-integrals-areas", "differential-equations"],
+  "intro": "Nine self-check questions across the calculus chapters. My own checks against the lessons, not an official paper.",
+  "questions": [
+    {
+      "prompt": "A sphere inflates at a constant volume rate Q. What happens to dr/dt as it grows?",
+      "choices": [
+        "It stays constant, since Q is constant",
+        "It falls, as Q/(4πr²) — the same inflow spread over an ever-larger surface, so radius goes as t^(1/3)",
+        "It rises, because the sphere has more surface to expand into",
+        "It oscillates with the radius"
+      ],
+      "answerIndex": 1,
+      "explanation": "Differentiate the relation, not the quantity: V = (4/3)πr³ gives dV/dt = 4πr²·dr/dt. Volume is linear in time; radius is not."
+    },
+    {
+      "prompt": "f′(c) = 0 and f″(c) = 0. What can you conclude?",
+      "choices": [
+        "It is an inflection point",
+        "It is a minimum",
+        "Nothing yet — the second-derivative test is inconclusive, so fall back to the first-derivative test and read the sign change",
+        "It is a maximum"
+      ],
+      "answerIndex": 2,
+      "explanation": "f″(c) = 0 is genuinely inconclusive. It may be a max, a min, or an inflection; only the sign change of f′ across c distinguishes them."
+    },
+    {
+      "prompt": "On [-2, 6], x³ - 3x² - 9x + 15 has a local maximum of 20 at x = -1. What is its absolute maximum?",
+      "choices": [
+        "20, at the local maximum",
+        "69, at the endpoint x = 6 — where f′(6) = 27 and the curve is still climbing when the interval runs out",
+        "-12, at the local minimum",
+        "It has no absolute maximum on a closed interval"
+      ],
+      "answerIndex": 1,
+      "explanation": "Absolute extrema on [a, b] must compare the interior critical points against the endpoints. A search that only solves f′ = 0 cannot find this one."
+    },
+    {
+      "prompt": "What does the + C in an indefinite integral physically represent in an inertial navigator?",
+      "choices": [
+        "Accumulated numerical error",
+        "The sensor's bias",
+        "The initial velocity — assume it is zero while the vehicle is already moving and position drifts linearly forever",
+        "Nothing; it cancels out in practice"
+      ],
+      "answerIndex": 2,
+      "explanation": "Differentiation destroys the constant. Integration recovers the shape but not the offset, and a default of zero is a claim that the system started at rest."
+    },
+    {
+      "prompt": "Why does ILATE say to take u = ln x when integrating ∫ln x dx?",
+      "choices": [
+        "Because logarithms are always harder",
+        "Because Logarithmic outranks Algebraic, leaving ∫v du easier than the original — it resolves to x·ln x - x + C",
+        "Because dv must always be the whole integrand",
+        "Because ln x has no derivative"
+      ],
+      "answerIndex": 1,
+      "explanation": "The whole skill in parts is choosing u so the REMAINING integral is simpler. Choosing the other way round here makes it worse."
+    },
+    {
+      "prompt": "On symmetric bounds [-a, a], what does an odd integrand give you?",
+      "choices": [
+        "Twice the integral from 0 to a",
+        "Exactly zero, with no computation at all",
+        "The same as an even integrand",
+        "An undefined result"
+      ],
+      "answerIndex": 1,
+      "explanation": "Odd cancels exactly; even gives 2∫₀ᵃ. It is an O(1) check in front of an O(N) computation — which is why roll moment vanishes across a symmetric wing while lift accumulates."
+    },
+    {
+      "prompt": "The trapezoid error on a smooth integrand goes 0.107, 0.027, 0.0067 at N = 10, 20, 40. What does that tell you?",
+      "choices": [
+        "The method is diverging",
+        "Error falls as roughly 1/N² — it quarters each time N doubles, which is why doubling resolution is the meaningful move",
+        "Error falls linearly with N",
+        "Round-off dominates already"
+      ],
+      "answerIndex": 1,
+      "explanation": "Quartering per doubling is the 1/N² signature. Adding a few slices achieves little; doubling achieves a factor of four."
+    },
+    {
+      "prompt": "After substituting u = g(x) in a DEFINITE integral and translating the limits, what should you do?",
+      "choices": [
+        "Back-substitute to x, then apply the original limits",
+        "Evaluate between the translated limits and stop — back-substituting and reapplying the old limits corrects the same thing twice",
+        "Always double the result",
+        "Re-derive du from scratch"
+      ],
+      "answerIndex": 1,
+      "explanation": "Translating the limits is what makes the substitution definite. Back-substitution belongs to indefinite integrals, where there are no limits to carry."
+    },
+    {
+      "prompt": "What is the degree of y′ + cos(y′) = 0?",
+      "choices": [
+        "1",
+        "2",
+        "0",
+        "Undefined — the equation is not polynomial in its derivatives, so the concept does not apply"
+      ],
+      "answerIndex": 3,
+      "explanation": "Degree requires the equation to be polynomial in its derivatives. 'Undefined' is the correct and informative answer; inventing a number there sends you toward a method that cannot work."
+    }
+  ]
+}

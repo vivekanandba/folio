@@ -1,0 +1,15 @@
+{
+  "id": "integral-estimate",
+  "kind": "estimate",
+  "title": "Area under a parabolic arch",
+  "conceptIds": ["definite-integrals-areas"],
+  "intro": "The curve y = -x² + 4x rises from the origin, peaks at x = 2, and returns to zero at x = 4 — a parabolic arch sitting on the x-axis.",
+  "prompt": "What is the area enclosed between the curve and the x-axis, from x = 0 to x = 4?",
+  "unit": "sq units",
+  "min": 0,
+  "max": 30,
+  "step": 0.1,
+  "answer": 10.67,
+  "tolerance": 0.05,
+  "debrief": "The antiderivative is `-x³/3 + 2x²`, so the Second FTC gives `(-64/3 + 32) - 0 = 32/3 ≈ **10.667**` square units. Two evaluations; the interior was never examined.\n\nIt is worth knowing what a numerical solver would do with the same question, because that is what actually runs in production. The trapezoidal rule gives 10.560 at N = 10, 10.640 at N = 20, and 10.660 at N = 40 — errors of 0.107, 0.027 and 0.0067. The error **quarters each time N doubles**, which is the 1/N² convergence, and it is why doubling resolution is the meaningful move and adding a few slices is not.\n\nA useful sanity check for any arch like this: the enclosing rectangle is 4 wide and 4 tall, so 16 square units, and a parabola fills exactly two-thirds of its bounding rectangle — giving 32/3 without integrating at all. When a numerical answer and a geometric argument agree, you have two independent reasons to believe it."
+}

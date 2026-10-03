@@ -1,0 +1,27 @@
+{
+  "id": "family-detective",
+  "kind": "detective",
+  "title": "The model that fit everything and predicted nothing",
+  "conceptIds": ["differential-equations"],
+  "intro": "A thermal model of an enclosure solves cleanly and matches the measured cooling curve. Asked to predict tomorrow's warm-up from a cold start, it produces a different answer every time it is run. Open the clues.",
+  "facts": [
+    { "label": "The symptom", "value": "Re-running the prediction gives a family of curves, all the same shape, stacked at different heights. Nobody can say which one the enclosure will follow.", "signal": 3 },
+    { "label": "The equation", "value": "First-order and separable: dT/dt = -k(T - T_ambient). Newton's law of cooling, correct for this enclosure.", "signal": 2 },
+    { "label": "The fit", "value": "Against the recorded cooling run the model matches to within sensor noise. k was identified from that data and is trusted.", "signal": 2 },
+    { "label": "The solution as stored", "value": "T(t) = T_ambient + C·e^(-kt). The constant C is left symbolic in the model definition.", "signal": 3 },
+    { "label": "The prediction call", "value": "The warm-up prediction supplies t, k and T_ambient. It does not supply a starting temperature — there is no argument for one.", "signal": 3 },
+    { "label": "The order", "value": "The equation is first order, so its general solution carries exactly one arbitrary constant.", "signal": 2 }
+  ],
+  "composition": [
+    { "label": "General solution used where a particular one was needed", "pct": 100, "revealAfter": 3, "color": "#b91c1c" }
+  ],
+  "question": "What actually failed?",
+  "choices": [
+    "k was identified from cooling data and does not transfer to warming",
+    "The model is only a general solution — a one-parameter family — and nothing supplies the initial condition that would select a single member",
+    "The equation needs to be second order to capture warm-up",
+    "Sensor noise in the original fit propagated into the prediction"
+  ],
+  "answerIndex": 1,
+  "debrief": "Nothing is wrong with the physics, the fit, or k. The model is a **general solution** — `T = T_ambient + C·e^(-kt)` — and a first-order equation's general solution carries exactly one arbitrary constant. That constant is a whole family of parallel behaviours, identical in shape, differing only in where they start.\n\nThe cooling run matched because the recorded data *implicitly* supplied the condition: the fit had a starting temperature to anchor to. The prediction has none, so C is unconstrained and every run is as valid as any other. The symptom in the first clue — same shape, different heights — is the visual signature of exactly this, and it is the same signature as the navigator's drift earlier in this pack. Both are a missing constant of integration wearing different clothes.\n\nThe fix is a measurement, not a better model: supply T(0). One number collapses the family to the single curve the enclosure will actually follow.\n\nThe broader habit is in the last clue. **Order tells you how many conditions you owe.** A first-order equation needs one; a second-order needs two, typically position and velocity. If you have fewer conditions than the order, you do not have a prediction — you have a family, and saying so is more useful than picking a member at random."
+}

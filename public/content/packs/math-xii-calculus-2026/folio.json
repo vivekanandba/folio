@@ -1,0 +1,34 @@
+{
+  "id": "math-xii-calculus-2026",
+  "title": "Calculus in Anger — Class XII, Chapters 6–9",
+  "subject": "mathematics",
+  "category": "Mathematics",
+  "type": "course",
+  "source": "Personal study notes from my own Class XII Mathematics revision project (Days 16–26), where each theorem was verified in NumPy/SymPy and mapped onto aerospace, electronics and computing.",
+  "summary": "The derivative as rate, direction and extreme — including the maximum that hides at an endpoint; integration as a family of curves whose lost constant is a physical measurement; definite integrals read from boundary states, with parity as a free shortcut; and differential equations that describe what is possible until one condition says what happened.",
+  "tags": ["mathematics", "cbse", "class-xii", "calculus", "integration", "differential-equations"],
+  "concepts": [
+    "derivative-applications",
+    "integration-techniques",
+    "definite-integrals-areas",
+    "differential-equations"
+  ],
+  "sessions": [
+    "01-derivative-apps-explainer.json",
+    "02-critical-point-classify.json",
+    "03-optimum-detective.json",
+    "04-box-estimate.json",
+    "05-integration-explainer.json",
+    "06-navigator-detective.json",
+    "07-substitution-sequence.json",
+    "08-definite-integrals-explainer.json",
+    "09-parity-classify.json",
+    "10-integral-estimate.json",
+    "11-areas-estimate.json",
+    "12-odes-explainer.json",
+    "13-ode-classify.json",
+    "14-family-detective.json",
+    "15-separable-sequence.json",
+    "16-calculus-quiz.json"
+  ]
+}
