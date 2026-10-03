@@ -45,7 +45,18 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       61→84%, fx.ts 87→98%. Driven deliberately — the aurora needs real WebGL
       AND no reduced-motion emulation, tilt needs a fine pointer, the engine
       needs dwell time.
-- [ ] 14b. The gap from 89.68% to 95%: tilt.ts (31% — attaches under emulated
+- [x] 14b. **Combined coverage reached 95.05%** (2026-10-03), up from 89.68%,
+      by playing every session kind to its END (check buttons, review rows,
+      result screens), driving the floor's pan/pinch/tap layer, the review
+      queue with seeded SRS state, the palette's keyboard, classify's
+      drag-and-drop, and progress-import's per-field refusals. The CI floor is
+      **94**, not 95: measured 94.95–95.05 across runs because the browser half
+      varies by a few lines, and a floor at the peak would fail on rendering
+      timing rather than on a regression.
+- [ ] 14c. Make the browser contribution deterministic so the floor can go to
+      95. The aurora now waits for 30 frames rather than a clock (which removed
+      most of the swing); sim/engine.ts and floor.ts still drift a few lines.
+      Superseded note — the original gap was: tilt.ts (31% — attaches under emulated
       pointer but its rAF handler still isn't captured) and the deep branches
       of the session renderers. Needs either full session play-through in the
       browser or targeted unit tests for the remaining paths.

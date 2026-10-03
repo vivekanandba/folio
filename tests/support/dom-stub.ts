@@ -241,6 +241,12 @@ export class StubElement extends StubNode {
     return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }
   }
   scrollIntoView(): void {}
+  /** Pointer capture: the floor canvas claims the pointer while panning. */
+  setPointerCapture(): void {}
+  releasePointerCapture(): void {}
+  hasPointerCapture(): boolean {
+    return false
+  }
 
   /** <dialog>: the command palette opens modally, so model open/close state. */
   open = false
@@ -380,8 +386,15 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
       return frames
     }
     g.cancelAnimationFrame = (): void => {}
+    // Media queries are answered from a mutable map so a test can simulate a
+    // desktop mouse (hover/fine pointer) or a reduced-motion preference. With
+    // a hard `matches: false`, modules that guard on a media query — tilt.ts
+    // does — return immediately and can never be exercised.
+    const mediaState: Record<string, boolean> = {}
+    g.__setMedia = (query: string, matches: boolean) => { mediaState[query] = matches }
+    g.__resetMedia = () => { for (const k of Object.keys(mediaState)) delete mediaState[k] }
     g.matchMedia = (query: string) => ({
-      matches: false,
+      matches: mediaState[query] ?? false,
       media: query,
       addEventListener: () => {},
       removeEventListener: () => {},

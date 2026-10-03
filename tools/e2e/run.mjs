@@ -384,9 +384,20 @@ try {
         return ctx ? ctx.getParameter(ctx.VERSION) : 'no webgl context'
       })()`)
       assert(String(gl).includes('WebGL'), `the aurora canvas has no GL context (${gl})`)
-      // Let the render loop turn over a few frames.
-      await page.evaluate('new Promise(r => setTimeout(r, 1200))')
-      return String(gl)
+      // Wait for FRAMES, not for a clock. A fixed sleep made shader.ts coverage
+      // swing by ~13 lines between runs — the render loop had sometimes turned
+      // over and sometimes not, which is the same "duration instead of
+      // condition" mistake the smoke suite was built on.
+      const frames = await page.evaluate(`(async () => {
+        let n = 0
+        await new Promise((resolve) => {
+          const tick = () => { n += 1; n < 30 ? requestAnimationFrame(tick) : resolve() }
+          requestAnimationFrame(tick)
+        })
+        return n
+      })()`)
+      assert(frames >= 30, `the aurora loop only reached ${frames} frames`)
+      return `${gl}, ${frames} frames`
     } finally {
       await page.close()
     }
