@@ -78,3 +78,26 @@ jobs:
           name: e2e-screenshots
           path: tests/baselines/*.png
           if-no-files-found: error
+
+  # Combined coverage: unit + what a real browser executed, unioned into the
+  # unit run's line set. WebGL, pointer handling and the animation loop cannot
+  # run under the DOM stub, so a unit-only figure permanently understates them.
+  coverage:
+    runs-on: ubuntu-latest # ships with google-chrome preinstalled
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Combined coverage floor
+        run: npm run coverage:all -- --min 89
+      - name: Upload lcov
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: .coverage/*.lcov
+          if-no-files-found: warn

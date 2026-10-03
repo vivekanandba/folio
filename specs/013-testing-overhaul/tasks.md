@@ -37,10 +37,18 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
 - [x] 15b. **Installability**: manifest fields, PNG 192/512 + maskable, every
       icon verified against its real IHDR dimensions, apple-touch-icon.
       Unplanned: folio was NOT installable on Android (SVG-only icon set).
-- [ ] 12. Play all 12 session kinds in the real browser (the unit suite plays
-      them against the DOM stub today)
-- [ ] 14. Browser V8 coverage merged with the unit run — the remaining route to
-      95% for shader.ts (WebGL), sim/engine.ts (frame loop), tilt.ts (pointer)
+- [x] 12. All 12 session kinds played in the real browser — each route loads,
+      renders a stage, takes interaction, and must not blank or throw
+- [x] 14. Browser V8 coverage merged with the unit run (`npm run coverage:all`,
+      floor in CI). Combined **89.68%**, up from 86.05% unit-only. The three
+      stub-impossible modules moved most: shader.ts 55→90%, sim/engine.ts
+      61→84%, fx.ts 87→98%. Driven deliberately — the aurora needs real WebGL
+      AND no reduced-motion emulation, tilt needs a fine pointer, the engine
+      needs dwell time.
+- [ ] 14b. The gap from 89.68% to 95%: tilt.ts (31% — attaches under emulated
+      pointer but its rAF handler still isn't captured) and the deep branches
+      of the session renderers. Needs either full session play-through in the
+      browser or targeted unit tests for the remaining paths.
 
 ## Phase 3 — delivery path + contracts (this PR)
 

@@ -148,6 +148,25 @@ async function newPage(port) {
       )
       if (!ok) throw new Error(`no element matched ${selector}`)
     },
+    /**
+     * Start collecting V8 precise coverage for this page.
+     *
+     * This is the only honest way to measure the code a DOM stub cannot run:
+     * WebGL in shader.ts, the animation loop in sim/engine.ts, pointer
+     * handling in tilt.ts. Must be called before navigating, or the scripts
+     * that run during load are missed.
+     */
+    async startCoverage() {
+      await send('Profiler.enable')
+      await send('Profiler.startPreciseCoverage', { callCount: false, detailed: true })
+    },
+    /** Raw V8 coverage entries: [{ url, functions: [{ ranges }] }]. */
+    async takeCoverage() {
+      const { result } = await send('Profiler.takePreciseCoverage')
+      await send('Profiler.stopPreciseCoverage').catch(() => {})
+      return result
+    },
+
     /** Full-page PNG, base64. */
     async screenshot({ fullPage = false } = {}) {
       const params = { format: 'png' }
