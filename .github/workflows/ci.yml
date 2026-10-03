@@ -93,7 +93,7 @@ jobs:
       - name: Install
         run: npm ci
       - name: Combined coverage floor
-        run: npm run coverage:all -- --min 89
+        run: npm run coverage:gate
       - name: Upload lcov
         if: always()
         uses: actions/upload-artifact@v4
