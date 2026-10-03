@@ -17,6 +17,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      # The hashed asset names this build produced, so the deploy job can prove
+      # the live site is serving THIS build rather than a cached older one.
+      assets: ${{ steps.assets.outputs.names }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +35,19 @@ jobs:
         run: npm test
       - name: Build
         run: npm run pages:build
+      - name: Verify the built artifact
+        run: node tools/verify-build.mjs dist --base /folio/
+      - id: assets
+        name: Record the built asset names
+        run: |
+          names=$(node -e "
+            const fs = require('node:fs')
+            const html = fs.readFileSync('dist/index.html', 'utf8')
+            const names = [...new Set([...html.matchAll(/\/assets\/([A-Za-z0-9._-]+)/g)].map(m => m[1]))]
+            if (!names.length) { console.error('no hashed assets in dist/index.html'); process.exit(1) }
+            console.log(names.join(','))
+          ")
+          echo "names=$names" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -42,5 +59,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - id: deployment
         uses: actions/deploy-pages@v4
+      # A deploy that exits 0 having shipped nothing is the documented failure
+      # mode (CON-VER-003). Read the outcome back: the live page must reference
+      # the assets this run built, and the PWA surface must actually serve.
+      - name: Verify the live site serves this build
+        run: |
+          node tools/verify-deploy.mjs \
+            "${{ steps.deployment.outputs.page_url }}" \
+            --expect "${{ needs.build.outputs.assets }}"
