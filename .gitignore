@@ -27,3 +27,6 @@ dist-ssr
 
 # e2e captures from CI runs (baselines are committed; these are not)
 tests/baselines/*.current.png
+
+# combined coverage output (lcov is regenerated, never committed)
+.coverage/

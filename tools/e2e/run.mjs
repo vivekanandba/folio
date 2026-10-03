@@ -15,10 +15,11 @@
 //   node tools/e2e/run.mjs --update   (accept current screenshots as baseline)
 
 import { execFileSync, execSync } from 'node:child_process'
-import { createReadStream, existsSync, globSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, globSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join } from 'node:path'
 import { launch } from './cdp.mjs'
+import { toLcov, v8ToLines } from './coverage.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 const PREVIEW = join(ROOT, '.preview')
@@ -69,6 +70,34 @@ function serve(dir, port) {
     createReadStream(file).pipe(res)
   })
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)))
+}
+
+/* ------------------------------------------------------------ coverage --- */
+
+const coverageEntries = []
+
+/**
+ * Make every page this suite opens report what it executed.
+ *
+ * Wrapping newPage/close rather than restructuring each check means coverage
+ * reflects the WHOLE run — every route, every session kind, every interaction
+ * — instead of a token page somebody remembered to instrument.
+ */
+function instrument(browser) {
+  const rawNewPage = browser.newPage.bind(browser)
+  browser.newPage = async () => {
+    const page = await rawNewPage()
+    await page.startCoverage()
+    const rawClose = page.close.bind(page)
+    page.close = async () => {
+      try {
+        coverageEntries.push(...(await page.takeCoverage()))
+      } catch { /* a page that already went away owes us nothing */ }
+      await rawClose()
+    }
+    return page
+  }
+  return browser
 }
 
 let failures = 0
@@ -167,7 +196,7 @@ if (!chrome) { console.error('e2e: no Chromium found (set CHROME_BIN)'); process
 
 mkdirSync(BASELINES, { recursive: true })
 const server = await serve(PREVIEW, PORT)
-const browser = await launch(chrome, { port: 9344 })
+const browser = instrument(await launch(chrome, { port: 9344 }))
 const origin = `http://127.0.0.1:${PORT}`
 
 try {
@@ -279,6 +308,145 @@ try {
     }
   })
 
+  /* --------------------------------------------- every session kind ------ */
+
+  // The unit suite plays all twelve kinds against the DOM stub, which proves
+  // the logic. It cannot prove they render and respond in a browser: canvas,
+  // SVG, drag-and-drop, pointer events and the animation loop are all stubbed
+  // out there. These run the real thing.
+  const kinds = new Map()
+  for (const pack of readdirSync(join(ROOT, 'public/content/packs'))) {
+    const dir = join(ROOT, 'public/content/packs', pack, 'sessions')
+    if (!existsSync(dir)) continue
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+      const data = JSON.parse(readFileSync(join(dir, file), 'utf8'))
+      if (!kinds.has(data.kind)) kinds.set(data.kind, { pack, id: data.id, title: data.title })
+    }
+  }
+
+  await check('every session kind has shipped content to drive', () => {
+    if (kinds.size < 12) throw new Error(`expected 12 kinds, found ${kinds.size}: ${[...kinds.keys()]}`)
+    return `${kinds.size} kinds`
+  })
+
+  for (const [kind, sample] of [...kinds].sort()) {
+    await check(`session kind in the browser: ${kind}`, async () => {
+      const page = await browser.newPage()
+      try {
+        await page.goto(`${origin}/index.html#/pack/${sample.pack}/session/${sample.id}`)
+        await page.waitFor('!!document.querySelector(".stage")', {
+          timeoutMs: 15000, label: `${kind} stage`,
+        })
+        const before = await page.evaluate('document.querySelector(".stage").textContent.length')
+        if (!before) throw new Error('the stage rendered empty')
+
+        // Touch it the way a learner would: the first few affordances the kind
+        // offers. Which ones exist differs per kind; clicking what is there is
+        // the point, not clicking a specific thing.
+        const clicked = await page.evaluate(`(() => {
+          const targets = document.querySelectorAll(
+            '.choice-btn, .clue-card, .classify-card, .seq-move, .pillar-tile, .score-btn, .bp-part, .primary')
+          let n = 0
+          for (const el of targets) { if (n >= 3) break; el.click(); n++ }
+          return n
+        })()`)
+
+        // Interacting must not blank the page — the failure mode that matters.
+        const after = await page.evaluate('document.querySelector(".stage")?.textContent.length ?? 0')
+        if (!after) throw new Error(`the stage went blank after ${clicked} interaction(s)`)
+        const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
+        if (errors) throw new Error(`${errors} uncaught error(s) during interaction`)
+        return `${clicked} interaction(s), stage ${before}→${after} chars`
+      } finally {
+        await page.close()
+      }
+    })
+  }
+
+  /* ------------------------------------- the parts a stub cannot run ------ */
+
+  // shader.ts (WebGL), tilt.ts (pointer) and sim/engine.ts (animation loop)
+  // are the three modules the DOM stub can only import, never execute. Each
+  // needs a specific condition met before it will even start, so each is
+  // driven deliberately rather than hoped for.
+
+  await check('the aurora shader compiles and runs on real WebGL', async () => {
+    const page = await browser.newPage()
+    try {
+      // No reduced-motion emulation here: mountAurora returns null under it,
+      // which is precisely why the screenshot pages never reach this code.
+      await page.goto(`${origin}/index.html#/halls`)
+      await page.waitFor('!!document.querySelector(".aurora-canvas")', { label: 'aurora canvas' })
+      const gl = await page.evaluate(`(() => {
+        const c = document.querySelector('.aurora-canvas')
+        if (!c) return 'no canvas'
+        const ctx = c.getContext('webgl')
+        return ctx ? ctx.getParameter(ctx.VERSION) : 'no webgl context'
+      })()`)
+      assert(String(gl).includes('WebGL'), `the aurora canvas has no GL context (${gl})`)
+      // Let the render loop turn over a few frames.
+      await page.evaluate('new Promise(r => setTimeout(r, 1200))')
+      return String(gl)
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('tilt responds to a fine pointer', async () => {
+    const page = await browser.newPage()
+    try {
+      // attachTilt declines unless the pointer is fine and hover-capable —
+      // the default headless profile is neither, so emulate a desktop mouse.
+      await page.send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'hover', value: 'hover' }, { name: 'pointer', value: 'fine' }],
+      })
+      await page.goto(`${origin}/index.html#/halls`)
+      await page.waitFor('document.querySelectorAll(".pack-card").length > 0', { label: 'pack cards' })
+      const moved = await page.evaluate(`(() => {
+        const card = document.querySelector('.pack-card')
+        if (!card) return 'no card'
+        const box = card.getBoundingClientRect()
+        for (const [x, y] of [[0.25, 0.25], [0.75, 0.6], [0.5, 0.5]]) {
+          card.dispatchEvent(new PointerEvent('pointermove', {
+            bubbles: true, clientX: box.left + box.width * x, clientY: box.top + box.height * y,
+          }))
+        }
+        card.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }))
+        return 'moved'
+      })()`)
+      assert(moved === 'moved', `could not drive a pointer over a card (${moved})`)
+      await page.evaluate('new Promise(r => setTimeout(r, 300))')
+      return 'pointermove ×3 + leave'
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('the simulation engine runs its loop and answers its knobs', async () => {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${origin}/index.html#/pack/ai-vllm-inf-2026/session/batching-lab`)
+      await page.waitFor('!!document.querySelector(".sim-machine")', { label: 'sim machine' })
+      // Let the loop integrate, then move a knob and let it react: the readouts
+      // changing is the evidence the engine actually stepped.
+      await page.evaluate('new Promise(r => setTimeout(r, 1500))')
+      const before = await page.evaluate(`document.querySelector('.sim-readouts')?.textContent ?? ''`)
+      await page.evaluate(`(() => {
+        for (const input of document.querySelectorAll('.sim-knobs input')) {
+          const max = Number(input.max || 100), min = Number(input.min || 0)
+          input.value = String(min + (max - min) * 0.8)
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+      })()`)
+      await page.evaluate('new Promise(r => setTimeout(r, 1500))')
+      const after = await page.evaluate(`document.querySelector('.sim-readouts')?.textContent ?? ''`)
+      assert(before || after, 'the machine rendered no readouts at all')
+      return before === after ? 'ran (readouts steady)' : 'ran, readouts responded to the knobs'
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ---------------------------------------------------- screenshots ------ */
 
   const SHOTS = [
@@ -294,6 +462,15 @@ try {
       try {
         await page.send('Emulation.setDeviceMetricsOverride', {
           width: 1280, height: 900, deviceScaleFactor: 1, mobile: false,
+        })
+        // Freeze motion before capturing. The halls aurora animates, so an
+        // unfrozen capture drifted ~2% run to run — noise indistinguishable
+        // from a small regression, which would have taught us to raise the
+        // threshold until the check stopped meaning anything. The app honours
+        // prefers-reduced-motion, so this both stabilises the shot AND puts
+        // the reduced-motion path under test.
+        await page.send('Emulation.setEmulatedMedia', {
+          features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
         })
         await page.goto(`${origin}/index.html${shot.hash}`)
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
@@ -328,6 +505,32 @@ try {
 } finally {
   await browser.close()
   server.close()
+}
+
+/* ------------------------------------------------- write browser lcov --- */
+
+try {
+  const previewSrc = join(PREVIEW, 'src')
+  const rebased = v8ToLines(coverageEntries, (url) => {
+    // Only our own modules, served from the preview under /src/.
+    const m = /^https?:\/\/[^/]+\/src\/(.+\.js)$/.exec(url)
+    if (!m) return null
+    const file = join(previewSrc, m[1])
+    if (!existsSync(file)) return null
+    // Attribute to the AUTHORED TypeScript: strip-only keeps line numbers, so
+    // line N of the served JS is line N of src/<rel>.ts.
+    return { file, sf: `src/${m[1].replace(/\.js$/, '.ts')}` }
+  })
+  mkdirSync(join(ROOT, '.coverage'), { recursive: true })
+  const out = join(ROOT, '.coverage/browser.lcov')
+  writeFileSync(out, toLcov(rebased))
+  const covered = [...rebased.values()].reduce((n, m) => n + [...m.values()].filter((h) => h > 0).length, 0)
+  const total = [...rebased.values()].reduce((n, m) => n + m.size, 0)
+  console.log(`\nbrowser coverage: ${rebased.size} modules, ${covered}/${total} lines → ${out}`)
+} catch (err) {
+  // Coverage is a measurement, not a gate here; say so loudly rather than
+  // failing a run whose actual checks passed.
+  console.error(`\nbrowser coverage: NOT written (${err.message})`)
 }
 
 for (const line of results) console.log(line)
