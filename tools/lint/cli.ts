@@ -1,14 +1,23 @@
 // Content linter. Zero external deps — run with Node 22's native type stripping:
 //   node --experimental-strip-types tools/lint/cli.ts
-// Walks public/content, validates catalog + every pack, exits 1 on any error.
+//   node --experimental-strip-types tools/lint/cli.ts --content path/to/content
+// Walks public/content (or --content), validates catalog + every pack, exits 1
+// on any error.
+//
+// --content exists so the linter's REFUSAL can be tested against deliberately
+// malformed fixtures. A gate that has only ever been run against good input is
+// a gate nobody has watched fail.
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { lintCatalog, lintPack, type LintIssue, type PackInput } from './referential.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const contentDir = join(root, 'public', 'content')
+const flagIndex = process.argv.indexOf('--content')
+const contentDir = flagIndex !== -1 && process.argv[flagIndex + 1]
+  ? resolve(process.argv[flagIndex + 1])
+  : join(root, 'public', 'content')
 
 function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, 'utf8'))

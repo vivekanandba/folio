@@ -33,8 +33,12 @@ jobs:
       # number cannot be flattered by only measuring the files a test imported.
       - name: Test + coverage floor
         run: npm run test:gate
+      # Build exactly what deploys (base /folio/), not the dev-base build —
+      # a base-path defect is invisible until it is served from a subdirectory.
       - name: Typecheck + build
-        run: npm run build
+        run: npm run pages:build
+      - name: Verify the built artifact
+        run: node tools/verify-build.mjs dist --base /folio/
 
   # Boot smoke: the blank-page bug class (layout feedback loops, dead module
   # graphs, missing furniture) that lint/tsc/unit tests can't see.

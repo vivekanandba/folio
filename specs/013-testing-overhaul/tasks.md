@@ -42,16 +42,29 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
 - [ ] 14. Browser V8 coverage merged with the unit run — the remaining route to
       95% for shader.ts (WebGL), sim/engine.ts (frame loop), tilt.ts (pointer)
 
-## Phase 3 — delivery path + contracts (next)
+## Phase 3 — delivery path + contracts (this PR)
 
-- [ ] 16. tools/ scripts incl. their failure paths — a harness that cannot fail
-      is not a harness
-- [ ] 17. Build artifacts: base path, **no external URLs**, sw precache list
-      matching what was built
-- [ ] 18. Content contract fetched as the app fetches it, validated from both
-      sides (CON-COV-003)
-- [ ] 19. Post-deploy verification: the live site serves the build just made
-      (CON-VER-003)
+- [x] 16. tools/ scripts incl. their failure paths — the linter now takes
+      `--content` so its REFUSAL is testable; the preview builder's output is
+      inspected (all three vite-isms patched, specifiers respelled, every
+      emitted module parses)
+- [x] 17. Build artifacts: `tools/verify-build.mjs` — base path, every
+      reference emitted, the PWA surface present, manifest icons real,
+      content shipped. **Corrected from the plan**: "no external URLs" was
+      false — style.css imports Google Fonts at runtime. The gate is now an
+      accepted-origin set that fails when it GROWS. And sw.js has no precache
+      list to assert against: it caches lazily (network-first + SWR), so the
+      assertion is that it handles fetch and declines cross-origin.
+- [x] 18. Content contract fetched over HTTP exactly as the app asks for it,
+      asserting from the reader's side (CON-COV-003)
+- [x] 19. Post-deploy verification: `tools/verify-deploy.mjs` in pages.yml —
+      the live page must reference the assets this run built, and the PWA
+      surface must serve. Empty input exits 2 rather than passing vacuously.
+- [x] 19b. Spec hygiene in folio's own suite: no spec file empty or untitled,
+      no half-furnished feature directory. This is the gate that was missing
+      when two tasks.md files sat at zero bytes. (The vendored `spec-check`
+      CI job is still outstanding — version numbering is being resolved in
+      the constitution repo.)
 
 ## Phase 4 — deferred, tracked elsewhere
 
