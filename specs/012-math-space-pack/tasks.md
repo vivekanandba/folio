@@ -8,4 +8,4 @@
 - [x] 4. Blueprint test case
 - [x] 5. Registration
 - [x] 6. Gates
-- [ ] 7. Ship via /ship (PR links specs/012-math-space-pack/)
+- [x] 7. Ship via /ship — merged as #62

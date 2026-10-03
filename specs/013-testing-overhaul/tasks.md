@@ -76,5 +76,5 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
 
 ## Phase 4 — deferred, tracked elsewhere
 
-- [ ] 20. Maths packs B and C — specs/011 (ch 6–9) and specs/012 (ch 10–13 +
-      capstone), lessons already extracted
+- [x] 20. Maths packs B and C — specs/011 (#61) and specs/012 (#62), shipped
+      2026-10-03. The Class XII track is fully converted.
