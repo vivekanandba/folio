@@ -228,3 +228,33 @@ test('prettyId turns kebab-case into a title', () => {
   assert.equal(prettyId('relations-functions'), 'Relations Functions')
   assert.equal(prettyId('single'), 'Single')
 })
+
+test('importing a structurally wrong backup is refused with a specific reason', () => {
+  // Each branch names what is missing. A single generic "invalid backup" would
+  // leave someone holding a file they cannot fix.
+  reset()
+  const base = { version: 2, sessions: {}, concepts: {}, attempts: [], daily: {} }
+  const cases: [string, Record<string, unknown>, RegExp][] = [
+    ['no sessions', { ...base, sessions: undefined }, /session/i],
+    ['sessions is an array', { ...base, sessions: [] }, /session/i],
+    ['no concepts', { ...base, concepts: undefined }, /concept/i],
+    ['concepts is an array', { ...base, concepts: [] }, /concept/i],
+    ['no attempts', { ...base, attempts: undefined }, /attempt/i],
+    ['attempts is an object', { ...base, attempts: {} }, /attempt/i],
+    ['no daily log', { ...base, daily: undefined }, /daily/i],
+    ['wrong version', { ...base, version: 7 }, /version/i],
+  ]
+  for (const [name, payload, expected] of cases) {
+    const res = progress.importProgress(JSON.stringify(payload))
+    assert.equal(res.ok, false, `${name} must be refused`)
+    assert.match(res.error ?? '', expected, `${name} should say which part is wrong`)
+  }
+})
+
+test('a structurally valid backup is accepted', () => {
+  reset()
+  const ok = progress.importProgress(
+    JSON.stringify({ version: 2, sessions: {}, concepts: {}, attempts: [], daily: {} }),
+  )
+  assert.equal(ok.ok, true, `a well-formed empty backup should import: ${ok.error ?? ''}`)
+})
