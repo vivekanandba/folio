@@ -20,6 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # tools/check_specs.py is vendored from the spec-check skill because
+      # Actions cannot read ~/.claude/skills. Re-run `--install .` when the
+      # skill changes; the copy does not update itself (CON-VER-004).
+      - name: Spec registry
+        run: python3 tools/check_specs.py
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
