@@ -1,0 +1,32 @@
+{
+  "id": "lines-explainer",
+  "kind": "explainer",
+  "title": "The third possibility",
+  "conceptIds": ["lines-in-space"],
+  "intro": "In a plane, two lines meet or they don't. Space offers an option that a 2-D intuition doesn't have.",
+  "steps": [
+    {
+      "title": "A line is a point plus a direction",
+      "body": "Vector form `r = a + λb`; Cartesian form `(x − x₁)/a = (y − y₁)/b = (z − z₁)/c = λ`.\n\nA **zero direction ratio freezes a coordinate**. If c = 0, that denominator isn't an arithmetic error waiting to happen — it means z never changes, and the line lives entirely in the plane z = z₁. Write the constraint explicitly rather than treating it as a division problem.\n\nDirection **ratios** are direction **cosines** before normalisation: (2, −1, 1) and (4, −2, 2) describe the same line. Divide by |b| when the magnitude must not matter."
+    },
+    {
+      "title": "Skew: neither parallel nor intersecting",
+      "body": "Two lines in a plane always resolve. In three dimensions they can pass each other at different heights — never meeting, never parallel. That is **skew**, and it is the ordinary case: two aircraft at different flight levels, two PCB traces on different layers, a ray and a triangle's edge.\n\nThe classification falls out of two numbers you already have: `b₁ × b₂ = 0` means **parallel**; a shortest distance of 0 means **intersecting**; otherwise **skew**.",
+      "viz": {
+        "type": "annotated",
+        "title": "Three relationships, two numbers",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "Parallel", "value": 1, "note": "Cross product of directions vanishes. Constant gap — measured from any point on one line." },
+          { "label": "Intersecting", "value": 2, "note": "Shortest distance exactly zero. The common normal exists but has nothing to span." },
+          { "label": "Skew", "value": 3, "note": "Neither. 3-D only — and the case collision screening is actually about." }
+        ]
+      }
+    },
+    {
+      "title": "The shortest distance, and what it's for",
+      "body": "The common normal `n = b₁ × b₂` is perpendicular to both lines, so the gap is the component of `a₂ − a₁` along it:\n\n`d = |(a₂ − a₁) · (b₁ × b₂)| / |b₁ × b₂|`\n\nFor the standard pair that comes to `1/√2 ≈ 0.7071`, at an angle of 35.26°. Verify by checking the connecting segment is perpendicular to both lines — if it isn't, the normal is wrong.\n\n**Closest point of approach** is this number: collision avoidance alerts when d drops below the separation minimum, answering 'how close do they get?' before either aircraft is near the conflict. Two PCB traces on different layers come out separated by exactly the dielectric thickness — the geometry recovering a physical constant, which is a satisfying way to confirm the method works."
+    }
+  ],
+  "recap": "A line is a point plus a direction, and a zero direction ratio freezes a coordinate rather than breaking the formula. Skew is the possibility that only exists in three dimensions, and it is the normal case. The cross product gives the common normal, the projection gives the gap, and that gap is what collision screening actually computes."
+}

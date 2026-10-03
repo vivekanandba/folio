@@ -1,0 +1,36 @@
+{
+  "id": "bayes-explainer",
+  "kind": "explainer",
+  "title": "Why strong evidence against a rare thing still isn't proof",
+  "conceptIds": ["probability-bayes"],
+  "intro": "A 95%-accurate test for a 1-in-100 condition comes back positive. You are at about one in six.",
+  "steps": [
+    {
+      "title": "Conditioning is re-measuring in a smaller room",
+      "body": "`P(E|F) = P(E ∩ F)/P(F)` shrinks the sample space to F and measures inside it.\n\nRoll two dice: P(total = 8) = 5/36. Condition on the first die showing 3, and the space collapses from 36 outcomes to 6, of which one totals 8 — so the probability becomes **1/6**.\n\nNothing about the dice changed. The question changed, and the denominator with it. Most conditional-probability errors are a denominator that didn't get updated."
+    },
+    {
+      "title": "The base rate does the damage",
+      "body": "A condition affects **1%**. The test is **95% sensitive** with a **5% false-positive rate**. It comes back positive.\n\n- True positives: `0.01 × 0.95 = 0.0095`\n- False positives: `0.99 × 0.05 = 0.0495` — over **five times larger**\n- Posterior: `0.0095 / (0.0095 + 0.0495) ≈ **0.161**`\n\nAbout **16%**. The evidence updated the prior sixteen-fold, which is a genuinely large update — and the answer is still that the condition is probably absent. The false positives win because there are ninety-nine times more people for them to come from.",
+      "viz": {
+        "type": "annotated",
+        "title": "Where a positive result comes from",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "True positives", "value": 1, "note": "0.01 × 0.95 = 0.0095. Real cases, well detected — but a small population to start with." },
+          { "label": "False positives", "value": 5, "note": "0.99 × 0.05 = 0.0495. A small error rate on a large healthy population outnumbers the true cases five to one." },
+          { "label": "Posterior ≈ 16%", "value": 2, "note": "A sixteen-fold update, and still probably absent. Both halves are true; neither is intuitive." }
+        ]
+      }
+    },
+    {
+      "title": "It is an update rule, not just a warning",
+      "body": "Bayes is what makes a noisy sensor usable. One radar observation multiplies a 1% missile prior about thirty-fold to ~34% — not dominant against 'airliner' at 61%, but far past any alert threshold, and a **second** confirming observation flips the ranking. Evidence accumulates multiplicatively, which is why two independent weak signals beat one strong one.\n\nThe same multiply-and-normalise is Naive Bayes spam filtering, and the confidence a receiver assigns to a bit given its noise profile."
+    },
+    {
+      "title": "Check it with a simulation",
+      "body": "A seeded Monte Carlo over a million trials reproduces the analytic posterior to about three decimal places, converging visibly as the sample grows.\n\nThat is worth more than reassurance. The analytic route fails subtly — a prior that doesn't sum to one, a likelihood attached to the wrong hypothesis — and a simulation makes **different** mistakes than algebra does. Two methods with independent failure modes agreeing is real evidence; disagreeing tells you immediately rather than in production."
+    }
+  ],
+  "recap": "Conditioning shrinks the sample space, so watch the denominator. A positive result's weight depends on how large the *other* population is — which is why a 95% test against a 1% base rate lands at 16%. And check the algebra with a simulation, because they fail differently."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "line-pair-classify",
+  "kind": "classify",
+  "title": "Parallel, intersecting, or skew?",
+  "conceptIds": ["lines-in-space"],
+  "intro": "Two numbers settle every case: the cross product of the directions, and the shortest distance. Sort each pair.",
+  "buckets": [
+    { "id": "parallel", "label": "Parallel", "hint": "b₁ × b₂ = 0 — constant gap", "tone": "cool" },
+    { "id": "intersecting", "label": "Intersecting", "hint": "Shortest distance is exactly 0", "tone": "warm" },
+    { "id": "skew", "label": "Skew", "hint": "Neither — 3-D only", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "Directions (1, 2, 2) and (2, 4, 4)", "bucketId": "parallel" },
+    { "id": "c2", "text": "Two traces on the same PCB layer, both running along x at different y", "bucketId": "parallel" },
+    { "id": "c3", "text": "Two aircraft holding the same heading at the same flight level, laterally offset", "bucketId": "parallel" },
+    { "id": "c4", "text": "The x-axis and the y-axis", "bucketId": "intersecting" },
+    { "id": "c5", "text": "A pair whose common normal exists but whose computed distance is 0", "bucketId": "intersecting" },
+    { "id": "c6", "text": "Two conveyor paths crossing at the same height, meeting at the transfer point", "bucketId": "intersecting" },
+    { "id": "c7", "text": "a₁ = (1,1,0), b₁ = (2,−1,1) and a₂ = (2,1,−1), b₂ = (1,−2,2), separated by 1/√2", "bucketId": "skew" },
+    { "id": "c8", "text": "One trace running along x on the top layer, another along y on the bottom layer", "bucketId": "skew" },
+    { "id": "c9", "text": "Two aircraft on crossing headings at different flight levels", "bucketId": "skew" },
+    { "id": "c10", "text": "A camera ray passing near a triangle's edge without touching it", "bucketId": "skew" }
+  ],
+  "debrief": "The aircraft appear three times, and that is the whole lesson. Same heading at the same level, laterally offset — **parallel**, constant separation, no conflict developing. Crossing headings at different levels — **skew**, and the only question that matters is the closest point of approach. If they were crossing at the *same* level they would **intersect**, which in air traffic is not a geometry result but an incident.\n\nSo the classification is not academic bookkeeping. It selects which computation is even meaningful: parallel lines need a different distance formula entirely, intersecting ones have a meeting point to solve for, and skew ones have a CPA and a time at which it occurs.\n\nThe PCB pair is the pleasing check. Top-layer x against bottom-layer y is skew, and the shortest distance between them comes out as exactly the dielectric thickness — 1.6 mm for standard FR4. When abstract geometry hands back a number you can measure with calipers, the method is working."
+}

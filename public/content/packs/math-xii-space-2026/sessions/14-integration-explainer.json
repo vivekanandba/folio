@@ -1,0 +1,32 @@
+{
+  "id": "integration-explainer",
+  "kind": "explainer",
+  "title": "Four engines, one pipeline",
+  "conceptIds": ["systems-integration"],
+  "intro": "The capstone introduces no new axiom. It couples the engines — and coupling is where the interesting failures live.",
+  "steps": [
+    {
+      "title": "What each engine is for",
+      "body": "**Linear algebra** frames space and tracks state. **Calculus** is the engine of how that state changes. **Probability** is the error-correction layer over noisy measurement. **Optimisation** picks the operating point.\n\nA real analysis uses all four, and the discipline of systems integration is making each stage's output a *valid input* to the next — which means its units, its assumptions and its uncertainty all have to survive the handoff."
+    },
+    {
+      "title": "A mission loop in four handoffs",
+      "body": "1. **LP allocates** — split a mass budget between payload and propellant under volume and lift constraints.\n2. **Calculus integrates** — that allocation sets a thrust curve; `I = ∫F dt` gives total impulse, and `Δv = I/m`.\n3. **Vectors orient** — express the burn direction as direction cosines and check `l² + m² + n² = 1`.\n4. **Bayes confirms** — fuse a noisy radar observation to update belief that insertion succeeded.\n\nEach arrow is a boundary condition. The allocation *is* the calculus input; the Δv *is* the vector's magnitude; the prediction *is* the prior."
+    },
+    {
+      "title": "Where coupling goes wrong",
+      "body": "The expensive bug is almost never a wrong formula inside a stage. It is a correct stage fed something that doesn't mean what it thinks.\n\nAn **allocation treated as a measurement** — optimal under constraints that may be wrong, and everything downstream inherits the error with no trace of its origin. A **magnitude treated as a vector** — Δv carried without its direction. A **prediction treated as an observation** — a prior arriving with its uncertainty stripped, so Bayes updates a point estimate and returns false confidence.\n\nEach stage tests clean in isolation. The pipeline is still wrong.",
+      "viz": {
+        "type": "annotated",
+        "title": "Three handoffs, three failure modes",
+        "prompt": "Tap each.",
+        "points": [
+          { "label": "LP → calculus", "value": 1, "note": "An allocation is optimal under its constraints. Treat it as a measured fact and a modelling error propagates invisibly." },
+          { "label": "Calculus → vectors", "value": 2, "note": "Δv is a vector. Carrying only its magnitude is the most common unit-style error in the chain." },
+          { "label": "Vectors → Bayes", "value": 3, "note": "A prediction carries uncertainty. Strip it and the posterior is confident about the wrong thing." }
+        ]
+      }
+    }
+  ],
+  "recap": "Four engines — algebra for space, calculus for change, probability for noise, optimisation for choice — and the integration work is the handoffs between them. Test each stage in isolation and the pipeline can still be wrong, because the defect lives in what one stage means and the next one assumes."
+}

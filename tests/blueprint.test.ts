@@ -126,6 +126,21 @@ test('recoverable-chain blueprint: the injective chain wins, both many-to-one tr
   assert.ok(passCount(s, [...nodes, N(6, 'clamp')], chain) < s.rules.length, 'placing the saturating stage fails inspection')
 })
 
+test('mission-loop blueprint: the pipeline wins, both shortcuts fail', () => {
+  const s = loadRules('math-xii-space-2026/sessions/15-mission-blueprint.json')
+  const nodes = [
+    N(1, 'mission'), N(2, 'allocate'), N(3, 'integrate'),
+    N(4, 'orient'), N(5, 'fuse'), N(6, 'commit'),
+  ]
+  const chain: Edge[] = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+  assert.equal(passCount(s, nodes, chain), s.rules.length, 'the four-engine pipeline wins')
+
+  // An allocation is optimal under its constraints, not a measured outcome.
+  assert.ok(passCount(s, nodes, [...chain, [2, 6]]) < s.rules.length, 'allocate→commit is refused')
+  // A prediction is not a confirmation.
+  assert.ok(passCount(s, nodes, [...chain, [4, 6]]) < s.rules.length, 'orient→commit is refused')
+})
+
 test('shortestHops + connectivityAvailability behave analytically', () => {
   const nodes = [N(1, 'a'), N(2, 'm'), N(3, 'm'), N(4, 'b')]
   const parallel: Edge[] = [[1, 2], [2, 4], [1, 3], [3, 4]]
