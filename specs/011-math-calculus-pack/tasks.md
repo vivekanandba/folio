@@ -8,4 +8,4 @@
 - [x] 4. Sessions 01–16
 - [x] 5. Registration (catalog.json)
 - [x] 6. Gates: lint · test · smoke · e2e · coverage
-- [ ] 7. Ship via /ship (PR links specs/011-math-calculus-pack/)
+- [x] 7. Ship via /ship — merged as #61
