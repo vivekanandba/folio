@@ -1,0 +1,25 @@
+{
+  "id": "parity-classify",
+  "kind": "classify",
+  "title": "Before you integrate: what's the symmetry?",
+  "conceptIds": ["definite-integrals-areas"],
+  "intro": "Every integral below runs over symmetric bounds [-a, a]. Sort each by what its parity lets you do.",
+  "buckets": [
+    { "id": "odd", "label": "Odd → zero, free", "hint": "f(-x) = -f(x); it cancels exactly", "tone": "cool" },
+    { "id": "even", "label": "Even → 2∫₀ᵃ, half the work", "hint": "f(-x) = f(x); it accumulates", "tone": "warm" },
+    { "id": "neither", "label": "Neither → integrate it properly", "hint": "No shortcut available", "tone": "neutral" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "x³ over [-2, 2]", "bucketId": "odd" },
+    { "id": "c2", "text": "sin(x) over [-π, π]", "bucketId": "odd" },
+    { "id": "c3", "text": "The roll moment across a symmetric delta wing", "bucketId": "odd" },
+    { "id": "c4", "text": "Net AC voltage over one full cycle", "bucketId": "odd" },
+    { "id": "c5", "text": "x² over [-3, 3]", "bucketId": "even" },
+    { "id": "c6", "text": "cos(x) over [-π, π]", "bucketId": "even" },
+    { "id": "c7", "text": "The lift distribution across that same symmetric delta wing", "bucketId": "even" },
+    { "id": "c8", "text": "Power dissipation over one AC cycle — which is why the device gets hot", "bucketId": "even" },
+    { "id": "c9", "text": "x² + x over [-1, 1]", "bucketId": "neither" },
+    { "id": "c10", "text": "eˣ over [-1, 1]", "bucketId": "neither" }
+  ],
+  "debrief": "The wing and the AC cycle each appear twice on purpose. **Same bounds, same physical object, opposite verdicts** — because parity is a property of the integrand, not of the geometry. Lift is even across a symmetric wing and accumulates into the number you care about; roll moment is odd and cancels to exactly zero, which is *why* a symmetric wing doesn't roll on its own. Net AC voltage is odd and vanishes over a cycle; dissipated power is even and piles up, which is the entire reason a component with zero average voltage still needs a heatsink.\n\nThe two 'neither' cards are worth a second look. `x² + x` is a sum of an even and an odd part — you can still split it and kill the odd half, which is the shortcut in a more useful form. `eˣ` has no symmetry to exploit at all; it is neither even nor odd, despite looking tidy.\n\nThe habit is cheap: the parity test is O(1) and runs before an O(N) computation. Checking costs one substitution of -x. Not checking costs a full numerical integration to arrive at zero."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "separable-sequence",
+  "kind": "sequence",
+  "title": "Solving a separable equation",
+  "conceptIds": ["differential-equations"],
+  "intro": "From an equation of change to the one curve a system actually follows.",
+  "prompt": "Drag into order — the first step at the top.",
+  "steps": [
+    { "id": "classify", "text": "Read the order, and check whether degree is even defined" },
+    { "id": "separate", "text": "Gather every y with dy on one side, every x with dx on the other" },
+    { "id": "integrate", "text": "Integrate both sides — one constant of integration is enough" },
+    { "id": "general", "text": "Rearrange into the general solution, carrying its arbitrary constant" },
+    { "id": "apply", "text": "Apply the initial condition to solve for that constant" },
+    { "id": "verify", "text": "Substitute the particular solution back; the residual must be exactly zero" }
+  ],
+  "debrief": "Reading the equation **first** is not ceremony. Order tells you how many conditions you will need before you go looking for them, and if the equation turns out not to be separable, you have learned that before investing in the attempt rather than after.\n\nThe pairing in the middle is the heart of it: integrating gives a **family**, and the initial condition selects the **member**. `dy/dx = -2xy` separates to `dy/y = -2x dx` and integrates to the Gaussian family `y = C·e^(-x²)`; y(0) = 10 makes it `y = 10·e^(-x²)`. Stop at the general solution and you have described what is possible, not what will happen — which is exactly the failure in this pack's thermal-model case.\n\nThe last step is the cheapest insurance in the whole workflow. Substitution is mechanical, takes seconds, and a wrong answer leaves a residual that is loud rather than subtle. Verifying is faster than wondering."
+}

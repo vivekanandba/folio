@@ -51,6 +51,10 @@
     {
       "id": "math-xii-2026",
       "path": "packs/math-xii-2026"
+    },
+    {
+      "id": "math-xii-calculus-2026",
+      "path": "packs/math-xii-calculus-2026"
     }
   ]
 }

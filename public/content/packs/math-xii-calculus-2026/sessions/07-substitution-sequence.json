@@ -1,0 +1,17 @@
+{
+  "id": "substitution-sequence",
+  "kind": "sequence",
+  "title": "Substituting in a definite integral",
+  "conceptIds": ["integration-techniques", "definite-integrals-areas"],
+  "intro": "The workflow that changes variable without changing the answer.",
+  "prompt": "Drag into order — the first step at the top.",
+  "steps": [
+    { "id": "spot", "text": "Spot an inner function g(x) whose derivative is present in the integrand" },
+    { "id": "set", "text": "Set u = g(x), so du = g′(x) dx" },
+    { "id": "limits", "text": "Translate the limits: a becomes g(a), b becomes g(b)" },
+    { "id": "rewrite", "text": "Rewrite the whole integrand in u — no x may survive" },
+    { "id": "integrate", "text": "Integrate in u and evaluate between the translated limits" },
+    { "id": "stop", "text": "Stop. The number is the answer — do not substitute back" }
+  ],
+  "debrief": "Two steps in this chain are the ones that go wrong, and they are the third and the last.\n\n**Translating the limits** is what makes a definite substitution definite. Once u = g(x), the interval you are integrating over lives in u-space: `∫ₐᵇ` becomes `∫_{g(a)}^{g(b)}`. Forgetting to move them means evaluating the new integrand over the old interval, which is two different problems spliced together.\n\n**Stopping** is the other. Having translated the limits, back-substituting to x and then applying the original limits corrects the same thing twice and quietly produces the wrong number — no error, no warning, just a plausible value. Back-substitution belongs to *indefinite* integrals, where there are no limits to carry and you do need to return to the original variable.\n\nThe fourth step is worth its own note: if any x survives the rewrite, the substitution has not actually worked, and that is a signal to pick a different u rather than to push on."
+}

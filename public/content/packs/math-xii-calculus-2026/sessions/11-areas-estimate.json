@@ -1,0 +1,15 @@
+{
+  "id": "areas-estimate",
+  "kind": "estimate",
+  "title": "The region between a line and a parabola",
+  "conceptIds": ["definite-integrals-areas"],
+  "intro": "The line y = x + 2 and the parabola y = x² cross at two points, enclosing a single bounded region between them.",
+  "prompt": "What is the area of that enclosed region, in square units?",
+  "unit": "sq units",
+  "min": 0,
+  "max": 20,
+  "step": 0.1,
+  "answer": 4.5,
+  "tolerance": 0.05,
+  "debrief": "Solve for the intersections first — that is the step people skip. `x² = x + 2` gives `x² - x - 2 = 0`, so x = -1 and x = 2. Those are the bounds; guessing them computes a region nobody asked about.\n\nOver that interval the **line is above** the parabola, so the integrand is `(x + 2) - x²` and the area is `[x²/2 + 2x - x³/3]` from -1 to 2 = **9/2 = 4.5** square units.\n\nGet the order wrong — parabola minus line — and you get -4.5. The sign is not cosmetic: in a signed-area context it means the region has been traversed the other way, which is exactly how a rasteriser decides a face is pointing away from the camera. Taking the absolute value hides a real piece of information.\n\nThe discipline generalises: find where the curves cross, determine which is upper **on that interval** (they can swap if the curves cross more than twice), and integrate upper minus lower. The same routine gives an airfoil's section area and, in a different costume entirely, ROC-AUC."
+}

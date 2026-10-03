@@ -1,0 +1,26 @@
+{
+  "id": "critical-point-classify",
+  "kind": "classify",
+  "title": "What kind of point is it?",
+  "conceptIds": ["derivative-applications"],
+  "intro": "Each case describes a point on a curve. Sort it by what it actually is.",
+  "buckets": [
+    { "id": "max", "label": "Local maximum", "hint": "f′ = 0, f″ < 0 — or + → − sign change", "tone": "warm" },
+    { "id": "min", "label": "Local minimum", "hint": "f′ = 0, f″ > 0 — or − → + sign change", "tone": "cool" },
+    { "id": "inflection", "label": "Inflection, not an extreme", "hint": "f′ = 0 but no sign change", "tone": "neutral" },
+    { "id": "endpoint", "label": "Endpoint extreme", "hint": "The derivative never pointed at it", "tone": "warm" }
+  ],
+  "cards": [
+    { "id": "c1", "text": "f′(c) = 0 and f″(c) = -4", "bucketId": "max" },
+    { "id": "c2", "text": "The cut depth x = S/6 on the open-box volume V(x) = x(S - 2x)²", "bucketId": "max" },
+    { "id": "c3", "text": "Lift-to-drag at C_L = √(C_D0/K): climbing below it, falling above", "bucketId": "max" },
+    { "id": "c4", "text": "f′(c) = 0 and f″(c) = +2", "bucketId": "min" },
+    { "id": "c5", "text": "Where a training loss settles with ∇J ≈ 0 and curvature upward", "bucketId": "min" },
+    { "id": "c6", "text": "x = 1/e on the curve xˣ, which falls to it and climbs after", "bucketId": "min" },
+    { "id": "c7", "text": "f′(c) = 0, f″(c) = 0, and f′ is positive on both sides", "bucketId": "inflection" },
+    { "id": "c8", "text": "y = x³ at the origin: flat for an instant, rising before and after", "bucketId": "inflection" },
+    { "id": "c9", "text": "x = 6 on x³ - 3x² - 9x + 15 over [-2, 6], where f = 69 and f′ = 27", "bucketId": "endpoint" },
+    { "id": "c10", "text": "The highest allowed throttle setting, on a problem whose optimum lies outside the permitted range", "bucketId": "endpoint" }
+  ],
+  "debrief": "Two of these buckets exist because the obvious test fails. **Inflection** is what you get when f′ = 0 misleads you: the curve pauses and resumes the same direction, and only the sign *change* — or the fallback first-derivative test when f″ is also zero — tells the difference. y = x³ at the origin is the whole lesson in one curve.\n\n**Endpoint** is the one that costs money. On [-2, 6] the cubic's interior peak is 20 and its actual maximum is 69, sitting at x = 6 where the derivative reads 27 and is pointing uphill at a wall. Any search that only collects stationary points never looks there. This is not a textbook curiosity: constrained optimisation lives at its boundaries, which is why the highest permitted throttle, the maximum legal payload, and the tightest allowed tolerance are so often the answer."
+}
