@@ -79,6 +79,10 @@ for (const origin of external) {
 
 /* ----------------------------------------------------------- content --- */
 
+// The floor cannot draw its constellation without this, and it is generated
+// rather than authored — exactly the kind of file a build can drop silently.
+check(existsSync(join(DIST, 'content/index.json')), 'content/index.json did not make it into the build')
+
 const catalogPath = join(DIST, 'content/catalog.json')
 check(existsSync(catalogPath), 'content/catalog.json did not make it into the build')
 if (existsSync(catalogPath)) {

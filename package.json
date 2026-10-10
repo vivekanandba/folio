@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "pages:build": "VITE_BASE=/folio/ npm run build",
+    "content:index": "node tools/content-index/build.mjs",
     "lint:content": "node --experimental-strip-types tools/lint/cli.ts",
     "preview:offline": "node --experimental-strip-types tools/preview/build.mjs",
     "author": "node --experimental-strip-types tools/authoring/cli.ts",
