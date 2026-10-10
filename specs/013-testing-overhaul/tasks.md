@@ -53,9 +53,16 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       **94**, not 95: measured 94.95–95.05 across runs because the browser half
       varies by a few lines, and a floor at the peak would fail on rendering
       timing rather than on a regression.
-- [ ] 14c. Make the browser contribution deterministic so the floor can go to
-      95. The aurora now waits for 30 frames rather than a clock (which removed
-      most of the swing); sim/engine.ts and floor.ts still drift a few lines.
+- [~] 14c. Browser determinism — **narrowed to a single cause, floor ratcheted
+      94 → 94.8**. Nine runs measured 94.86–95.07%. A per-file diff across runs
+      shows every module is now deterministic to the line EXCEPT `src/shader.ts`,
+      which swings 192–205 covered roughly one run in three: headless Chrome
+      intermittently fails to hand the aurora a WebGL context, so the shader
+      compile/link/draw path does not run. sim/engine.ts and floor.ts turned out
+      to be stable after all — the earlier suspicion was wrong.
+      Remaining: make that context acquisition reliable (or cover those lines
+      without a GPU), then the floor can go to 95. Do not raise it on a lucky
+      run.
       Superseded note — the original gap was: tilt.ts (31% — attaches under emulated
       pointer but its rAF handler still isn't captured) and the deep branches
       of the session renderers. Needs either full session play-through in the
