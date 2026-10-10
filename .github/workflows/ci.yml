@@ -33,6 +33,11 @@ jobs:
         run: npm ci
       - name: Lint content
         run: npm run lint:content
+      # The dark theme's contrast was checked by hand before commits and never
+      # by anything automatic. It now reads its palette from style.css, so it
+      # cannot pass against a stale copy of the colours.
+      - name: Contrast (WCAG) of the palette
+        run: python3 tools/contrast.py
       # Coverage floor, not just a pass/fail suite. The denominator is the whole
       # of src/ (tests/import-all.test.ts forces every module to load), so this
       # number cannot be flattered by only measuring the files a test imported.
