@@ -9,33 +9,43 @@ Exit code 0 = all pairs pass; 1 = at least one failure (printed).
 
 from __future__ import annotations
 
+import re
 import sys
+from pathlib import Path
 
 # ---------------------------------------------------------------- palette ---
-# Night-gallery tokens. Keep in sync with :root in src/style.css.
-TOKENS: dict[str, str] = {
-    # walls & surfaces
-    "bg": "#141210",          # museum wall, warm charcoal
-    "surface": "#1d1a17",     # exhibit card
-    "surface-2": "#262220",   # raised panel / code bg
-    "stage": "#0c1222",       # session installation (pre-existing)
-    # text
-    "ink": "#f2ede4",         # warm ivory body text
-    "muted": "#c5bdb1",       # secondary text
-    "lead": "#d9d2c7",        # lede paragraphs
-    # identity
-    "brass": "#c9a86a",       # brass plaques / numbering
-    "brass-bright": "#e3c88d",# brass on hover / on stage
-    "accent": "#4fd1c5",      # teal glow (links, primary)
-    "accent-ink": "#0b3d38",  # text on accent-filled buttons
-    # status
-    "ok": "#7fd8a5",
-    "bad": "#f2a09c",
-    "ok-bg": "#12271b",
-    "bad-bg": "#2d1614",
-    # hairlines (non-text UI)
-    "line": "#453f38",
-}
+# The palette is READ FROM src/style.css, never copied into this file.
+#
+# It used to be a hand-maintained duplicate and had already drifted: this
+# checker carried `stage` and `bad-bg`, neither of which is declared anywhere
+# in the stylesheet. It was validating two colours the app does not have, and
+# passing. Two copies of the same values is the boundary defect CON-COV-003
+# warns about, so now there is one copy and this reads it.
+
+CSS = Path(__file__).resolve().parent.parent / "src" / "style.css"
+TOKEN_RE = re.compile(r"--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;")
+
+
+def load_tokens(css_path: Path) -> dict[str, str]:
+    """Every `--name: #hex;` custom property the stylesheet declares."""
+    tokens = dict(TOKEN_RE.findall(css_path.read_text(encoding="utf-8")))
+    if not tokens:
+        sys.exit(f"contrast: no colour tokens found in {css_path} — has the format changed?")
+    return tokens
+
+
+TOKENS: dict[str, str] = load_tokens(CSS)
+
+
+def require(name: str) -> str:
+    """A pair may only name a token the stylesheet actually declares."""
+    if name not in TOKENS:
+        sys.exit(
+            f"contrast: '{name}' is checked here but is not declared in {CSS.name}. "
+            "Either the token was renamed or this check is stale — fix one of them."
+        )
+    return TOKENS[name]
+
 
 # ------------------------------------------------------------------ pairs ---
 # (foreground, background, minimum ratio, note)
@@ -45,17 +55,14 @@ PAIRS: list[tuple[str, str, float, str]] = [
     ("ink", "bg", 7.0, "body on wall"),
     ("ink", "surface", 7.0, "body on card"),
     ("ink", "surface-2", 7.0, "body on raised panel"),
-    ("ink", "stage", 7.0, "body on stage"),
     # secondary text
     ("muted", "bg", 4.5, "muted on wall (target 7)"),
     ("muted", "surface", 4.5, "muted on card (target 7)"),
     ("muted", "surface-2", 4.5, "muted on raised panel"),
-    ("muted", "stage", 4.5, "muted on stage"),
     ("lead", "bg", 7.0, "lede on wall"),
     # identity
     ("brass", "bg", 4.5, "plaque text on wall"),
     ("brass", "surface", 4.5, "plaque text on card"),
-    ("brass-bright", "stage", 4.5, "brass on stage"),
     ("accent", "bg", 4.5, "link on wall"),
     ("accent", "surface", 4.5, "link on card"),
     ("accent-ink", "accent", 4.5, "label on filled primary button"),
@@ -63,11 +70,9 @@ PAIRS: list[tuple[str, str, float, str]] = [
     ("ok", "surface", 4.5, "ok text on card"),
     ("bad", "surface", 4.5, "error text on card"),
     ("ok", "ok-bg", 4.5, "ok text on ok tint"),
-    ("bad", "bad-bg", 4.5, "error text on error tint"),
     # non-text UI
     ("line", "bg", 1.2, "hairline vs wall (decorative)"),
     ("brass", "surface-2", 4.5, "plaque on raised panel"),
-    ("accent", "stage", 4.5, "link on stage"),
     ("muted", "ok-bg", 4.5, "muted on ok tint"),
 ]
 
@@ -99,14 +104,14 @@ def main() -> int:
     print(f"{'pair':<34} {'ratio':>7}  {'min':>5}  note")
     print("-" * 78)
     for fg, bg, minimum, note in PAIRS:
-        r = ratio(TOKENS[fg], TOKENS[bg])
+        r = ratio(require(fg), require(bg))
         status = "PASS" if r >= minimum else "FAIL"
         if r < minimum:
             failures += 1
         print(f"{fg + ' / ' + bg:<34} {r:>6.2f}:1 {minimum:>4.1f}:1  {status}  {note}")
     print("-" * 78)
     for fg, bg, target, note in SOFT_PAIRS:
-        r = ratio(TOKENS[fg], TOKENS[bg])
+        r = ratio(require(fg), require(bg))
         mark = "meets" if r >= target else "below"
         print(f"soft: {fg}/{bg} = {r:.2f}:1 ({mark} {target}:1 target) — {note}")
     if failures:
