@@ -21,6 +21,15 @@ export interface Catalog {
   packs: CatalogPackRef[]
 }
 
+/**
+ * Precomputed cross-links between concepts, built by tools/content-index.
+ * Each edge is a pair of `packId::conceptId` keys, undirected and sorted.
+ */
+export interface ContentIndex {
+  version: number
+  edges: [string, string][]
+}
+
 export interface FolioPackMeta {
   id: string
   title: string

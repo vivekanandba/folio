@@ -73,6 +73,47 @@ function checkRichField(text: unknown, label: string, err: (m: string) => void):
   }
 }
 
+/** One document whose prose may contain in-app links. */
+export interface LinkDoc {
+  /** How the document is named in a finding. */
+  file: string
+  text: string
+}
+
+/** `#/pack/<packId>/concept|session/<id>` as written in prose. */
+const IN_APP_LINK = /#\/pack\/([a-z0-9-]+)\/(concept|session)\/([a-z0-9-]+)/g
+
+/**
+ * Every in-app link must resolve to something that exists.
+ *
+ * The museum floor draws its constellation from these links, and the code that
+ * read them swallowed failures — a renamed concept did not error, the wires
+ * just quietly vanished. Cross-pack links make this a whole-registry check
+ * rather than a per-pack one.
+ */
+export function lintCrossLinks(
+  docs: LinkDoc[],
+  knownConcepts: Set<string>,
+  knownSessions: Set<string>,
+): LintIssue[] {
+  const issues: LintIssue[] = []
+  for (const doc of docs) {
+    for (const m of doc.text.matchAll(IN_APP_LINK)) {
+      const [, packId, kind, id] = m
+      const key = `${packId}::${id}`
+      const known = kind === 'concept' ? knownConcepts : knownSessions
+      if (!known.has(key)) {
+        issues.push({
+          level: 'error',
+          file: doc.file,
+          message: `dead link: #/pack/${packId}/${kind}/${id} does not exist`,
+        })
+      }
+    }
+  }
+  return issues
+}
+
 export function lintCatalog(catalog: Json, packPaths: string[]): LintIssue[] {
   const issues: LintIssue[] = []
   const file = 'content/catalog.json'

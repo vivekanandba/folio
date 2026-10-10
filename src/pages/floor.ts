@@ -1,5 +1,5 @@
 import { prefersReducedMotion } from '../a11y'
-import { loadCatalog, loadConcept, loadPackMeta } from '../content'
+import { loadCatalog, loadContentIndex, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
 import { getConceptState, loadProgress } from '../progress'
 import { href } from '../router'
@@ -48,7 +48,6 @@ const BAND_GLOW: Record<FloorNode['band'], number> = {
   solid: 20,
 }
 
-const LINK_RE = /#\/pack\/([a-z0-9-]+)\/concept\/([a-z0-9-]+)/g
 
 export async function renderFloor(root: HTMLElement): Promise<void> {
   root.replaceChildren(el('p', { class: 'muted' }, ['Lighting the halls…']))
@@ -91,28 +90,18 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
     })
   })
 
-  // ---- edges from concept markdown cross-links ---------------------------
+  // ---- edges, precomputed ------------------------------------------------
+  // Previously this fetched every concept's markdown to find cross-links:
+  // 73 requests and ~500 KB on the home page, growing with every pack added,
+  // to draw a few dozen lines. The index ships the same links in ~4 KB.
   const edges: [FloorNode, FloorNode][] = []
   const nodeIndex = new Map(nodes.map((n) => [`${n.packId}::${n.conceptId}`, n]))
-  await Promise.all(
-    metas.map(async (meta, i) => {
-      const packPath = catalog.packs[i].path
-      await Promise.all(
-        meta.concepts.map(async (cid) => {
-          try {
-            const md = await loadConcept(packPath, cid)
-            for (const m of md.matchAll(LINK_RE)) {
-              const from = nodeIndex.get(`${meta.id}::${cid}`)
-              const to = nodeIndex.get(`${m[1]}::${m[2]}`)
-              if (from && to && from !== to) edges.push([from, to])
-            }
-          } catch {
-            /* concept md missing — no wires from it */
-          }
-        }),
-      )
-    }),
-  )
+  const index = await loadContentIndex()
+  for (const [a, b] of index.edges) {
+    const from = nodeIndex.get(a)
+    const to = nodeIndex.get(b)
+    if (from && to && from !== to) edges.push([from, to])
+  }
 
   // ---- canvas -------------------------------------------------------------
   const canvas = document.createElement('canvas')

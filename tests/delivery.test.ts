@@ -207,6 +207,55 @@ test('every pack loads over HTTP exactly as the app asks for it', async () => {
   }
 })
 
+test('the content index is served, and is current', async () => {
+  // Generated files rot. The floor reads this instead of every concept's
+  // markdown, so a stale index means missing wires with nothing to notice it.
+  const { buildIndex } = await import('../tools/content-index/build.mjs')
+  const expected = `${JSON.stringify(buildIndex(), null, 2)}\n`
+  const onDisk = readFileSync(join(ROOT, 'public/content/index.json'), 'utf8')
+  assert.equal(onDisk, expected, 'public/content/index.json is stale — run `npm run content:index`')
+
+  const index = JSON.parse(onDisk) as { version: number; edges: [string, string][] }
+  assert.equal(index.version, 1)
+  assert.ok(index.edges.length > 10, `expected a populated index, got ${index.edges.length} edges`)
+  // Every endpoint must exist, or the floor silently loses a wire.
+  const catalog = JSON.parse(readFileSync(join(CONTENT, 'catalog.json'), 'utf8')) as {
+    packs: { path: string }[]
+  }
+  const known = new Set<string>()
+  for (const ref of catalog.packs) {
+    const meta = JSON.parse(readFileSync(join(CONTENT, ref.path, 'folio.json'), 'utf8')) as {
+      id: string; concepts: string[]
+    }
+    for (const c of meta.concepts) known.add(`${meta.id}::${c}`)
+  }
+  for (const [a, b] of index.edges) {
+    assert.ok(known.has(a), `index edge references unknown concept ${a}`)
+    assert.ok(known.has(b), `index edge references unknown concept ${b}`)
+  }
+})
+
+test('the linter refuses a dead in-app link', async () => {
+  const { lintCrossLinks } = await import('../tools/lint/referential.ts')
+  const concepts = new Set(['p1::alive'])
+  const sessions = new Set(['p1::real-session'])
+  const issues = lintCrossLinks(
+    [
+      { file: 'p1/concepts/a.md', text: 'see [ok](#/pack/p1/concept/alive)' },
+      { file: 'p1/concepts/b.md', text: 'see [gone](#/pack/p1/concept/removed)' },
+      { file: 'p1/sessions/s.json', text: 'see [gone](#/pack/p1/session/never-existed)' },
+      { file: 'p1/concepts/c.md', text: 'see [other pack](#/pack/ghost-pack/concept/x)' },
+    ],
+    concepts,
+    sessions,
+  )
+  assert.equal(issues.length, 3, `expected three dead links, got ${issues.map((i) => i.message)}`)
+  assert.ok(issues.every((i) => i.level === 'error'))
+  assert.match(issues[0].message, /removed/)
+  assert.match(issues[1].message, /never-existed/)
+  assert.match(issues[2].message, /ghost-pack/)
+})
+
 /* --------------------------------------------------------- repo records --- */
 
 test('no spec file is empty, and each has a title', () => {

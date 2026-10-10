@@ -1,4 +1,4 @@
-import type { Catalog, FolioPackMeta, Session } from './types'
+import type { Catalog, ContentIndex, FolioPackMeta, Session } from './types'
 
 const base = import.meta.env.BASE_URL
 
@@ -32,6 +32,21 @@ const asText = (r: Response) => r.text()
 
 export function loadCatalog(): Promise<Catalog> {
   return cachedFetch(contentUrl('content/catalog.json'), asJson<Catalog>, 'Failed to load catalog')
+}
+
+/**
+ * The constellation's wires, precomputed.
+ *
+ * Deriving these at runtime meant fetching every concept's full markdown —
+ * 73 files and ~500 KB on the home page — to draw 41 line segments. The links
+ * cannot change between deploys, so they ship as one small file instead.
+ */
+export function loadContentIndex(): Promise<ContentIndex> {
+  return cachedFetch(
+    contentUrl('content/index.json'),
+    asJson<ContentIndex>,
+    'Failed to load the content index',
+  )
 }
 
 export function loadPackMeta(packPath: string): Promise<FolioPackMeta> {

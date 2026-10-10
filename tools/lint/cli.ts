@@ -11,7 +11,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { lintCatalog, lintPack, type LintIssue, type PackInput } from './referential.ts'
+import { lintCatalog, lintCrossLinks, lintPack, type LinkDoc, type LintIssue, type PackInput } from './referential.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const flagIndex = process.argv.indexOf('--content')
@@ -59,6 +59,32 @@ function main(): void {
     const input: PackInput = { packId: ref.id, meta, conceptSlugs, sessionFiles, sessions }
     issues.push(...lintPack(input))
   }
+
+  // Cross-links are a whole-registry question: a concept in one pack may link
+  // into another, so this runs after every pack has been catalogued.
+  const knownConcepts = new Set<string>()
+  const knownSessions = new Set<string>()
+  const docs: LinkDoc[] = []
+  for (const ref of packs) {
+    const packDir = join(contentDir, ref.path)
+    if (!existsSync(join(packDir, 'folio.json'))) continue
+    const meta = readJson(join(packDir, 'folio.json')) as { id: string; concepts?: string[]; sessions?: string[] }
+    const packId = meta.id ?? ref.id
+    for (const slug of meta.concepts ?? []) {
+      knownConcepts.add(`${packId}::${slug}`)
+      const file = join(packDir, 'concepts', `${slug}.md`)
+      if (existsSync(file)) docs.push({ file: `${packId}/concepts/${slug}.md`, text: readFileSync(file, 'utf8') })
+    }
+    for (const sf of meta.sessions ?? []) {
+      const file = join(packDir, 'sessions', sf)
+      if (!existsSync(file)) continue
+      const data = readJson(file) as { id?: string }
+      if (data.id) knownSessions.add(`${packId}::${data.id}`)
+      // Session prose (intros, debriefs, briefings) can carry links too.
+      docs.push({ file: `${packId}/sessions/${sf}`, text: readFileSync(file, 'utf8') })
+    }
+  }
+  issues.push(...lintCrossLinks(docs, knownConcepts, knownSessions))
 
   const errors = issues.filter((i) => i.level === 'error')
   const warns = issues.filter((i) => i.level === 'warn')
