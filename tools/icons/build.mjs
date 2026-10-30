@@ -19,23 +19,11 @@ import { execSync } from 'node:child_process'
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { launch } from '../e2e/cdp.mjs'
+import { findChrome } from '../e2e/chrome.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 const PUBLIC = join(ROOT, 'public')
 const BRAND_BG = '#141210'
-
-function findChrome() {
-  if (process.env.CHROME_BIN && existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN
-  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium']) {
-    try {
-      const found = execSync(`command -v ${name}`, { encoding: 'utf8' }).trim()
-      if (found) return found
-    } catch { /* keep looking */ }
-  }
-  return globSync(
-    join(process.env.HOME ?? '', '.cache/ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell'),
-  ).sort().at(-1) ?? null
-}
 
 /**
  * `scale` is the fraction of the canvas the artwork occupies. Maskable icons

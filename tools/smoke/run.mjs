@@ -24,25 +24,13 @@ import { createReadStream, existsSync, globSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join } from 'node:path'
 import { launch } from '../e2e/cdp.mjs'
+import { findChrome } from '../e2e/chrome.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
 const PREVIEW = join(ROOT, '.preview')
 const PORT = 8123
 
 /* ------------------------------------------------------------ browser --- */
-
-function findChrome() {
-  if (process.env.CHROME_BIN && existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN
-  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium']) {
-    try {
-      return execSync(`command -v ${name}`, { encoding: 'utf8' }).trim() || null
-    } catch { /* keep looking */ }
-  }
-  const cached = globSync(
-    join(process.env.HOME ?? '', '.cache/ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell'),
-  ).sort()
-  return cached.at(-1) ?? null
-}
 
 /* ------------------------------------------------------------- server --- */
 
