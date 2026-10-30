@@ -82,6 +82,16 @@ for (const asset of ['manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.
   if (!res.ok) problems.push(`${asset} is not served (${res.status})`)
 }
 
+// The worker that is actually serving must be stamped, or every device that
+// installs this build keeps its predecessors forever.
+const swRes = await fetch(new global.URL(`${basePath}sw.js`, origin.origin), { cache: 'no-store' })
+if (swRes.ok) {
+  const swText = await swRes.text()
+  const stamp = /const VERSION = 'folio-sw-([0-9a-f]{12})'/.exec(swText)
+  if (!stamp) problems.push('the live sw.js is not stamped — old caches will never be dropped')
+  else console.log(`  live service worker: folio-sw-${stamp[1]}`)
+}
+
 // And the content the museum is made of.
 const catalogRes = await fetch(new global.URL(`${basePath}content/catalog.json`, origin.origin), { cache: 'no-store' })
 if (!catalogRes.ok) {

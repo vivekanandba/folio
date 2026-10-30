@@ -9,7 +9,7 @@
 // tests the layer that moves content from the repo to a reader.
 
 import assert from 'node:assert/strict'
-import { execFile } from 'node:child_process'
+import { execFile, spawnSync } from 'node:child_process'
 import { createReadStream, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, mkdirSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
@@ -254,6 +254,57 @@ test('the linter refuses a dead in-app link', async () => {
   assert.match(issues[0].message, /removed/)
   assert.match(issues[1].message, /never-existed/)
   assert.match(issues[2].message, /ghost-pack/)
+})
+
+test('the service worker carries the placeholder the stamper rewrites', () => {
+  // The stamp is applied at build time by matching this exact line. If sw.js
+  // is edited and the line drifts, the build fails loudly — but failing here
+  // names the cause in a second instead of in a deploy.
+  const sw = readFileSync(join(ROOT, 'public/sw.js'), 'utf8')
+  assert.match(sw, /const VERSION = 'folio-sw-v1'/, 'tools/stamp-sw.mjs matches this line exactly')
+  assert.match(sw, /k !== VERSION/, 'activate must still drop caches that are not the current version')
+})
+
+test('stamping is a function of the built content, and refuses when it cannot stamp', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const dir = mkdtempSync(join(tmpdir(), 'folio-sw-'))
+  const stamp = () => {
+    const res = spawnSync(process.execPath, [join(ROOT, 'tools/stamp-sw.mjs'), dir], { encoding: 'utf8' })
+    return { code: res.status, out: `${res.stdout}${res.stderr}` }
+  }
+  const version = () => /folio-sw-[0-9a-f]+|folio-sw-v1/.exec(readFileSync(join(dir, 'sw.js'), 'utf8'))?.[0]
+  try {
+    mkdirSync(join(dir, 'assets'), { recursive: true })
+    const fresh = readFileSync(join(ROOT, 'public/sw.js'), 'utf8')
+    writeFileSync(join(dir, 'sw.js'), fresh)
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><html></html>')
+    writeFileSync(join(dir, 'assets/app.js'), 'console.log(1)')
+
+    assert.equal(stamp().code, 0, 'a fresh worker stamps')
+    const first = version()
+    assert.match(first ?? '', /folio-sw-[0-9a-f]{12}/, 'the placeholder is replaced by a digest')
+
+    // Same bytes, fresh worker → same stamp. A clock-based version could not
+    // promise this, and then every build would look like a content change.
+    writeFileSync(join(dir, 'sw.js'), fresh)
+    stamp()
+    assert.equal(version(), first, 'identical content stamps identically')
+
+    // Different bytes → different stamp, which is what makes activate drop
+    // the old cache.
+    writeFileSync(join(dir, 'sw.js'), fresh)
+    writeFileSync(join(dir, 'assets/app.js'), 'console.log(2)')
+    stamp()
+    assert.notEqual(version(), first, 'changed content must change the stamp')
+
+    // Already stamped: refuse rather than silently ship an unstamped worker.
+    const again = stamp()
+    assert.equal(again.code, 1, 're-stamping must fail')
+    assert.match(again.out, /could not find/, 'and must say why')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })
 
 /* --------------------------------------------------------- repo records --- */
