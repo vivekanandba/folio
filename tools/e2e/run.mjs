@@ -19,6 +19,7 @@ import { createReadStream, existsSync, globSync, mkdirSync, readFileSync, readdi
 import { createServer } from 'node:http'
 import { extname, join } from 'node:path'
 import { launch } from './cdp.mjs'
+import { browserIdentity, findChrome } from './chrome.mjs'
 import { toLcov, v8ToLines } from './coverage.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
@@ -28,31 +29,27 @@ const PORT = 8124
 const UPDATE = process.argv.includes('--update')
 
 /**
- * Screenshot baselines are committed from ONE machine's browser. CI runs a
- * different Chrome build with different fonts and hinting, so a pixel baseline
- * cannot honestly gate there — it would fail on rendering, not on regressions.
+ * A pixel baseline is only comparable against the browser that produced it, so
+ * the visual check gates when the running browser MATCHES the one recorded
+ * beside the baselines, and reports without failing when it does not.
  *
- * So the visual check gates locally (stable browser, committed baselines) and
- * is informational in CI, where the captures are uploaded as artifacts instead.
- * Stated out loud on every run rather than silently tolerated: a check whose
- * failure mode is invisible is worse than no check (CON-VER-005).
+ * This replaces a `process.env.CI` heuristic that had it exactly backwards:
+ * it gated locally and went informational in CI. Measured on 2026-10-30, the
+ * baselines had been captured with chrome-headless-shell — a stripped build
+ * that rasterises text differently from full Chrome — so they were comparable
+ * to nothing else. CI's Chrome drifted 1.1/2.6/4.9/4.5%, and the pinned
+ * Playwright container drifted 1.1/2.5/4.9/4.5%: CI and the container agree
+ * with each other and the baselines were the odd one out.
+ *
+ * Baselines are now captured in that container, which CI also runs, so the
+ * check gates where it matters and degrades loudly on a dev box.
  */
-const SHOTS_INFORMATIONAL = !!process.env.CI
+const BASELINE_BROWSER_FILE = join(BASELINES, 'BROWSER')
+const recordedBrowser = existsSync(BASELINE_BROWSER_FILE)
+  ? readFileSync(BASELINE_BROWSER_FILE, 'utf8').trim()
+  : null
 
 /* ------------------------------------------------------------- plumbing --- */
-
-function findChrome() {
-  if (process.env.CHROME_BIN && existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN
-  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium']) {
-    try {
-      const found = execSync(`command -v ${name}`, { encoding: 'utf8' }).trim()
-      if (found) return found
-    } catch { /* keep looking */ }
-  }
-  return globSync(
-    join(process.env.HOME ?? '', '.cache/ms-playwright/chromium_headless_shell-*/chrome-*/chrome-headless-shell'),
-  ).sort().at(-1) ?? null
-}
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -193,6 +190,10 @@ execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/
 
 const chrome = findChrome()
 if (!chrome) { console.error('e2e: no Chromium found (set CHROME_BIN)'); process.exit(2) }
+
+const currentBrowser = browserIdentity(chrome)
+if (UPDATE) writeFileSync(BASELINE_BROWSER_FILE, `${currentBrowser}\n`)
+const SHOTS_INFORMATIONAL = !(recordedBrowser && recordedBrowser === currentBrowser)
 
 mkdirSync(BASELINES, { recursive: true })
 const server = await serve(PREVIEW, PORT)
@@ -501,7 +502,7 @@ try {
         const diff = await pixelDiff(page, readFileSync(file).toString('base64'), print.toString('base64'))
         if (SHOTS_INFORMATIONAL) {
           const drift = diff.sizeMismatch ? 'size differs' : `${(diff.ratio * 100).toFixed(2)}%`
-          return `${drift} vs committed baseline (INFORMATIONAL in CI — different browser build)`
+          return `${drift} vs committed baseline (INFORMATIONAL — different browser)`
         }
         assert(!diff.sizeMismatch, `size changed: baseline ${diff.a} vs now ${diff.b}`)
         // 2% absorbs font hinting and antialiasing; a real layout change is
@@ -545,9 +546,11 @@ try {
 }
 
 for (const line of results) console.log(line)
-if (SHOTS_INFORMATIONAL) {
-  console.log('\nnote: screenshot comparison ran INFORMATIONALLY (CI browser build differs from the')
-  console.log('      one that produced the committed baselines). Installability and offline DID gate.')
+if (SHOTS_INFORMATIONAL && !UPDATE) {
+  console.log('\nnote: screenshot comparison was INFORMATIONAL — this browser is not the one that')
+  console.log(`      produced the baselines.\n        running:  ${currentBrowser}`)
+  console.log(`        baseline: ${recordedBrowser ?? '(none recorded — run with --update)'}`)
+  console.log('      Installability and offline DID gate.')
 }
 if (failures) {
   console.error(`\ne2e: ${failures} check(s) failed`)

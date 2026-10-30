@@ -65,22 +65,24 @@ jobs:
       - name: Boot smoke over key routes
         run: npm run smoke
 
-  # Can it be INSTALLED on a phone, and does it work on a plane? Neither
-  # question is answerable from unit tests or a boot check. Screenshot
-  # comparison runs informationally here (CI's Chrome renders differently
-  # from the machine that committed the baselines) and is uploaded instead.
+  # Can it be INSTALLED on a phone, does it work on a plane, and does it still
+  # look the same? None of those is answerable from unit tests or a boot check.
+  # Screenshot comparison GATES here now, because this job runs the same pinned
+  # browser the baselines were captured with.
   e2e:
-    runs-on: ubuntu-latest # ships with google-chrome preinstalled
+    runs-on: ubuntu-latest
+    # Pinned browser, so the visual baselines are comparable to what runs here.
+    # They are captured in this same image; the hosted runner's own Chrome
+    # drifted 1.1-4.9% against them, which is why the check used to be
+    # informational in CI. The image has node and the suite has no npm
+    # dependencies, so there is nothing to install.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --user 1001:1001
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - name: Install
-        run: npm ci
       - name: Installability, offline, screenshots
-        run: npm run e2e
+        run: node tools/e2e/run.mjs
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
