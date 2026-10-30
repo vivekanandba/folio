@@ -83,6 +83,14 @@ for (const origin of external) {
 // rather than authored — exactly the kind of file a build can drop silently.
 check(existsSync(join(DIST, 'content/index.json')), 'content/index.json did not make it into the build')
 
+// An unstamped worker keeps one cache name forever, so `activate` never drops
+// anything and the device accumulates every past deploy.
+const swText = existsSync(join(DIST, 'sw.js')) ? readFileSync(join(DIST, 'sw.js'), 'utf8') : ''
+check(
+  /const VERSION = 'folio-sw-[0-9a-f]{12}'/.test(swText),
+  "sw.js is not stamped — old caches would never be dropped (run `node tools/stamp-sw.mjs dist`)",
+)
+
 const catalogPath = join(DIST, 'content/catalog.json')
 check(existsSync(catalogPath), 'content/catalog.json did not make it into the build')
 if (existsSync(catalogPath)) {

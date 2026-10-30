@@ -4,7 +4,12 @@
  *  - navigations: network-first (fresh deploys win), cache fallback offline
  *  - everything else same-origin GET: stale-while-revalidate
  * After one online visit, the whole museum — shell, packs, machines — works
- * on a plane. Bump VERSION to drop old caches on activate.
+ * on a plane.
+ *
+ * VERSION is rewritten at build time by tools/stamp-sw.mjs with a digest of
+ * the built tree, so `activate` drops every older cache on each deploy. The
+ * placeholder below is what that script looks for — if you rename it, the
+ * build fails loudly rather than shipping a worker that never cleans up.
  */
 
 const VERSION = 'folio-sw-v1'
