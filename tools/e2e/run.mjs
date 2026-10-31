@@ -643,7 +643,15 @@ try {
               return args.length === 0 ? new Real(FIXED) : new Real(...args)
             }
             Pinned.prototype = Real.prototype
-            Pinned.now = () => FIXED
+            // now() still ADVANCES, from the pinned instant. Freezing it
+            // too would stop every elapsed-time calculation in the app dead:
+            // the cue queue in feedback.ts derives its next free slot from
+            // Date.now(), and with a frozen clock it would push queued cues
+            // further into the future forever. The capture needs stable
+            // COPY, not a stopped world. (No backticks in here: this whole
+            // block is a template literal.)
+            const t0 = performance.now()
+            Pinned.now = () => FIXED + Math.round(performance.now() - t0)
             Pinned.parse = Real.parse
             Pinned.UTC = Real.UTC
             globalThis.Date = Pinned
@@ -695,23 +703,34 @@ try {
         // frame, indistinguishable from a design regression. This is the same
         // "duration instead of condition" mistake the smoke suite was rebuilt
         // to remove; it had simply survived here (CON-VER-008).
-        // `.widget-failed` counts as settled. A figure that CANNOT mount — a
-        // malformed ```viz fence — degrades to "(interactive figure
-        // unavailable)" and never gains `widget-mounted`, so waiting only on
-        // the success class turns a graceful degradation into a 15s timeout
-        // blaming hydration. That is the misdiagnosis this block exists to
-        // prevent, committed by the fix for it (CON-VER-005).
-        await page.waitFor(
-          `document.querySelectorAll('.viz-slot:not(.widget-mounted):not(.widget-failed)').length === 0`,
-          { label: `${shot.name} figures settled` },
-        )
         // Webfonts: style.css imports Google Fonts at runtime, and a capture
         // taken on the fallback face differs from one taken on Source Serif
-        // everywhere there is text.
+        // everywhere there is text. Measured as already loaded at this point
+        // on every shot, under load as well — kept because it is the right
+        // condition, not because it is currently doing work.
         await page.evaluate(`document.fonts ? document.fonts.ready.then(() => true) : true`)
-        // Then a short settle for entry animations, which reduced motion has
-        // already collapsed to nothing.
-        await page.evaluate(`new Promise(r => setTimeout(r, 400))`)
+        // Two animation frames, then settle. A frame callback runs BEFORE the
+        // compositor presents, so one rAF proves layout ran and the second
+        // proves the frame it produced was committed — a paint barrier rather
+        // than a hope. The settle stays at 600ms: it was briefly cut to 400
+        // on the theory that a condition above had replaced it, which
+        // measurement did not support.
+        // Pin the SCROLL. page.screenshot() captures the VIEWPORT, so what is
+        // in frame depends on where the page is scrolled — and main.ts focuses
+        // #main on every route change, which scrolls it into view by 68px.
+        // Whether that has happened by shutter time varies with load order and
+        // with whether the service worker served the route from cache, so the
+        // same page was being captured from two different offsets. 68px of a
+        // 900px viewport is the 8.55% that kept appearing on `halls`.
+        await page.evaluate(`window.scrollTo(0, 0)`)
+        // Two animation frames, then settle. A frame callback runs BEFORE the
+        // compositor presents, so one rAF proves layout ran and the second
+        // proves the frame it produced was committed — a paint barrier rather
+        // than a hope. The settle stays at 600ms: it was briefly cut to 400
+        // on the theory that a condition above had replaced it, which
+        // measurement did not support.
+        await page.evaluate(`new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))`)
+        await page.evaluate(`new Promise(r => setTimeout(r, 600))`)
         // Checked HERE, immediately before the shutter, not before the settle:
         // the earlier placement could not see anything written during those
         // 600ms, and an `halls` capture carrying a resume card drifted 8.55%
@@ -729,6 +748,7 @@ try {
           // guarantees it, so a diagnostic for it could never fire — and an
           // unreachable branch dressed as a check is worse than no check.
           fonts: document.fonts ? document.fonts.status : 'loaded',
+          scrollY: Math.round(window.scrollY),
         })`))
         const wrong = [
           state.keys.length ? `storage kept [${state.keys.join(', ')}]` : '',
@@ -736,6 +756,7 @@ try {
           state.aurora ? 'a live aurora canvas is on screen' : '',
           state.motion ? '' : 'reduced-motion emulation did not take',
           state.fonts === 'loaded' ? '' : `fonts are ${state.fonts}`,
+          state.scrollY ? `the page is scrolled to ${state.scrollY}px` : '',
         ].filter(Boolean)
         // Named causes, not a bare "it differs". An intermittent screenshot
         // failure that says only "8.55% changed" sends the next reader after

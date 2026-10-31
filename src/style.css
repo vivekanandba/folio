@@ -2204,7 +2204,11 @@ input[type='range'] {
   margin: 0 0 0.35rem;
   font-family: var(--font);
   font-size: 1.02rem;
-  font-style: italic;
+  /* No `font-style: italic`. The Source Serif 4 request at the top of this
+     file carries no `ital` axis, so asking for italic gets a browser-
+     synthesised slant of the upright face — a worse letterform than the
+     upright one, and it is what the floor baseline would then encode. */
+  letter-spacing: 0.01em;
   color: var(--brass);
 }
 
@@ -2250,9 +2254,13 @@ input[type='range'] {
    buttons on focus, which is the visible shape jump a focus style must never
    cause; browsers already follow the element's own radius when drawing an
    outline, so there is nothing to set. */
+/* `from` only, deliberately. With an explicit `to` of 2px and no fill-mode,
+   the ring animated to 2px and then SNAPPED back to whatever the element's
+   own rule computed — 3px for choices and cards, which is the shape jump the
+   comment below promises never to cause. A keyframe with only `from` animates
+   to the computed value, whatever that element's value happens to be. */
 @keyframes focus-land {
   from { outline-offset: 6px; outline-color: transparent; }
-  to   { outline-offset: 2px; }
 }
 :focus-visible {
   outline: 2px solid var(--brass-bright);

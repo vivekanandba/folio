@@ -66,22 +66,41 @@
 
 ### Found while shipping PR 3 — the capture was racing the page
 
-- [x] 18b. The screenshot step waited a fixed 600ms and then fired. Under load
-       a concept page's interactive figures had not hydrated, so the capture
-       had a figure-sized hole and reported 9.54% drift — a timing failure
-       wearing the costume of a design regression, and the same
-       duration-instead-of-condition mistake the smoke suite was rebuilt to
-       remove. It now waits for every `.viz-slot` to hydrate and for
-       `document.fonts.ready`, and the capture asserts FIVE named conditions
-       (storage, resume card, live aurora, reduced-motion, font status) so a
-       future race says what it was rather than printing a percentage for the
-       reader to guess at (CON-VER-005). Five, not six: an earlier draft also
-       re-checked hydration, which the wait above already guarantees — an
-       unreachable branch dressed as a check.
+- [x] 18b. The screenshot step's intermittent drift (halls 8.55%,
+       concept-matrices 9.54%) was **the camera, not the page**.
 
-       Correction to the record: PR 1 attributed an earlier intermittent 8.55%
-       to the resume card. That was inferred, never observed — the measured
-       cause is this one.
+       `page.screenshot()` captures the VIEWPORT, and `main.ts` focuses
+       `#main` on every route change, which scrolls it into view by 68px.
+       Whether that had happened by shutter time varied with load order and
+       with whether the service worker served the route from cache — so the
+       same page was photographed from two different offsets. 68px of a 900px
+       viewport is the 8.55% that kept appearing. Pinned with
+       `window.scrollTo(0, 0)` before the shutter, and `scrollY` is now one of
+       the conditions asserted there.
+
+       How it was finally found, after two wrong answers: the DOM was captured
+       ten times and was byte-identical every time, which ruled out everything
+       structural at once and pointed at rendering rather than content.
+
+       Ruled out by measurement along the way: leftover localStorage, a resume
+       card, a live aurora canvas, reduced-motion failing to apply, unhydrated
+       `.viz-slot` figures (zero pending on the FIRST poll — the wait added
+       for them was vacuous and has been removed), webfont loading, pending
+       images, and layout height.
+
+       Evidence for the fix: 2 failures in 6 runs before it; 11 consecutive
+       clean runs after, three of them at load average 10.5 — the condition
+       the fleet notes name as where Playwright jobs break. `halls.png` and
+       `pack-math.png` moved on recapture and the other two did not, which is
+       the independent confirmation that those were the two being shot 68px
+       down.
+
+       Corrections to the record, both mine. PR 1 said the earlier 8.55% was
+       the resume card: inferred, never observed. PR 3 then said it was
+       unhydrated figures and called it fixed: also inferred, and measurably
+       wrong — the wait it added could not fail. Twice I wrote a guess into a
+       commit message as a finding, while citing CON-DATA-001 elsewhere in the
+       same change.
 
 - [x] 18d. Three style rules in this PR rendered ZERO pixels. A bare
        `:focus-visible` and a `.saved-note.plaque-card` already existed LATER
@@ -103,11 +122,11 @@
        in the capture is now verified by probe, not assumed: "Good morning",
        Sat Jun 06 2026 09:00:00 GMT+0000.
 
-- [x] 18f. The hydration wait treated "cannot mount" as "not mounted yet". A
-       malformed ```viz fence degrades to "(interactive figure unavailable)"
-       and never gains `widget-mounted`, so the gate would have waited out its
-       full timeout blaming hydration — the misdiagnosis the wait was added to
-       prevent. Failed figures mark themselves `widget-failed` now.
+- [x] 18f. A figure that cannot mount now marks itself `widget-failed` on all
+       three degradation paths. The wait that motivated it has since been
+       removed as vacuous, but the mark is right on its own terms: "has not
+       mounted yet" and "will never mount" should not look identical from
+       outside, and a test pins it.
 
 ### Carried forward — e2e load sensitivity (wider than first recorded)
 

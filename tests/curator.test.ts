@@ -136,12 +136,19 @@ test('a counter whose node has left the page gives up', async () => {
   assert.equal((node as unknown as { textContent: string }).textContent, '5')
 })
 
-test('a counter never erases the number it was given', async () => {
-  // requestAnimationFrame does not run in a hidden tab. An earlier draft set
-  // the node to '0' before the first frame, so finishing a round and
-  // switching away left "0 concepts reviewed today" on screen permanently.
+test('a counter does not erase the number before its first frame', async () => {
+  // What this can actually check, said plainly: countUp must write nothing
+  // SYNCHRONOUSLY. An earlier draft set the node to '0' on the spot and
+  // relied on requestAnimationFrame to put the value back — and rAF does not
+  // run in a hidden tab, so finishing a round and switching away left
+  // "0 concepts reviewed today" on screen permanently.
+  //
+  // The hidden-tab case itself is not reachable here: this stub's rAF is a
+  // timer that always fires, and there is no visibility model to hide behind.
+  // So this guards the synchronous wipe, which is the regression, and the
+  // browser half is the e2e's job.
   const node = el()
   node.append(document.createTextNode('9'))
-  countUp(node, 9, 50_000) // long enough that no frame can complete
-  assert.notEqual(text(node), '0', 'the real value must survive until a frame replaces it')
+  countUp(node, 9, 50_000) // long enough that no frame can complete it
+  assert.equal(text(node), '9', 'the real value must survive until a frame replaces it')
 })

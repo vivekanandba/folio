@@ -91,11 +91,16 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // not stamped — the stamp is the loudest claim on the card, and sounding
       // nothing while stamping "cleared" would leave the two disagreeing.
       // role="status" so a screen reader is told as much (CON-DATA-001).
+      // role="status" AND liveAnnounce. The attribute alone is not enough
+      // here: this node is built into a card that is attached afterwards, and
+      // a live region inserted already populated is not reliably announced —
+      // the rule this same function cites thirty lines below for the plaques.
       card.append(
         el('div', { class: 'muted small', role: 'status' }, [
           'Nothing was due that had material to review.',
         ]),
       )
+      liveAnnounce('Review complete. Nothing was due that had material to review.')
     }
     const cta = el('p', {}, [
       el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum']),
