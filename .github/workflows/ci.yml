@@ -111,5 +111,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          path: .coverage/*.lcov
+          # Everything, not just *.lcov: the e2e log lives here too, and when
+          # coverage:gate fails inside CI that log is the only account of
+          # WHICH check failed. The runner workspace is discarded after.
+          path: .coverage/*
           if-no-files-found: warn

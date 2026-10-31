@@ -74,12 +74,22 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       a lost context (driver reset, memory pressure), and asserts the canvas
       is gone. The teardown is deterministic.
 
-      Residual drift is ~3 lines a run in shader.ts's uniform setup, about
-      0.03pp. Six measurements — five on the dev box, one in CI — spanned
-      97.87–97.92%, so the floor is 97.5 with 0.37pp of headroom. The margin
-      is wider than the 0.06pp the old floor used, on purpose: CON-COV-002
-      forbids lowering a floor, so too tight has to be walked back while too
-      loose merely ratchets again.
+      Residual drift, measured rather than inferred: the combined figure has
+      been observed between **97.85% and 98.06%** across twelve runs (ten
+      local, two in CI) — a 0.21pp band, about 18 lines of 8807. The browser
+      half underneath swings much wider, 3965–4089 covered lines over six
+      runs, most of it absorbed by the union because the unit half already
+      covers those lines. shader.ts itself varies by three lines (150–153).
+
+      An earlier version of this entry said that three-line shader figure WAS
+      the drift. It was not; it was one file's share of it, generalised to the
+      whole (CON-DATA-001) — and it was the number the headroom argument
+      rested on, so it mattered. Caught in review, re-measured, corrected.
+
+      The floor is 97.5: 0.35pp below the lowest figure ever observed, about
+      1.7× the measured band. The margin is wider than the 0.06pp the old
+      floor used, on purpose — CON-COV-002 forbids lowering a floor, so too
+      tight has to be walked back while too loose merely ratchets again.
 
       The lesson worth keeping is not about WebGL. A diagnosis was written
       into this file as a finding and then believed for three weeks, and the

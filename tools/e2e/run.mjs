@@ -644,20 +644,20 @@ try {
         const file = new File([text], 'folio-progress.json', { type: 'application/json' })
         Object.defineProperty(input, 'files', { value: [file], configurable: true })
         input.dispatchEvent(new Event('change', { bubbles: true }))
-        // The handler awaits file.text() and then schedules a reload 600ms
-        // later on success. We read the store before that fires.
-        //
-        // NOT by monkeypatching location.reload: Location members are
-        // [LegacyUnforgeable], so the assignment silently does nothing and
-        // the restore afterwards is equally a no-op. An earlier version did
-        // exactly that and passed anyway — by outrunning the very reload its
-        // comment claimed to be holding. Shorten report.ts's delay and the
-        // page would navigate mid-evaluate, and the failure would point at
-        // the import handler rather than at a broken test guard.
-        await new Promise((r) => setTimeout(r, 150))
-        return localStorage.getItem('folio-progress-v2') || ''
+        return 'dispatched'
       })()`)
-      assert(imported.includes('p2::s9'), `importing a ledger did not replace the store (${imported.slice(0, 60)})`)
+      assert(imported === 'dispatched', `the ledger offers no file input (${imported})`)
+      // Poll for the WRITE, do not sleep past it. The handler awaits
+      // file.text() before writing and report.ts then schedules a reload
+      // 600ms later, so a fixed wait is squeezed between two timings it does
+      // not control — and on a loaded box it loses. An earlier version slept
+      // 150ms and also monkeypatched location.reload to hold the navigation,
+      // which does nothing at all: Location members are [LegacyUnforgeable].
+      // It passed by outrunning the very reload it claimed to be holding.
+      await page.waitFor(
+        `(localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')`,
+        { timeoutMs: 500, intervalMs: 25, label: 'the imported ledger reaches storage' },
+      )
       return 'export → parse → import'
     } finally {
       await page.close()
@@ -686,9 +686,21 @@ try {
       })
       await page.goto(`${origin}/index.html?floor=2#/`)
       await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'narrow floor' })
+      // Assert the viewport actually IS narrow and the canvas was laid out
+      // for it. Checking only that no error was thrown would let this pass on
+      // a 1280px page and still be called "survives a phone-width viewport".
+      const narrow = JSON.parse(await page.evaluate(`JSON.stringify({
+        width: window.innerWidth,
+        canvas: Math.round(document.querySelector('.floor-canvas').getBoundingClientRect().width),
+      })`))
+      assert(narrow.width <= 400, `the viewport is ${narrow.width}px, not phone width`)
+      assert(
+        narrow.canvas > 0 && narrow.canvas <= narrow.width,
+        `the floor canvas is ${narrow.canvas}px inside a ${narrow.width}px viewport`,
+      )
       errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
       assert(!errors, `${errors} uncaught error(s) on a phone-width floor`)
-      return `${clicked} controls, then 390px wide`
+      return `${clicked} controls, then ${narrow.width}px wide`
     } finally {
       await page.close()
     }
@@ -709,10 +721,17 @@ try {
         const ext = gl && gl.getExtension('WEBGL_lose_context')
         if (!ext) return 'no WEBGL_lose_context'
         ext.loseContext()
-        await new Promise((r) => setTimeout(r, 300))
-        return document.querySelector('.aurora-canvas') ? 'still here' : 'removed'
+        return 'lost'
       })()`)
-      assert(gone === 'removed', `the aurora did not tear down (${gone})`)
+      assert(gone === 'lost', `could not lose the context (${gone})`)
+      // A condition, not 300ms. Dispatching webglcontextlost and running
+      // destroy() can take longer than any number picked in advance, and the
+      // failure would read as "the aurora did not tear down" rather than as a
+      // wait that was too short.
+      await page.waitFor('!document.querySelector(".aurora-canvas")', {
+        timeoutMs: 5000,
+        label: 'the aurora removes itself',
+      })
       const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
       assert(!errors, `${errors} uncaught error(s) during teardown`)
       return 'context lost → canvas removed'

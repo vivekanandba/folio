@@ -107,12 +107,14 @@ async function newPage(port) {
   // Collect uncaught errors and unhandled rejections from EVERY document this
   // page loads, before any page script runs.
   //
-  // Four checks in run.mjs assert `window.__e2eErrors` is empty. Nothing ever
-  // created it — `grep -rn __e2eErrors` found four reads and zero writes — so
-  // every one of them compared 0 against 0 and could not fail. The oldest had
-  // been reporting "no uncaught errors" for all twelve session kinds, in CI,
-  // for weeks. An assertion that cannot fail is worse than no assertion: it
-  // occupies the place where a real one would go (CON-VER-005).
+  // run.mjs asserts `window.__e2eErrors` is empty, and nothing ever created
+  // it: four reads, zero writes. ONE of those reads predates this change —
+  // the session-kind check, which had been reporting "no uncaught errors" for
+  // all twelve kinds, in CI, for weeks while comparing 0 against 0. The other
+  // three were added alongside this collector. (An earlier version of this
+  // comment said all four had been live for weeks, which overstated a real
+  // incident fourfold — in a file whose argument is that a misdescribing
+  // record is worse than none, CON-VER-005.)
   await send('Page.enable')
   await send('Runtime.enable')
   await send('Page.addScriptToEvaluateOnNewDocument', {

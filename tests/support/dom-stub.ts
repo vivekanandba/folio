@@ -234,12 +234,19 @@ export class StubElement extends StubNode {
           // approximates is worse than one that refuses, because the wrong
           // match is a green test on a false premise.
           if (!m) return false
-          // `class` and `id` never reach the attributes map — setAttribute
-          // diverts them to className/id — so ask the element, not the map.
+          // `class` is read off the element, not the map. Not because
+          // setAttribute diverts it — it writes attributes too — but because
+          // classList.add() afterwards updates className WITHOUT refreshing
+          // the map, so the stored value goes stale. `id` needs no special
+          // case; an earlier comment here claimed both did, which would have
+          // invited someone to delete a branch that is load-bearing.
           const name = m[1]
-          const actual =
-            name === 'class' ? this.className : name === 'id' ? this.id : this.getAttribute(name)
-          if (actual == null || actual === '') return false
+          const actual = name === 'class' ? this.className : this.getAttribute(name)
+          // Presence matches an EMPTY value: [hidden], [open] and [data-x]
+          // are all set with ''. Treating empty as absent fails closed, and a
+          // silent non-match is the "looks untestable" dead end this matcher
+          // exists to remove.
+          if (actual == null) return false
           return m[2] ? actual === m[3] : true
         }
         return this.tagName.toLowerCase() === piece.toLowerCase()
