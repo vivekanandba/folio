@@ -230,7 +230,8 @@ export async function renderReport(root: HTMLElement): Promise<void> {
     el('h2', {}, ['Acquisitions']),
     plaques.length
       ? el('p', { class: 'muted small' }, [
-          `${plaques.length} plaque${plaques.length === 1 ? '' : 's'} on the wall, most recent first.`,
+          `${plaques.length} plaque${plaques.length === 1 ? '' : 's'} on the wall, most recently recorded first. `,
+          'A date is when the curator noticed, which for anything you had already earned is the first visit after folio began keeping them.',
         ])
       : el('p', { class: 'muted small' }, [
           'Nothing on the wall yet. Finish an exhibit, or come back tomorrow and keep a streak going.',
@@ -242,7 +243,12 @@ export async function renderReport(root: HTMLElement): Promise<void> {
           el('div', {}, [
             el('h3', {}, [milestone.title]),
             el('p', { class: 'muted small' }, [milestone.note]),
-            el('p', { class: 'muted small acquisition-date' }, [at.slice(0, 10)]),
+            // "Recorded", not "earned". detect() is satisfied-minus-recorded,
+            // so a learner who was using folio before plaques existed has
+            // today's date stamped on a streak they completed in September.
+            // Printing that bare would be an inference dressed as an
+            // observation (CON-DATA-001).
+            el('p', { class: 'muted small acquisition-date' }, [`Recorded ${at.slice(0, 10)}`]),
           ]),
         ]),
       ),

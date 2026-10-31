@@ -14,7 +14,7 @@ import { installModuleHooks } from './support/module-hooks.mjs'
 installModuleHooks()
 installDomStub()
 
-const { detect, satisfied, MILESTONE_IDS } = await import('../src/milestones.ts')
+const { describe, detect, satisfied, MILESTONE_IDS } = await import('../src/milestones.ts')
 const { addDays, today } = await import('../src/srs.ts')
 
 type Store = {
@@ -128,6 +128,31 @@ test('a hall with no sessions at all is not quietly complete', () => {
     ids(satisfied(store(), { halls: emptyHall })).filter((i) => i.startsWith('hall-complete')),
     [],
   )
+})
+
+test('a pack with no sessions does not make "every hall" unearnable', () => {
+  // [].some() is false, so an unfiltered every() would be false forever: one
+  // concepts-only or half-authored pack in the catalog and the plaque could
+  // never be earned, with nothing on screen to explain why.
+  const withEmpty = [...HALLS, { packId: 'hall-wip', title: 'Work in progress', sessionIds: [] as string[] }]
+  const both = store({
+    sessions: Object.fromEntries([session('hall-a', 'a1', 5, 5), session('hall-b', 'b1', 3, 3)]),
+  })
+  assert.ok(
+    ids(satisfied(both, { halls: withEmpty })).includes('every-hall'),
+    'a room with nothing in it is not a hall you have failed to visit',
+  )
+})
+
+test('a crafted ledger key is ignored, not rendered and not thrown', () => {
+  // milestones come back from importProgress unvalidated, so these reach
+  // describe() verbatim. Prototype keys must find nothing.
+  for (const id of ['constructor', 'toString', '__proto__', 'constructor-x', 'hasOwnProperty-3']) {
+    assert.equal(describe(id, ctx), null, `${id} must not describe a plaque`)
+  }
+  // And the shelf-shaped path over a poisoned store must survive.
+  const poisoned = store({ milestones: { constructor: 'x', 'streak-3': '2026-01-01T00:00:00.000Z' } })
+  assert.doesNotThrow(() => detect(poisoned, ctx))
 })
 
 test('visiting every hall needs every hall, not most of them', () => {

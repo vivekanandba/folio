@@ -119,8 +119,12 @@ export type MilestoneId = (typeof MILESTONE_IDS)[number]
  * newer build degrades to leaving that plaque out rather than crashing.
  */
 export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
-  const fixed = FIXED[id]
-  if (fixed) return { id, ...fixed }
+  // Object.hasOwn, not a truthiness check: ids come out of a ledger the
+  // learner can import, and `constructor` or `toString` would otherwise find
+  // something on the prototype chain — rendering a plaque with an undefined
+  // inscription, or throwing out of the Curator's Report entirely. Nothing
+  // here is trusted input.
+  if (Object.hasOwn(FIXED, id)) return { id, ...FIXED[id] }
 
   if (id.startsWith('hall-complete:')) {
     const packId = id.slice('hall-complete:'.length)
@@ -134,8 +138,8 @@ export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
   }
 
   const [kind, raw] = id.split('-')
+  if (!Object.hasOwn(TIERS, kind)) return null
   const tiers = TIERS[kind as keyof typeof TIERS]
-  if (!tiers) return null
   const tier = tiers.find(([threshold]) => String(threshold) === raw)
   return tier ? { id, title: tier[1], note: tier[2] } : null
 }
@@ -158,20 +162,22 @@ export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[
   // would make clicking through one a flawless run.
   if (results.some((r) => r.maxScore > 0 && r.score === r.maxScore)) ids.push('first-flawless')
 
-  for (const hall of ctx.halls) {
-    // An empty hall would be vacuously complete — a plaque for a room with
-    // nothing in it.
-    if (!hall.sessionIds.length) continue
+  // Both hall rules judge the same set. A hall with no sessions in it would be
+  // vacuously COMPLETE ([].every() is true) and permanently UNVISITABLE
+  // ([].some() is false) — so one concepts-only or half-authored pack in the
+  // catalog would hand out a plaque for an empty room and make "every hall"
+  // unearnable forever, with nothing to explain why. It is not a hall yet.
+  const rooms = ctx.halls.filter((hall) => hall.sessionIds.length > 0)
+
+  for (const hall of rooms) {
     if (hall.sessionIds.every((id) => store.sessions?.[`${hall.packId}::${id}`])) {
       ids.push(`hall-complete:${hall.packId}`)
     }
   }
 
   if (
-    ctx.halls.length > 0 &&
-    ctx.halls.every((hall) =>
-      hall.sessionIds.some((id) => store.sessions?.[`${hall.packId}::${id}`]),
-    )
+    rooms.length > 0 &&
+    rooms.every((hall) => hall.sessionIds.some((id) => store.sessions?.[`${hall.packId}::${id}`]))
   ) {
     ids.push('every-hall')
   }

@@ -179,6 +179,9 @@ export function recordConceptReview(
 export function earnedMilestones(ctx: MilestoneCtx): { milestone: Milestone; at: string }[] {
   const recorded = Object.entries(loadProgress().milestones ?? {})
   return recorded
+    // The map comes back from importProgress unvalidated, so a value that is
+    // not a date string must not reach the report's .slice().
+    .filter(([, at]) => typeof at === 'string')
     .map(([id, at], order) => ({ milestone: describe(id, ctx), at, order }))
     .filter((row): row is { milestone: Milestone; at: string; order: number } => !!row.milestone)
     // Newest first. A whole batch earned in one save shares a timestamp, so

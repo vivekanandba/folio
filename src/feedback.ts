@@ -46,32 +46,40 @@ export function noteForRun(run: number): number {
 
 let run = 0
 
+
 /**
- * When the last answer cue went out. A one-shot session kind calls
- * cue('correct') and then synchronously completes, so the bell and the
- * finishing chord would land in the SAME tick: two oscillators at the same
- * pitch starting together nearly double the master trim — loudest on a
- * flawless finish, the one case this most wants to sound good — and a second
- * navigator.vibrate() CANCELS the running pattern, so the answer's tap never
- * reaches the learner at all. The chord waits for the bell to ring out.
+ * Roughly how long each cue occupies the room, in ms — its notes plus their
+ * decay. Used to keep two cues from talking over each other, which matters
+ * for more than tidiness: a second navigator.vibrate() CANCELS the running
+ * pattern, so an overlap does not blur, it silently truncates.
  */
-let lastAnswerAt = 0
-
-/** The length of the answer bell, which is what the chord has to clear. */
-const ANSWER_TAIL_MS = 440
-
-/** A chord waiting its turn. At most one is ever outstanding. */
-let pendingCue = 0
+const CUE_MS: Record<CueName, number> = {
+  correct: 440,
+  wrong: 300,
+  complete: 1180,
+  milestone: 1120,
+  reveal: 140,
+}
 
 /**
- * Drop a chord that has not spoken yet. A learner who has left the exhibit —
- * or muted — must not be sung to by the session they just left, and a test
- * that leaves one armed hands it to whichever test happens to wait next.
+ * When the room is next free. Cues the learner caused DIRECTLY — an answer, a
+ * card turning over — always speak at once and push this out; cues that merely
+ * follow from them (the finishing chord, a plaque going up) queue behind it.
+ */
+let freeAt = 0
+
+/** Cues waiting their turn, in the order they will speak. */
+let pendingCues: number[] = []
+
+/**
+ * Drop everything not yet spoken. A learner who has left the exhibit — or
+ * muted — must not be sung to by the session they just left, and a test that
+ * leaves one armed hands it to whichever test happens to wait next.
  */
 function cancelPending(): void {
-  if (!pendingCue) return
-  window.clearTimeout(pendingCue)
-  pendingCue = 0
+  for (const id of pendingCues) window.clearTimeout(id)
+  pendingCues = []
+  freeAt = 0
 }
 
 /** Consecutive right answers in the current session. */
@@ -86,7 +94,6 @@ export function currentRun(): number {
  */
 export function resetRun(): void {
   run = 0
-  lastAnswerAt = 0
   cancelPending()
 }
 
@@ -244,23 +251,27 @@ export function cue(name: CueName, opts: CueOptions = {}): void {
   const degree = run
   if (name === 'correct') run += 1
   else if (name === 'wrong') run = 0
-  if (name === 'correct' || name === 'wrong') lastAnswerAt = Date.now()
 
-  // A finish that arrives on the heels of the answer that caused it waits for
-  // that answer to finish speaking. Quiz and calculator put a "Finish" button
-  // in between and are already clear of this; the one-shot kinds are not.
-  if (name === 'complete') {
-    const since = Date.now() - lastAnswerAt
-    if (lastAnswerAt && since < ANSWER_TAIL_MS) {
-      cancelPending()
-      pendingCue = window.setTimeout(() => {
-        pendingCue = 0
-        emit(name, degree, opts)
-      }, ANSWER_TAIL_MS - since)
-      return
-    }
+  const now = Date.now()
+  // A finish, or a plaque, arrives on the heels of the thing that caused it:
+  // a one-shot session kind marks the answer and completes in the same tick,
+  // and a plaque follows the finish. Each waits for the room, in order.
+  //
+  // Answers and reveals never wait — a learner pressing a button must hear it
+  // now — so they speak immediately and push the room's free time out.
+  const queued = name === 'complete' || name === 'milestone'
+  const start = queued ? Math.max(now, freeAt) : now
+  freeAt = start + CUE_MS[name]
+
+  if (start <= now) {
+    emit(name, degree, opts)
+    return
   }
-  emit(name, degree, opts)
+  const id = window.setTimeout(() => {
+    pendingCues = pendingCues.filter((t) => t !== id)
+    emit(name, degree, opts)
+  }, start - now)
+  pendingCues.push(id)
 }
 
 /** Actually speak. Separate from cue() because a deferred chord lands here. */
