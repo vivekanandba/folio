@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, donut, stage } from '../fx'
 import type { DetectiveSession } from '../types'
 import { stepPills } from '../visuals'
@@ -87,6 +88,7 @@ function mountDetective(
           el('span', { class: 'muted' }, ['Face down']),
         )
         card.addEventListener('click', () => {
+          cue('reveal')
           burst(card)
           revealed += 1
           render()

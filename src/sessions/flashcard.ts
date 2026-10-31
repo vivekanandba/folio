@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { stage } from '../fx'
 import type { Flashcard } from '../types'
 
@@ -42,6 +43,7 @@ export function mountFlashcards(
     const controls = el('div', { class: 'flashcard-controls' })
     const reveal = el('button', { class: 'primary', type: 'button' }, ['Reveal answer'])
     reveal.addEventListener('click', () => {
+      cue('reveal')
       flip.append(el('div', { class: 'flashcard-face back pop-in' }, [el('p', {}, [card.back])]))
       controls.replaceChildren(
         el('p', { class: 'muted small' }, ['How well did you recall it?']),
@@ -51,6 +53,11 @@ export function mountFlashcards(
           GRADES.map((g) => {
             const b = el('button', { class: `grade-btn ${g.cls}`, type: 'button' }, [g.label])
             b.addEventListener('click', () => {
+              // Again (0.2) is a miss; Good and Easy keep the run. Hard (0.5)
+              // means recalled, just not easily — a neutral tick, because
+              // losing a run of six for remembering something slowly is a
+              // punishment the learner did not earn.
+              cue(g.value <= 0.2 ? 'wrong' : g.value >= 0.75 ? 'correct' : 'reveal')
               grades.push(g.value)
               index += 1
               render()

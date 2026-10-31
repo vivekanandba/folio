@@ -1,6 +1,7 @@
 import { liveAnnounce } from '../a11y'
 import { COMPUTES } from '../computes'
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import type { EstimateSession } from '../types'
 import { gauge } from '../visuals'
@@ -114,6 +115,7 @@ function mountEstimate(
         ]),
         richBlock(session.debrief),
       )
+      cue(correct ? 'correct' : 'wrong')
       if (correct) burst(reveal)
       else shake(reveal)
       onComplete(correct ? 1 : 0, 1)

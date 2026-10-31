@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import {
   connectivityAvailability, edgeKey, evalRule, nodesOf, shortestHops,
@@ -232,9 +233,14 @@ function mountBlueprint(
     const passed = results.filter((r) => r.ok).length
     if (passed === session.rules.length) {
       done = true
+      cue('correct')
       burst(inspect)
       finish(passed)
     } else {
+      // Inspect is formative here — it is pressed repeatedly WHILE wiring, not
+      // once to commit. Sounding a miss each time would reprimand someone for
+      // thinking out loud, and wipe a run they never spent. The shake is
+      // feedback enough until the topology actually passes.
       shake(inspect)
     }
   })
