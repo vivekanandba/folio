@@ -200,13 +200,37 @@ export class StubElement extends StubNode {
     return null
   }
   /** Supports `.class`, `#id`, `tag`, and comma-separated lists of those. */
+  /**
+   * A COMPOUND selector matcher: tag, #id, .class, [attr] and [attr="value"],
+   * in any combination, plus comma lists. Still no combinators — descendant
+   * and child selectors stay the browser suite's job.
+   *
+   * Attribute selectors were the missing piece. src/sessions/blueprint.ts
+   * finds its wires with `[data-uid="…"]` and classify its buckets with
+   * `[data-bucket="…"] .bucket-drop`, so without them those queries returned
+   * null, the loops around them did nothing, and whole interactions looked
+   * untestable when they were only unsupported.
+   */
   matches(sel: string): boolean {
     return sel.split(',').some((part) => {
       const s = part.trim()
       if (!s) return false
-      if (s.startsWith('.')) return this.classList.contains(s.slice(1))
-      if (s.startsWith('#')) return this.id === s.slice(1)
-      return this.tagName.toLowerCase() === s.toLowerCase()
+      // Split a compound into its pieces: `button.foo[data-x="1"]#id`.
+      const pieces = s.match(/(^[a-zA-Z][\w-]*)|(\.[\w-]+)|(#[\w-]+)|(\[[^\]]+\])/g)
+      if (!pieces || pieces.join('') !== s) return false
+      return pieces.every((piece) => {
+        if (piece.startsWith('.')) return this.classList.contains(piece.slice(1))
+        if (piece.startsWith('#')) return this.id === piece.slice(1)
+        if (piece.startsWith('[')) {
+          const m = /^\[([\w-]+)(?:([~|^$*]?=)"?([^"\]]*)"?)?\]$/.exec(piece)
+          if (!m) return false
+          const actual = this.getAttribute(m[1])
+          if (actual == null) return false
+          if (!m[2]) return true
+          return m[2] === '=' ? actual === m[3] : actual.includes(m[3])
+        }
+        return this.tagName.toLowerCase() === piece.toLowerCase()
+      })
     })
   }
   /** Depth-first descendants, self excluded. */

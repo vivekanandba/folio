@@ -254,3 +254,66 @@ test('a genuinely empty queue shows the forgetting curve instead of a blank page
   assert.ok(page.textContent.trim().length > 0, 'and must explain itself')
   storage().clear()
 })
+
+/* ----------------------------------------------- the halls, and the palette --- */
+
+test('the hall filter chips hide and show categories', async () => {
+  storage().clear()
+  const hub = await import('../src/pages/hub.ts')
+  const el = root()
+  await hub.renderHub(el)
+  const page = el as unknown as El
+
+  const chips = page.querySelectorAll('.cat-chip')
+  assert.ok(chips.length > 1, 'more than one category, so filtering is offered')
+  const sections = () => page.querySelectorAll('.cat-section')
+  assert.ok(sections().length > 1, 'and a section per category')
+
+  // Pick a named category, not "All" — the branch that actually hides things.
+  const named = chips.slice(1)[0]
+  named.click()
+  const hidden = sections().filter((s) => s.hidden === true)
+  assert.ok(hidden.length > 0, 'choosing a category hides the others')
+  assert.equal(named.getAttribute('aria-pressed'), 'true', 'and the chip says it is chosen')
+
+  chips[0].click() // All
+  assert.equal(
+    sections().filter((s) => s.hidden === true).length,
+    0,
+    'and "All" brings them back',
+  )
+  storage().clear()
+})
+
+test('the palette answers Home, End and a click on its backdrop', async () => {
+  const handle = initPalette()
+  handle.open()
+  const dialog = document.querySelector('.cmdk') as unknown as (El & { open: boolean })
+  const input = dialog.querySelector('.cmdk-input')!
+  input.value = 'a'
+  input.dispatchEvent({ type: 'input', target: input })
+  await tick(20)
+
+  const rows = () => dialog.querySelectorAll('.cmdk-item')
+  assert.ok(rows().length > 1, 'a broad query offers several results')
+
+  const key = (k: string) =>
+    input.dispatchEvent({ type: 'keydown', key: k, preventDefault: () => {}, target: input })
+  key('End')
+  const activeIndex = (): number =>
+    rows().findIndex((r) => (r as unknown as { className: string }).className.includes('active'))
+  const atEnd = activeIndex()
+  key('Home')
+  const atHome = activeIndex()
+  assert.notEqual(atEnd, atHome, 'End and Home land in different places')
+  assert.equal(atHome, 0, 'and Home is the first result')
+
+  // Hovering a row makes it the active one — the mouse path beside the keys.
+  rows()[1].dispatchEvent({ type: 'mousemove' })
+  assert.equal(activeIndex(), 1, 'hovering a row selects it')
+
+  // Clicking the backdrop (the dialog itself, not a child) dismisses.
+  dialog.dispatchEvent({ type: 'click', target: dialog })
+  await tick()
+  assert.equal(dialog.open, false, 'a click outside closes the palette')
+})

@@ -591,6 +591,131 @@ try {
     }
   })
 
+  /* ------------------------------- the parts only a browser can reach ----- */
+
+  await check('the ledger exports and imports, in a real browser', async () => {
+    const page = await browser.newPage()
+    try {
+      // Blob, URL.createObjectURL, a synthetic <a>.click() download and
+      // File.text() are all browser APIs the DOM stub has no answer for, so
+      // the ledger — the only way progress leaves this device — had never
+      // been exercised end to end.
+      await page.goto(`${origin}/index.html?ledger=1`)
+      await page.waitFor('document.readyState !== "loading"', { label: 'app booted' })
+      await page.evaluate(`localStorage.setItem('folio-progress-v2', JSON.stringify({
+        version: 2,
+        sessions: { 'p1::s1': { packId: 'p1', sessionId: 's1', kind: 'quiz', score: 4, maxScore: 5, completedAt: '2026-09-01T00:00:00.000Z' } },
+        concepts: {},
+        attempts: [{ id: 'a', packId: 'p1', conceptIds: [], source: 'session', ref: 's1', normalized: 0.8, grade: 4, at: '2026-09-01T00:00:00.000Z' }],
+        daily: { '2026-09-01': 1 },
+      }))`)
+      await page.goto(`${origin}/index.html?ledger=1&go=1#/report`)
+      await page.waitFor(
+        'document.querySelectorAll("input[type=file]").length > 0',
+        { label: 'ledger section' },
+      )
+
+      // Export: capture what the page hands the browser, without downloading.
+      const exported = await page.evaluate(`(async () => {
+        const real = URL.createObjectURL
+        let captured = null
+        URL.createObjectURL = (blob) => { captured = blob; return real.call(URL, blob) }
+        for (const b of document.querySelectorAll('button')) {
+          if (/export/i.test(b.textContent)) b.click()
+        }
+        URL.createObjectURL = real
+        return captured ? await captured.text() : ''
+      })()`)
+      assert(exported, 'clicking export produced no blob')
+      const parsed = JSON.parse(exported)
+      assert(parsed.version === 2, `exported ledger is not a v2 store (version ${parsed.version})`)
+      assert(parsed.sessions['p1::s1'], 'the exported ledger lost the session it was holding')
+
+      // Import: hand the file input a File and let the page read it back.
+      const imported = await page.evaluate(`(async () => {
+        localStorage.removeItem('folio-progress-v2')
+        const input = document.querySelector('input[type=file]')
+        if (!input) return 'no file input'
+        const text = JSON.stringify({
+          version: 2,
+          sessions: { 'p2::s9': { packId: 'p2', sessionId: 's9', kind: 'quiz', score: 2, maxScore: 2, completedAt: '2026-10-01T00:00:00.000Z' } },
+          concepts: {}, attempts: [], daily: {},
+        })
+        const file = new File([text], 'folio-progress.json', { type: 'application/json' })
+        Object.defineProperty(input, 'files', { value: [file], configurable: true })
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+        // The handler awaits file.text() and then schedules a reload on
+        // success; hold the reload so it cannot take the page away mid-check.
+        const realReload = location.reload
+        location.reload = () => {}
+        await new Promise((r) => setTimeout(r, 150))
+        location.reload = realReload
+        return localStorage.getItem('folio-progress-v2') || ''
+      })()`)
+      assert(imported.includes('p2::s9'), `importing a ledger did not replace the store (${imported.slice(0, 60)})`)
+      return 'export → parse → import'
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('the floor zooms, fits, and survives a phone-width viewport', async () => {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${origin}/index.html?floor=1#/`)
+      await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'floor canvas' })
+      // The zoom controls are the pointer-free half of the floor, and a stub
+      // with no layout can never drive the other half.
+      const clicked = await page.evaluate(`(() => {
+        let n = 0
+        for (const b of document.querySelectorAll('.floor-controls button')) { b.click(); n++ }
+        return n
+      })()`)
+      assert(clicked >= 3, `expected zoom in/out/fit, found ${clicked} control(s)`)
+      let errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
+      assert(!errors, `${errors} uncaught error(s) while working the floor controls`)
+
+      // And at phone width, where the floor re-lays-out around a single hall.
+      await page.send('Emulation.setDeviceMetricsOverride', {
+        width: 390, height: 780, deviceScaleFactor: 2, mobile: true,
+      })
+      await page.goto(`${origin}/index.html?floor=2#/`)
+      await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'narrow floor' })
+      errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
+      assert(!errors, `${errors} uncaught error(s) on a phone-width floor`)
+      return `${clicked} controls, then 390px wide`
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('the aurora tears itself down when its context is lost', async () => {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${origin}/index.html?gl=1#/halls`)
+      await page.waitFor('!!document.querySelector(".aurora-canvas")', { label: 'aurora canvas' })
+      // WEBGL_lose_context is how a real browser tells a page its GPU context
+      // is gone — a driver reset, memory pressure, a tab coming back. The
+      // shader listens for it and destroys itself, and nothing had ever fired
+      // it, so that whole teardown path was dead as far as any gate could see.
+      const gone = await page.evaluate(`(async () => {
+        const canvas = document.querySelector('.aurora-canvas')
+        const gl = canvas.getContext('webgl')
+        const ext = gl && gl.getExtension('WEBGL_lose_context')
+        if (!ext) return 'no WEBGL_lose_context'
+        ext.loseContext()
+        await new Promise((r) => setTimeout(r, 300))
+        return document.querySelector('.aurora-canvas') ? 'still here' : 'removed'
+      })()`)
+      assert(gone === 'removed', `the aurora did not tear down (${gone})`)
+      const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
+      assert(!errors, `${errors} uncaught error(s) during teardown`)
+      return 'context lost → canvas removed'
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ---------------------------------------------------- screenshots ------ */
 
   const SHOTS = [
