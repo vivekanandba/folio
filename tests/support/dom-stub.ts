@@ -470,10 +470,70 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
     }
     g.addEventListener = g.window.addEventListener
     g.removeEventListener = g.window.removeEventListener
+    // Web Audio: a RECORDER, not a synthesiser. There is no sound card here
+    // and nothing to listen to, so the only honest assertion a headless box
+    // can make is *what the app asked for* — which tone, at which pitch, in
+    // which order. Each scheduled oscillator lands in __audioLog as
+    // { type, freq, startAt, stopAt }, which is exactly enough to prove the
+    // scale climbs across a run and drops back after a miss.
+    const audioLog: { type: string; freq: number; startAt: number; stopAt: number }[] = []
+    g.__audioLog = audioLog
+    g.__resetAudio = () => { audioLog.length = 0 }
+    class StubParam {
+      value = 0
+      setValueAtTime(v: number): StubParam { this.value = v; return this }
+      linearRampToValueAtTime(v: number): StubParam { this.value = v; return this }
+      exponentialRampToValueAtTime(v: number): StubParam { this.value = v; return this }
+      cancelScheduledValues(): StubParam { return this }
+    }
+    class StubAudioNode {
+      connect(to: unknown): unknown { return to }
+      disconnect(): void {}
+    }
+    class StubGain extends StubAudioNode {
+      gain = new StubParam()
+    }
+    class StubOscillator extends StubAudioNode {
+      type = 'sine'
+      frequency = new StubParam()
+      private startAt = 0
+      start(t = 0): void { this.startAt = t }
+      stop(t = 0): void {
+        audioLog.push({ type: this.type, freq: this.frequency.value, startAt: this.startAt, stopAt: t })
+      }
+    }
+    class StubAudioContext {
+      state = 'running'
+      /**
+       * A REAL clock, not a frozen 0. With currentTime stuck at zero every
+       * note looks like it starts at the same instant, so a test could not
+       * tell "the chord waits for the bell" from "both fired together" — the
+       * very thing the pacing logic exists to prevent.
+       */
+      private born = Date.now()
+      get currentTime(): number {
+        return (Date.now() - this.born) / 1000
+      }
+      destination = new StubAudioNode()
+      createOscillator(): StubOscillator { return new StubOscillator() }
+      createGain(): StubGain { return new StubGain() }
+      async resume(): Promise<void> { this.state = 'running' }
+      async close(): Promise<void> { this.state = 'closed' }
+    }
+    g.AudioContext = StubAudioContext
     // Node 22 defines `navigator` as a getter-only global, so plain assignment
-    // throws — redefine it instead.
+    // throws — redefine it instead. `vibrate` records rather than buzzes, for
+    // the same reason the audio stub does.
+    const vibrateLog: (number | number[])[] = []
+    g.__vibrateLog = vibrateLog
+    g.__resetVibrate = () => { vibrateLog.length = 0 }
     Object.defineProperty(globalThis, 'navigator', {
-      value: { userAgent: 'node-dom-stub', serviceWorker: undefined, maxTouchPoints: 0 },
+      value: {
+        userAgent: 'node-dom-stub',
+        serviceWorker: undefined,
+        maxTouchPoints: 0,
+        vibrate: (pattern: number | number[]) => { vibrateLog.push(pattern); return true },
+      },
       configurable: true,
       writable: true,
     })

@@ -1,5 +1,6 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
+import { cue, resetRun } from '../feedback'
 import { deriveFlashcards } from '../flashcards'
 import { burst } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
@@ -19,6 +20,8 @@ function header(): HTMLElement {
 }
 
 export async function renderReview(root: HTMLElement): Promise<void> {
+  // The daily round is its own run; it does not inherit one from a session.
+  resetRun()
   root.classList.add('main-wide')
   root.replaceChildren(el('p', { class: 'muted' }, ['Building your review…']))
 
@@ -64,7 +67,18 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
-    const stamp = el('div', { class: 'exhibit-stamp mastered', role: 'status' }, ['Gauntlet cleared'])
+    // Not `mastered`: finishing the round is attendance, not mastery — the
+    // grades were self-reported. The ordinary chord below says the same thing.
+    // And a round where every concept was skipped cleared no gauntlet at all,
+    // so it gets no stamp either — the stamp is the loudest claim on the card,
+    // and suppressing only the chord would leave the two disagreeing.
+    const stamp = reviewed > 0
+      ? el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
+      // role="status" either way: a learner on a screen reader who finishes a
+      // round where nothing had material still deserves to be told so.
+      : el('div', { class: 'muted small', role: 'status' }, [
+          'Nothing was due that had material to review.',
+        ])
     root.replaceChildren(
       header(),
       el('div', { class: 'result-card pop-in review-summary' }, [
@@ -77,7 +91,14 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
       ]),
     )
-    burst(stamp)
+    // A queue whose every concept was skipped (no cards, no drill) still
+    // reaches here. "0 concepts reviewed" is not an achievement, and sounding
+    // a chord plus a five-beat haptic over it rewards a round that never
+    // happened (CON-DATA-001: praise tracks something the learner did).
+    if (reviewed > 0) {
+      cue('complete', { perfect: false })
+      burst(stamp)
+    }
   }
 
   const runNext = async () => {

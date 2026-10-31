@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import type { HotspotSession } from '../types'
 import { richBlock } from '../widgets'
@@ -37,6 +38,7 @@ function mountHotspot(
           if (session.series[j].anomaly) b.classList.add('is-anomaly')
         })
         if (!correct) bar.classList.add('missed')
+        cue(correct ? 'correct' : 'wrong')
         if (correct) burst(bar)
         else shake(bar)
         feedback.replaceChildren(

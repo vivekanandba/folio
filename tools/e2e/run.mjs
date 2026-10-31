@@ -459,6 +459,84 @@ try {
     }
   })
 
+  await check('the museum can be silenced, and stays silenced', async () => {
+    const page = await browser.newPage()
+    try {
+      // Make the precondition rather than assuming it. Every page in this run
+      // shares one profile, so "a fresh visitor" is only true while this check
+      // happens to be the sole writer of the preference — exactly the
+      // order-dependence the screenshot loop below clears storage to escape
+      // (CON-VER-008). Relying on it here would be the same bug, one hunk up.
+      await page.send('Storage.clearDataForOrigin', {
+        origin,
+        storageTypes: 'local_storage',
+      })
+      await page.goto(`${origin}/index.html#/`)
+      await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control' })
+      const pressed = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-pressed')`)
+      const label = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-label')`)
+      assert((await pressed()) === 'true', 'a fresh visitor should arrive with the museum audible')
+      const nameWhenOn = await label()
+
+      await page.evaluate(`document.querySelector('.topbar-sound').click()`)
+      assert((await pressed()) === 'false', 'clicking the control did not mute')
+      // A toggle's NAME is the thing; aria-pressed is the state. If the name
+      // changes with the state too, a screen reader reads the two together and
+      // announces the opposite of the truth ("mute … pressed" while sound is
+      // on). So the name must NOT move.
+      assert(
+        (await label()) === nameWhenOn,
+        `the control renamed itself when toggled ("${nameWhenOn}" → "${await label()}") — aria-pressed already carries the state`,
+      )
+      const stored = await page.evaluate(`localStorage.getItem('folio-feedback')`)
+      assert(stored === 'off', `the mute did not reach storage (got ${stored})`)
+
+      // A reload is the whole point of persisting it: a preference that does
+      // not survive the next visit is not a preference.
+      //
+      // It has to be a REAL reload. Navigating to a URL identical down to the
+      // fragment is a same-document navigation — the document survives, and
+      // this assertion would pass against a preference held in a module
+      // variable that never reached storage. So: a different URL, and a marker
+      // that proves the document was rebuilt before anything is concluded.
+      await page.evaluate(`window.__sameDocument = true`)
+      await page.goto(`${origin}/index.html?reload=1#/`)
+      await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control again' })
+      const survived = await page.evaluate(`!!window.__sameDocument`)
+      assert(!survived, 'the page was never actually reloaded — this check would prove nothing')
+      assert((await pressed()) === 'false', 'the mute did not survive a reload')
+
+      await page.evaluate(`document.querySelector('.topbar-sound').click()`)
+      assert((await pressed()) === 'true', 'the control did not unmute')
+      const back = await page.evaluate(`localStorage.getItem('folio-feedback')`)
+      assert(back === 'on', `unmuting did not reach storage (got ${back})`)
+
+      // Cross-tab. feedbackEnabled() reads storage first precisely so another
+      // tab's choice is honoured; without the storage listener this page would
+      // keep showing a speaker, and keep telling a screen reader
+      // aria-pressed="true", while the museum was in fact silent.
+      const other = await browser.newPage()
+      try {
+        await other.goto(`${origin}/index.html?tab=2#/`)
+        await other.waitFor('!!document.querySelector(".topbar-sound")', { label: 'second tab' })
+        await other.evaluate(`document.querySelector('.topbar-sound').click()`)
+        // Poll, do not sleep. These jobs share a 4-vCPU box with other
+        // Playwright runs; a wall-clock assertion in a merge gate is the
+        // CON-VER-008 pattern — it would fail under load and teach everyone
+        // to re-run rather than to look.
+        await page.waitFor(
+          `document.querySelector('.topbar-sound')?.getAttribute('aria-pressed') === 'false'`,
+          { timeoutMs: 5000, label: 'this tab notices the other tab muted' },
+        )
+      } finally {
+        await other.close()
+      }
+      return 'mute → real reload → unmute → cross-tab'
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ---------------------------------------------------- screenshots ------ */
 
   const SHOTS = [
@@ -484,8 +562,51 @@ try {
         await page.send('Emulation.setEmulatedMedia', {
           features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
         })
-        await page.goto(`${origin}/index.html${shot.hash}`)
+        // Capture a FIRST-TIME visitor, every time. Every page in this run
+        // shares one profile, and the session-kind checks above PLAY sessions
+        // — which writes real progress. The committed baselines had therefore
+        // been encoding whatever those checks happened to record: a resume
+        // card, a streak of 1, lamps that had come due. That makes the gate
+        // depend on check ORDER and on the date, which is a suite defect, not
+        // a visual one (CON-VER-008). Captured from a clean store, these four
+        // shots answer one question only: does the museum still look like
+        // itself to someone arriving for the first time?
+        //
+        // Only localStorage is cleared. Wiping cache_storage here would also
+        // tear out the service worker the checks above just installed.
+        //
+        // And it is cleared IN THE PAGE, not over CDP. Storage.clearDataForOrigin
+        // races the navigation that follows it: when the clear landed late the
+        // shot was captured with the progress the session-play checks had
+        // recorded, and halls/concept drifted 8.6%/9.5% while floor and
+        // pack-math passed — an intermittent failure that looks exactly like a
+        // visual regression and is not one (CON-VER-008). localStorage.clear()
+        // in page context is synchronous, and the assertion below turns any
+        // future race into a sentence instead of a mystery.
+        // Prime a document on this origin, clear there, then load the shot in
+        // a genuinely NEW document. Three things each have to be waited for,
+        // and skipping any of them was a bug in an earlier draft:
+        //  - goto is a bare Page.navigate; it does not wait for the document
+        //    to commit, and evaluating against the about:blank a fresh tab
+        //    starts on throws SecurityError the moment it touches localStorage
+        //  - the second URL must differ by more than its FRAGMENT, or it is a
+        //    same-document navigation and the clear never takes effect on a
+        //    rebuilt page (for `floor`, whose hash is empty, the primed
+        //    document has already painted .floor-canvas, so shot.ready would
+        //    be satisfied by the stale pre-clear DOM)
+        //  - and a marker set before the clear proves the document really was
+        //    rebuilt, rather than leaving that to be assumed
+        await page.goto(`${origin}/index.html?shot=${shot.name}&prime=1`)
+        await page.waitFor('document.readyState !== "loading"', { label: `${shot.name} prime` })
+        await page.evaluate('localStorage.clear(); window.__beforeClear = true')
+        await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
+        await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
+        const leftovers = await page.evaluate('localStorage.length')
+        assert(
+          leftovers === 0,
+          `the capture is not a first-time visitor — ${leftovers} key(s) survived the clear`,
+        )
         // Settle entry animations so the capture is comparable run to run.
         await page.evaluate(`new Promise(r => setTimeout(r, 600))`)
         const png = await page.screenshot()

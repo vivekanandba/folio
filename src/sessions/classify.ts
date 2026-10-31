@@ -1,5 +1,6 @@
 import { liveAnnounce } from '../a11y'
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import type { ClassifySession } from '../types'
 import { richBlock } from '../widgets'
@@ -74,6 +75,7 @@ function mountClassify(
         if (!id) return
         assignment.set(id, bucket.id)
         announce(id, bucket.label)
+        cue('reveal')
         burst(col, tone === 'warm' ? ['#f59e0b', '#c2410c'] : ['#3b82f6', '#0ea5e9'])
         render()
       })
@@ -125,6 +127,7 @@ function mountClassify(
           ]),
         )
       }
+      cue(score === max ? 'correct' : 'wrong')
       if (score === max) burst(check)
       else shake(check)
       root.replaceChildren(

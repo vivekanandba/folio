@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import type { SequenceSession } from '../types'
 import { richBlock } from '../widgets'
@@ -94,6 +95,7 @@ function mountSequence(
           ]),
         )
       })
+      cue(score === max ? 'correct' : 'wrong')
       if (score === max) burst(check)
       else shake(check)
       root.replaceChildren(

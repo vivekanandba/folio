@@ -1,6 +1,7 @@
 import './style.css'
 import { liveAnnounce, setLiveRegion } from './a11y'
 import { el } from './dom'
+import { adoptStoredPreference, cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
 import { initPalette } from './palette'
 import { onRoute } from './router'
 import { renderConcept } from './pages/concept'
@@ -22,6 +23,46 @@ const searchBtn = el('button', { class: 'topbar-search', type: 'button', 'aria-l
 ])
 searchBtn.addEventListener('click', () => palette.open())
 
+// The museum's voice, and the one control that silences it. Sound and
+// haptics share a single switch: someone reaching for it wants quiet, not a
+// mixing desk.
+const SPEAKER_ON = '\u{1F50A}'
+const SPEAKER_OFF = '\u{1F507}'
+const soundBtn = el('button', { class: 'topbar-sound', type: 'button' })
+function paintSoundBtn(): void {
+  const on = feedbackEnabled()
+  // A toggle's NAME must be the thing, and aria-pressed the state. Naming it
+  // after the action ("Sound on — mute") while also setting aria-pressed=true
+  // makes a screen reader say the mute control is pressed while sound is on —
+  // the opposite of the truth.
+  soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false')
+  soundBtn.setAttribute('aria-label', 'Sound and haptics')
+  soundBtn.setAttribute('title', on ? 'Mute sound and haptics' : 'Unmute sound and haptics')
+  soundBtn.classList.toggle('is-muted', !on)
+  soundBtn.replaceChildren(el('span', { 'aria-hidden': 'true' }, [on ? SPEAKER_ON : SPEAKER_OFF]))
+}
+soundBtn.addEventListener('click', () => {
+  const next = !feedbackEnabled()
+  setFeedbackEnabled(next)
+  paintSoundBtn()
+  // Unmuting answers in its own voice — the click IS the gesture the browser
+  // needs before a context may start, so this is also how audio first wakes.
+  if (next) cue('reveal')
+})
+paintSoundBtn()
+// feedbackEnabled() reads storage first so a change made in another tab is
+// honoured. Without this listener the OTHER tab's button would keep showing
+// a speaker — and telling a screen reader aria-pressed="true" — while the
+// museum was in fact silent. A control that reports the opposite of the
+// truth is worse than one that does not update.
+window.addEventListener('storage', (e) => {
+  if (e.key !== null && e.key !== FEEDBACK_KEY) return
+  // Repaint AND act on it: a cross-tab mute that leaves this tab holding an
+  // open audio device is silent but still rude to the rest of the system.
+  adoptStoredPreference()
+  paintSoundBtn()
+})
+
 const skipLink = el('a', { class: 'skip-link', href: '#main' }, ['Skip to content'])
 const liveRegion = el('div', { class: 'sr-only', id: 'sr-status', 'aria-live': 'polite', role: 'status' })
 setLiveRegion(liveRegion)
@@ -30,7 +71,7 @@ const shell = el('div', { class: 'app-shell' }, [
   skipLink,
   el('header', { class: 'topbar' }, [
     el('a', { class: 'brand', href: '#/' }, ['Folio']),
-    el('div', { class: 'topbar-actions' }, [searchBtn]),
+    el('div', { class: 'topbar-actions' }, [soundBtn, searchBtn]),
   ]),
   el('main', { class: 'main', id: 'main', tabindex: '-1' }),
   el('footer', { class: 'colophon' }, ['Folio · a private museum of things worth remembering']),

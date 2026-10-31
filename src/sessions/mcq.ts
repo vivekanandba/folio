@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake } from '../fx'
 import { richBlock } from '../widgets'
 
@@ -53,6 +54,7 @@ export function mountMCQ(opts: MCQOptions): HTMLElement {
         if (order[j] === opts.answerIndex) b.classList.add('correct')
         if (j === displayIndex && !correct) b.classList.add('wrong')
       })
+      cue(correct ? 'correct' : 'wrong')
       if (correct) burst(btn)
       else shake(btn)
       feedback.replaceChildren(
