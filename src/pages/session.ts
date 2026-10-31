@@ -2,7 +2,7 @@ import { loadHalls, loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { acquisitionCard, ceremony } from '../fx'
-import { saveSessionResult } from '../progress'
+import { awardMilestones, saveSessionResult } from '../progress'
 import type { Hall } from '../milestones'
 import { href } from '../router'
 import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
@@ -53,15 +53,17 @@ export async function renderSession(
   )
   shell.append(mount)
 
-  // Started here, never AWAITED here. loadHalls() fetches the catalog and then
-  // every pack's metadata; awaiting it would leave the exhibit blank until all
-  // of them settled, on a page that used to become interactive as soon as its
-  // one session JSON had arrived. A learner takes seconds to play, so by the
-  // time this matters it has landed — and if it has not, the hall-shaped
-  // plaques fire on the next save rather than being lost, because detect() is
-  // satisfied-minus-recorded and not a diff. Progress is never at risk either way.
-  let halls: Hall[] = []
-  void loadHalls().then((h) => { halls = h }).catch(() => {})
+  // Started here, never awaited here: loadHalls() fetches the catalog and then
+  // every pack's metadata, and awaiting it would leave the exhibit blank until
+  // all of them settled — on a page that used to become interactive as soon as
+  // its one session JSON arrived.
+  //
+  // It is also not raced. An earlier draft kept a mutable `halls` and read
+  // whatever had arrived, which on a cold visit meant a short session finishing
+  // first and the hall-shaped plaques being missed on the very save that earned
+  // them. Progress is saved the instant the learner finishes; the plaques that
+  // need the whole catalog are awarded a beat later, when it is actually known.
+  const hallsReady = loadHalls().catch((): Hall[] => [])
 
   let saved = false
   mountSession(mount, session, (score, maxScore) => {
@@ -77,7 +79,6 @@ export async function renderSession(
         completedAt: new Date().toISOString(),
       },
       session.conceptIds,
-      { halls },
     )
     // The chord is unconditional: finishing an exhibit is worth hearing even
     // if the kind that rendered it has no .stage for the bloom to land on.
@@ -86,13 +87,15 @@ export async function renderSession(
     // The room celebrates: bloom + bursts + a brass stamp on the exhibit.
     const stageEl = shell.querySelector<HTMLElement>('.stage')
     if (stageEl) ceremony(stageEl, { perfect })
-    // The plaque goes up after the room has finished celebrating the exhibit,
+    // The plaque goes up once the halls are known, so a hall completed by THIS
+    // session is on it. cue() queues the shimmer behind the finishing chord,
     // so the two moments read as a sequence rather than a pile-up.
-    const plaques = acquisitionCard(earned)
-    if (plaques) {
+    void hallsReady.then((halls) => {
+      const plaques = acquisitionCard([...earned, ...awardMilestones({ halls })])
+      if (!plaques) return
       cue('milestone')
       shell.append(plaques)
-    }
+    })
     shell.append(
       el('div', { class: 'saved-note plaque-card' }, [
         el('span', { class: 'plaque' }, ['Progress saved']),

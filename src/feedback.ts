@@ -261,7 +261,11 @@ export function cue(name: CueName, opts: CueOptions = {}): void {
   // now — so they speak immediately and push the room's free time out.
   const queued = name === 'complete' || name === 'milestone'
   const start = queued ? Math.max(now, freeAt) : now
-  freeAt = start + CUE_MS[name]
+  // Math.max, never a bare assignment: a short cue arriving while a long one
+  // is still sounding would otherwise pull the room's free time BACKWARDS,
+  // and the next queued cue would start over the top of the chord — the
+  // doubled pitch and the truncated haptic this queue exists to prevent.
+  freeAt = Math.max(freeAt, start + CUE_MS[name])
 
   if (start <= now) {
     emit(name, degree, opts)

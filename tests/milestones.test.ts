@@ -147,7 +147,13 @@ test('a pack with no sessions does not make "every hall" unearnable', () => {
 test('a crafted ledger key is ignored, not rendered and not thrown', () => {
   // milestones come back from importProgress unvalidated, so these reach
   // describe() verbatim. Prototype keys must find nothing.
-  for (const id of ['constructor', 'toString', '__proto__', 'constructor-x', 'hasOwnProperty-3']) {
+  // Including near-misses: split('-') looks at two segments, so an id with a
+  // third would otherwise describe itself with a real tier's words and hang a
+  // duplicate plaque on the wall.
+  for (const id of [
+    'constructor', 'toString', '__proto__', 'constructor-x', 'hasOwnProperty-3',
+    'streak-3-anything', 'solid-1-x', 'visits-10-10',
+  ]) {
     assert.equal(describe(id, ctx), null, `${id} must not describe a plaque`)
   }
   // And the shelf-shaped path over a poisoned store must survive.

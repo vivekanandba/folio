@@ -677,6 +677,30 @@ test('a plaque waits for the finishing chord, and does not cut its haptic short'
   )
 })
 
+test('a short cue in the middle cannot pull the queue backwards', async () => {
+  fresh()
+  // cue() is a general API, so the invariant has to hold for orders the pages
+  // do not happen to produce today: a brief reveal landing while the chord is
+  // still sounding must not reset the room's free time and let the next
+  // queued cue start over the top of it.
+  cue('complete', { perfect: false })
+  cue('reveal')
+  cue('milestone')
+  assert.ok(await until(() => g.__audioLog.length >= 8), 'everything should eventually land')
+
+  // By POSITION, not by pitch: the plaque's shimmer and the ordinary chord
+  // share a 392Hz note, so filtering on frequency puts one of the plaque's own
+  // notes into the chord and the comparison measures nothing.
+  // Emission order is complete (3 notes), reveal (1), milestone (4).
+  assert.equal(g.__audioLog.length, 8, 'three cues, eight notes')
+  const chordEnd = Math.max(...g.__audioLog.slice(0, 3).map((n) => n.stopAt))
+  const shimmerStart = Math.min(...g.__audioLog.slice(4).map((n) => n.startAt))
+  assert.ok(
+    shimmerStart >= chordEnd - 0.1,
+    `the plaque started over the chord (chord ends ${chordEnd}, plaque at ${shimmerStart})`,
+  )
+})
+
 test('a chord still waiting when the learner mutes never arrives', async () => {
   fresh()
   cue('correct')

@@ -230,6 +230,51 @@ test('a hall that has left the catalog keeps its plaque, named as best it can', 
   )
 })
 
+test('a hall plaque earned by a save is still awarded when the halls arrive late', () => {
+  // The session page saves progress the instant the learner finishes, before
+  // the catalog has necessarily loaded, and awards the hall-shaped plaques
+  // afterwards. The plaque must not be lost by being judged too early.
+  reset()
+  const halls = [{ packId: 'p1', title: 'Hall One', sessionIds: ['s1'] }]
+
+  const immediate = progress.saveSessionResult(result() as never, ['c1'])
+  assert.ok(immediate.some((m) => m.id === 'first-exhibit'), 'the non-hall plaques land at once')
+  assert.ok(
+    !immediate.some((m) => m.id === 'hall-complete:p1'),
+    'the hall is not judged without hall knowledge',
+  )
+
+  const late = progress.awardMilestones({ halls })
+  assert.ok(
+    late.some((m) => m.id === 'hall-complete:p1'),
+    'and is awarded as soon as the halls are known',
+  )
+  assert.deepEqual(progress.awardMilestones({ halls }), [], 'once, not every time it is asked')
+  assert.ok(
+    progress.earnedMilestones({ halls }).some((r) => r.milestone.id === 'hall-complete:p1'),
+    'and it is on the wall',
+  )
+})
+
+test('a hand-edited ledger date is dropped rather than rendered', () => {
+  reset()
+  const storage = globalThis.localStorage as unknown as Storage
+  storage.setItem('folio-progress-v2', JSON.stringify({
+    version: 2, sessions: {}, concepts: {}, attempts: [], daily: {},
+    milestones: {
+      'first-exhibit': '2026-10-01T00:00:00.000Z',
+      'first-flawless': '<script>alert(1)',
+      'streak-3': 42,
+    },
+  }))
+  const wall = progress.earnedMilestones({ halls: [] })
+  assert.deepEqual(
+    wall.map((r) => r.milestone.id),
+    ['first-exhibit'],
+    'only the plaque with a real timestamp is shown',
+  )
+})
+
 test('importing rubbish is refused and leaves the store intact', () => {
   reset()
   progress.saveSessionResult(result() as never, [])

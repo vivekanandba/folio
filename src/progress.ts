@@ -134,6 +134,21 @@ function award(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[] {
 const NO_HALLS: MilestoneCtx = { halls: [] }
 
 /**
+ * Award whatever the store ALREADY qualifies for but has not been given, with
+ * no new progress attached. The session page uses this for the hall-shaped
+ * plaques, which it cannot judge until the catalog has loaded: progress is
+ * saved the instant the learner finishes, and the plaques that need wider
+ * knowledge follow a beat later rather than being missed on the very save
+ * that earned them.
+ */
+export function awardMilestones(ctx: MilestoneCtx): Milestone[] {
+  const store = loadProgress()
+  const earned = award(store, ctx)
+  if (earned.length) persist(store)
+  return earned
+}
+
+/**
  * Persist a completed session AND fold it into each linked concept's SRS
  * state. Returns the plaques this earned, newest first.
  */
@@ -179,9 +194,12 @@ export function recordConceptReview(
 export function earnedMilestones(ctx: MilestoneCtx): { milestone: Milestone; at: string }[] {
   const recorded = Object.entries(loadProgress().milestones ?? {})
   return recorded
-    // The map comes back from importProgress unvalidated, so a value that is
-    // not a date string must not reach the report's .slice().
-    .filter(([, at]) => typeof at === 'string')
+    // The map comes back from importProgress unvalidated. A string is not a
+    // date: `"<script>alert(1)"` would render as `Recorded <script>ale` and
+    // sort arbitrarily against the real timestamps, scrambling the shelf's
+    // stated order. Check the shape the comment claims to check
+    // (CON-VER-005 — a guard that misdescribes itself is worse than none).
+    .filter(([, at]) => typeof at === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(at))
     .map(([id, at], order) => ({ milestone: describe(id, ctx), at, order }))
     .filter((row): row is { milestone: Milestone; at: string; order: number } => !!row.milestone)
     // Newest first. A whole batch earned in one save shares a timestamp, so

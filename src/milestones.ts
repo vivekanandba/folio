@@ -138,6 +138,10 @@ export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
   }
 
   const [kind, raw] = id.split('-')
+  // Reconstructed and compared, because split() ignores anything after the
+  // second segment: `streak-3-anything` would otherwise describe itself as
+  // "Three nights running" and hang a second, duplicate plaque on the wall.
+  if (`${kind}-${raw}` !== id) return null
   if (!Object.hasOwn(TIERS, kind)) return null
   const tiers = TIERS[kind as keyof typeof TIERS]
   const tier = tiers.find(([threshold]) => String(threshold) === raw)
