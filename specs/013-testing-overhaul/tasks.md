@@ -93,7 +93,7 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       rested on, so it mattered. Caught in review, re-measured, corrected.
 
       The floor is 97.5: 0.35pp below the lowest figure ever observed, about
-      1.7× the measured band. The margin is wider than the 0.06pp the old
+      1.5× the measured band (it read 1.7× against the superseded 0.21pp band, which contradicted both the re-measured figure ten lines above and package.json — the two-records-disagreeing defect 14c was reopened for, inside the fix for it). The margin is wider than the 0.06pp the old
       floor used, on purpose — CON-COV-002 forbids lowering a floor, so too
       tight has to be walked back while too loose merely ratchets again.
 

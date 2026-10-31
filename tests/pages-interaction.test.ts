@@ -180,9 +180,16 @@ test('an empty review explains itself rather than showing a blank page', async (
 
 test('the palette searches, navigates by keyboard, and closes', async () => {
   const handle = initPalette()
-  handle.open()
+  // Awaited, and the LAST dialog — the last of the three palette tests to
+  // get both corrections. This one is first in the file, so
+  // querySelector('.cmdk') happened to return its own dialog and the fixed
+  // tick(20) happened to outrun buildIndex(); adding any palette test above
+  // it would silently retarget it, and a slow index build would fail it on
+  // timing in a merge gate (CON-VER-008).
+  await handle.open()
 
-  const dialog = document.querySelector('.cmdk') as unknown as (El & { open: boolean }) | null
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as (El & { open: boolean }) | null
   assert.ok(dialog, 'the palette is in the document')
   assert.equal(dialog!.open, true)
 

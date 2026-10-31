@@ -31,6 +31,15 @@ export function initPalette(): { open: () => Promise<void> } {
   dialog.append(box)
   document.body.append(dialog)
 
+  /**
+   * The index could not be built. Held as STATE, not written straight into
+   * the list, because the input listener is still live while the message is
+   * on screen: the first character the reader types calls render(), which
+   * replaced the explanation with "No matches" — landing them in exactly the
+   * blank-looking list the message exists to prevent.
+   */
+  let indexFailed = false
+  const INDEX_FAILED = 'The index could not be loaded. Close and open again to retry.'
   let docs: SearchDoc[] = []
   let results: SearchDoc[] = []
   let active = 0
@@ -46,6 +55,13 @@ export function initPalette(): { open: () => Promise<void> } {
 
   const render = () => {
     list.replaceChildren()
+    if (indexFailed) {
+      const li = document.createElement('li')
+      li.className = 'cmdk-empty'
+      li.textContent = INDEX_FAILED
+      list.append(li)
+      return
+    }
     if (!results.length) {
       const li = document.createElement('li')
       li.className = 'cmdk-empty'
@@ -129,6 +145,7 @@ export function initPalette(): { open: () => Promise<void> } {
     dialog.showModal()
     input.value = ''
     list.replaceChildren()
+    indexFailed = false
     if (!docs.length) {
       try {
         docs = await buildIndex()
@@ -137,10 +154,8 @@ export function initPalette(): { open: () => Promise<void> } {
         // matches for a query you have not typed yet". The index can be
         // rebuilt — buildIndex no longer caches the failure — so this is
         // worth retrying rather than reporting as fatal.
-        const li = document.createElement('li')
-        li.className = 'cmdk-empty'
-        li.textContent = 'The index could not be loaded. Close and open again to retry.'
-        list.replaceChildren(li)
+        indexFailed = true
+        render()
         input.focus()
         return
       }

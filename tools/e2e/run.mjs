@@ -693,7 +693,16 @@ try {
         { label: 'ledger section' },
       )
 
-      // Export: capture what the page hands the browser, without downloading.
+      // Export: capture what the page hands the browser.
+      //
+      // It DOES download. The patch records the blob and then calls the real
+      // createObjectURL, so report.ts gets a live URL and its a.click()
+      // starts a genuine download into the runner's default directory —
+      // inside the pinned container too. Harmless, but the comment used to
+      // say "without downloading", which is a property this code does not
+      // have and a side effect invisible to anyone reading it. Returning a
+      // dummy URL instead would make the click a no-op, at the cost of no
+      // longer exercising the real path; the real path is the point.
       const exported = await page.evaluate(`(async () => {
         const real = URL.createObjectURL
         let captured = null

@@ -440,10 +440,16 @@ test('a wire can be cut, and a component armed and let go', () => {
   // earlier version inspected it in that state, never passed, and still
   // called itself "inspected to a pass".
   const mod = getModule('blueprint')!
-  const session = firstOfKind('blueprint') as {
-    parts: { id: string; label: string }[]
-    rules: { rule: string; a?: string; b?: string }[]
-  }
+  // Selected, not taken on faith. This used to be firstOfKind('blueprint')
+  // followed by `rules.find(r => r.rule === 'connected' && r.a && r.b)!` —
+  // so a first-sorted board with no `connected` rule would crash on
+  // "Cannot read properties of undefined", reporting a fixture problem as a
+  // renderer crash. That is the failure satisfiableBlueprint() was built for
+  // two tests up; there is no reason for this one to opt out of it.
+  const session = satisfiableBlueprint(
+    (sp) => sp.rules.some((r) => r.rule === 'connected' && !!r.a && !!r.b),
+    'has a connected rule to cut',
+  )
   const host = root()
   mod.mount(host, session as never, () => {})
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
@@ -536,7 +542,9 @@ test('inspecting a board that breaks a rule reports it, and does NOT finish', ()
 test('a blueprint part can be removed again, taking its wires with it', () => {
   const mod = getModule('blueprint')!
   const host = root()
-  mod.mount(host, firstOfKind('blueprint') as never, () => {})
+  // Same reasoning as above: a board this walk can actually place and wire,
+  // rather than whichever one sorts first.
+  mod.mount(host, satisfiableBlueprint() as never, () => {})
 
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
   const placed = node(host).querySelectorAll('.bp-node').length
