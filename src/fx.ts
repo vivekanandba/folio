@@ -169,7 +169,9 @@ export function stage(
  */
 export function acquisitionCard(items: { title: string; note: string }[]): HTMLElement | null {
   if (!items.length) return null
-  const wrap = el('div', { class: 'acquisitions', role: 'status' }, [
+  // No role="status": both callers follow this with liveAnnounce(), and a
+  // region that IS honoured on insertion would then read the plaque twice.
+  const wrap = el('div', { class: 'acquisitions' }, [
     el('p', { class: 'eyebrow' }, [
       items.length === 1 ? 'The curator adds a plaque' : `The curator adds ${items.length} plaques`,
     ]),

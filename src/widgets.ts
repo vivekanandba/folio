@@ -29,10 +29,12 @@ export function renderRichInto(host: HTMLElement, md: string): void {
   host.innerHTML = renderMarkdown(md)
   host.querySelectorAll<HTMLElement>('.viz-slot').forEach((slot) => {
     const raw = slot.getAttribute('data-viz')
-    // `widget-failed` on every path that will never mount. Without it,
-    // "has not hydrated yet" and "cannot hydrate at all" look identical from
-    // the outside — and anything waiting for hydration (the screenshot gate
-    // does) waits out its whole timeout on a figure that already gave up.
+    // `widget-failed` on every path that will never mount. "Has not mounted
+    // yet" and "cannot mount at all" should not look identical from outside:
+    // anything that waits on hydration would otherwise burn its whole timeout
+    // on a figure that has already given up. Nothing waits on it today — the
+    // screenshot gate's wait was removed as vacuous — so this is a marker
+    // kept for the next thing that needs it, which the tests pin.
     if (!raw) {
       slot.classList.add('widget-failed')
       return

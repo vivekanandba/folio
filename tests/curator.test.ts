@@ -92,8 +92,14 @@ const el = (): HTMLElement => {
 }
 const text = (node: HTMLElement): string => (node as unknown as { textContent: string }).textContent
 const frames = (ms = 20) => new Promise((r) => setTimeout(r, ms))
+// The stub's animation-frame budget is shared across the whole file. Without
+// resetting it, the first countUp test here can consume all three frames and
+// every later one asserts on a node no frame ever touched — passing while
+// exercising nothing.
+const freshFrames = (): void => (globalThis as unknown as { __resetFrames: () => void }).__resetFrames()
 
 test('a score counts up to its value and lands exactly on it', async () => {
+  freshFrames()
   const node = el()
   // A duration short enough that the stub's three-frame budget finishes it:
   // the point under test is where it ENDS, not how long it takes.
@@ -103,6 +109,7 @@ test('a score counts up to its value and lands exactly on it', async () => {
 })
 
 test('under reduced motion the number is simply there', async () => {
+  freshFrames()
   const g = globalThis as unknown as { __setMedia: (q: string, m: boolean) => void; __resetMedia: () => void }
   g.__setMedia('(prefers-reduced-motion: reduce)', true)
   try {
@@ -117,6 +124,7 @@ test('under reduced motion the number is simply there', async () => {
 })
 
 test('zero and nonsense are printed, not animated', async () => {
+  freshFrames()
   const zero = el()
   countUp(zero, 0)
   assert.equal(text(zero), '0', 'counting up to zero has nothing to count')
@@ -127,16 +135,26 @@ test('zero and nonsense are printed, not animated', async () => {
 })
 
 test('a counter whose node has left the page gives up', async () => {
+  freshFrames()
   const node = document.createElement('span') // never appended
   node.append(document.createTextNode('5'))
-  assert.doesNotThrow(() => countUp(node as unknown as HTMLElement, 5, 1))
+  // A LONG duration on purpose. With a 1ms one the first frame computes
+  // t === 1 and writes the final value regardless, so the guard and its
+  // absence produce the same string and the assertion proves nothing — it
+  // did exactly that until a mutation removing the guard stayed green.
+  // Over 50 seconds the first frame is at t ≈ 0, so an unguarded counter
+  // would overwrite 5 with 0.
+  assert.doesNotThrow(() => countUp(node as unknown as HTMLElement, 5, 50_000))
   await frames()
-  // It bails on the first frame rather than ticking into a node nobody can
-  // see — and leaves the value it found, which is the one that was right.
-  assert.equal((node as unknown as { textContent: string }).textContent, '5')
+  assert.equal(
+    (node as unknown as { textContent: string }).textContent,
+    '5',
+    'a counter must not tick into a node nobody can see',
+  )
 })
 
 test('a counter does not erase the number before its first frame', async () => {
+  freshFrames()
   // What this can actually check, said plainly: countUp must write nothing
   // SYNCHRONOUSLY. An earlier draft set the node to '0' on the spot and
   // relied on requestAnimationFrame to put the value back — and rAF does not

@@ -709,12 +709,6 @@ try {
         // on every shot, under load as well — kept because it is the right
         // condition, not because it is currently doing work.
         await page.evaluate(`document.fonts ? document.fonts.ready.then(() => true) : true`)
-        // Two animation frames, then settle. A frame callback runs BEFORE the
-        // compositor presents, so one rAF proves layout ran and the second
-        // proves the frame it produced was committed — a paint barrier rather
-        // than a hope. The settle stays at 600ms: it was briefly cut to 400
-        // on the theory that a condition above had replaced it, which
-        // measurement did not support.
         // Pin the SCROLL. page.screenshot() captures the VIEWPORT, so what is
         // in frame depends on where the page is scrolled — and main.ts focuses
         // #main on every route change, which scrolls it into view by 68px.
@@ -744,9 +738,6 @@ try {
           // in a fingerprint is drift by construction.
           aurora: !!document.querySelector('.aurora-canvas'),
           motion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-          // Not re-checking hydration here: the waitFor above already
-          // guarantees it, so a diagnostic for it could never fire — and an
-          // unreachable branch dressed as a check is worse than no check.
           fonts: document.fonts ? document.fonts.status : 'loaded',
           scrollY: Math.round(window.scrollY),
         })`))

@@ -393,6 +393,12 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
     // hold the runner open. Sustained animation belongs to the browser suite.
     let frames = 0
     const FRAME_BUDGET = 3
+    // The budget is MODULE-level and shared by every test in a file, so one
+    // test that needs three frames leaves none for the next — and a test that
+    // never gets a frame passes vacuously while appearing to exercise an
+    // animation. Reset it per test that cares (CON-VER-008: a suite whose
+    // outcome depends on order is a defect in the suite).
+    g.__resetFrames = () => { frames = 0 }
     g.requestAnimationFrame = (fn: (t: number) => void): number => {
       if (frames >= FRAME_BUDGET) return 0
       frames += 1

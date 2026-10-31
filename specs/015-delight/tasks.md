@@ -102,6 +102,21 @@
        commit message as a finding, while citing CON-DATA-001 elsewhere in the
        same change.
 
+- [x] 18g. The focus ring SILENCED the page. `:focus-visible` is specificity
+       (0,1,0), the same as `.pulse` and `.fx-shake`, and written later — so
+       an `animation` shorthand on it wins over both. Measured by forcing the
+       pseudo-state: animation-name went `pulse-glow` → the ring's keyframe,
+       and adding `fx-shake` to the focused element did not change it back. A
+       keyboard user answering wrongly would have got NO shake — the exact
+       cohort the hunk was written for. The flourish is gone; the brass ring,
+       which was the valuable half, stays.
+
+- [x] 18h. Baseline record corrected. The PR body claimed only `floor.png`
+       changed and the other three were byte-identical. True of the first
+       commit; false of the PR — pinning the scroll re-recorded `halls`,
+       `pack-math` and `concept-matrices` too, which is itself the evidence
+       that those were being photographed 68px down.
+
 - [x] 18d. Three style rules in this PR rendered ZERO pixels. A bare
        `:focus-visible` and a `.saved-note.plaque-card` already existed LATER
        in style.css at identical specificity, so the new blocks lost the

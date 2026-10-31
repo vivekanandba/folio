@@ -2254,18 +2254,19 @@ input[type='range'] {
    buttons on focus, which is the visible shape jump a focus style must never
    cause; browsers already follow the element's own radius when drawing an
    outline, so there is nothing to set. */
-/* `from` only, deliberately. With an explicit `to` of 2px and no fill-mode,
-   the ring animated to 2px and then SNAPPED back to whatever the element's
-   own rule computed — 3px for choices and cards, which is the shape jump the
-   comment below promises never to cause. A keyframe with only `from` animates
-   to the computed value, whatever that element's value happens to be. */
-@keyframes focus-land {
-  from { outline-offset: 6px; outline-color: transparent; }
-}
+/* NO animation here, and that is the whole point of this comment.
+   `:focus-visible` is specificity (0,1,0) — the same as `.pulse` and
+   `.fx-shake` — and it is written later in this file, so an `animation`
+   shorthand on it WINS over both. Measured, not argued: forcing the
+   pseudo-state on the hub's pulsing CTA moved animation-name from
+   `pulse-glow` to the ring's own keyframe, and adding `fx-shake` to that
+   focused element did not change it back. A keyboard user answering wrongly
+   would have got no shake at all — the exact cohort this block exists for.
+   The brass ring was the valuable half; a landing flourish is not worth
+   silently disabling every other animation an element asks for. */
 :focus-visible {
   outline: 2px solid var(--brass-bright);
   outline-offset: 2px;
-  animation: focus-land 0.18s cubic-bezier(0.2, 1.2, 0.4, 1);
 }
 .choice-btn:focus-visible,
 .choice-tile:focus-visible,

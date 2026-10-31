@@ -54,12 +54,16 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   if (!queue.length) {
     // The museum explains itself: a live forgetting curve while you wait.
     const curveHost = el('div', { class: 'viz-slot' })
-    mountSim(curveHost, {
+    const curve = mountSim(curveHost, {
       model: 'retention',
       title: 'Why folio nags you — the forgetting curve, live',
       caption: 'Memory decays; reviewing near the edge of forgetting multiplies stability. That timing is what the review queue computes.',
     })
-    curveHost.classList.add('widget-mounted')
+    // Marked from mountSim's RETURN, not asserted on its behalf. It returns
+    // null for an unknown model and renders "(unknown simulation)" instead,
+    // and this used to add `widget-mounted` either way — declaring a figure
+    // mounted that may never have been, to anything that reads the class.
+    curveHost.classList.add(curve ? 'widget-mounted' : 'widget-failed')
     root.replaceChildren(
       header(),
       el('header', { class: 'page-header' }, [
@@ -91,12 +95,12 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // not stamped — the stamp is the loudest claim on the card, and sounding
       // nothing while stamping "cleared" would leave the two disagreeing.
       // role="status" so a screen reader is told as much (CON-DATA-001).
-      // role="status" AND liveAnnounce. The attribute alone is not enough
-      // here: this node is built into a card that is attached afterwards, and
-      // a live region inserted already populated is not reliably announced —
-      // the rule this same function cites thirty lines below for the plaques.
+      // liveAnnounce ONLY, and the note is plain text. A region inserted
+      // already populated is not reliably announced — but where it IS
+      // honoured, carrying role="status" as well means the sentence is read
+      // out twice. One channel, the one that works everywhere.
       card.append(
-        el('div', { class: 'muted small', role: 'status' }, [
+        el('div', { class: 'muted small' }, [
           'Nothing was due that had material to review.',
         ]),
       )
