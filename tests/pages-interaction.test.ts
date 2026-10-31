@@ -211,10 +211,20 @@ test('the palette searches, navigates by keyboard, and closes', async () => {
   // palette, so `again` must be THIS test's dialog — and the block ended in
   // `assert.ok(true)`, so if it ever resolved to an earlier, already-closed
   // one, nothing would have gone red.
+  // CLOSED first, then reopened. `again.open === true` on its own cannot
+  // tell "reopened" from "never closed": open() begins with
+  // `if (dialog.open) return`, so if Enter ever stopped choosing a result
+  // (choose() no-ops on an empty `results`), the dialog would simply stay
+  // open, the second open() would be a no-op, and the assertion would still
+  // pass. It is non-vacuous today only because the query 'determinants'
+  // happens to match shipped content — which is a fact about the packs, not
+  // about the palette.
+  assert.equal(dialog!.open, false, 'choosing a result closes the palette')
+
   await handle.open()
   const reopened = document.querySelectorAll('.cmdk')
   const again = reopened[reopened.length - 1] as unknown as (El & { open: boolean })
-  assert.equal(again.open, true, 'reopening the palette opens the one this test holds')
+  assert.equal(again.open, true, 'and it can be reopened')
 
   again.querySelector('.cmdk-input')?.dispatchEvent({
     type: 'keydown', key: 'Escape', preventDefault: () => {}, target: again,

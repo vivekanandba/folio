@@ -427,9 +427,6 @@ try {
             '.bp-part, .fork-door, .hotspot-bar, .sim-btn, .primary')
           let n = 0
           for (const el of targets) { if (n >= 3) break; el.click(); n++ }
-          // Stamp the stage as it was AT THE CLICK, so the wait below can
-          // tell "the page has answered" from "nothing has happened yet".
-          window.__stageAtClick = document.querySelector('.stage')?.textContent.length ?? 0
           return n
         })()`)
 
@@ -455,6 +452,14 @@ try {
         // Not every kind re-renders, so a change is not required — but the
         // deferred ones must be given their window, and uncaughtErrors must
         // run after it rather than before.
+        // Compared against the length BEFORE the clicks, interpolated from
+        // `before`. An earlier version stamped the length inside the click
+        // evaluate, AFTER the clicks — so for every kind that re-renders
+        // synchronously it recorded the already-changed value, the poll
+        // could never become true, and each of those kinds paid the full
+        // 400ms timeout: the exact cost this comment says it avoids, while
+        // only `decision` was ever observed answering at all.
+        //
         // Poll for the stage to change, then stop waiting at 400ms — a kind
         // that legitimately does not change its stage (sequence reorders in
         // place) must not cost a timeout every run, and the fixed wait below
@@ -466,7 +471,7 @@ try {
         // Dropped rather than wired, because the fixed wait already covers
         // the case it pretended to.
         await page.waitFor(
-          `(document.querySelector('.stage')?.textContent.length ?? 0) !== window.__stageAtClick`,
+          `(document.querySelector('.stage')?.textContent.length ?? 0) !== ${before}`,
           { timeoutMs: 400, intervalMs: 25, label: `${kind} answered` },
         ).catch(() => {})
         await page.evaluate('new Promise((r) => setTimeout(r, 250))')
@@ -801,6 +806,15 @@ try {
         })
         const file = new File([text], 'folio-progress.json', { type: 'application/json' })
         Object.defineProperty(input, 'files', { value: [file], configurable: true })
+        // The marker goes on THIS document, in the same evaluate, BEFORE the
+        // event. Setting it in a round trip of its own after the dispatch
+        // left the marker itself racing the reload: if report.ts's 600ms
+        // reload beat that round trip, __preImport was written on the FRESH
+        // document, the poll then saw marker true, write true (localStorage
+        // survives a reload) and an empty error list — and an exception
+        // thrown by the import was reported as a pass. Which is the exact
+        // failure the marker was added to close.
+        window.__preImport = true
         input.dispatchEvent(new Event('change', { bubbles: true }))
         return 'dispatched'
       })()`)
@@ -824,7 +838,6 @@ try {
       // the FRESH document's empty array, so an exception thrown by the
       // import handler is reported as a pass. The marker is the only lever:
       // location.reload is [LegacyUnforgeable] and cannot be stubbed.
-      await page.evaluate('window.__preImport = true')
       //
       // Reading them in two round trips raced report.ts's own reload: the
       // import schedules location.reload() 600ms after it writes, and
