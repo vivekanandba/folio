@@ -159,17 +159,22 @@
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 
-- [ ] 19. Measure `--enable-unsafe-swiftshader` over ≥9 runs before claiming
-       anything about task 14c
-- [ ] 20. Cover the stub-reachable clusters: `review.ts` summary + interrupt,
+- [x] 19. Measured, and the hypothesis was WRONG — which is the point of
+       measuring. `--enable-unsafe-swiftshader` was never needed: a probe
+       granted a WebGL context 9 times out of 9 with the flags already in
+       use. The swinging band was `destroy()` and the `webglcontextlost`
+       handler racing page teardown, not context acquisition. See
+       specs/013-testing-overhaul/tasks.md 14c.
+- [x] 20. Cover the stub-reachable clusters: `review.ts` summary + interrupt,
        `lab.ts` endings, `decision.ts` ending node, `sim/engine.ts` controls and
        `destroy()`, `sequence.ts` reorder, `widgets.ts`, and the tail
-- [ ] 21. Cover the browser-only clusters via the e2e driver: `report.ts`
+- [x] 21. Cover the browser-only clusters via the e2e driver: `report.ts`
        export/import, `floor.ts` zoom + narrow layout, `shader.ts` teardown via
        `WEBGL_lose_context`
-- [ ] 22. Ratchet the floor ONCE, from the measured minimum across runs — never
-       from a lucky run
-- [ ] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
+- [x] 22. Ratchet the floor ONCE, from the measured minimum across runs —
+       never from a lucky run. Six measurements (five local, one CI) spanned
+       97.87–97.92%; the floor is 97.5, up from 94.8.
+- [x] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
 
 ## Manual verification (cannot be gated headlessly — CON-VER-007)
 

@@ -53,16 +53,38 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       **94**, not 95: measured 94.95–95.05 across runs because the browser half
       varies by a few lines, and a floor at the peak would fail on rendering
       timing rather than on a regression.
-- [~] 14c. Browser determinism — **narrowed to a single cause, floor ratcheted
-      94 → 94.8**. Nine runs measured 94.86–95.07%. A per-file diff across runs
-      shows every module is now deterministic to the line EXCEPT `src/shader.ts`,
-      which swings 192–205 covered roughly one run in three: headless Chrome
-      intermittently fails to hand the aurora a WebGL context, so the shader
-      compile/link/draw path does not run. sim/engine.ts and floor.ts turned out
-      to be stable after all — the earlier suspicion was wrong.
-      Remaining: make that context acquisition reliable (or cover those lines
-      without a GPU), then the floor can go to 95. Do not raise it on a lucky
-      run.
+- [x] 14c. Browser determinism — **CLOSED 2026-10-31, floor ratcheted
+      94.8 → 97.5** (specs/015-delight, PR #74).
+
+      The recorded cause was wrong. This task said headless Chrome
+      "intermittently fails to hand the aurora a WebGL context", which would
+      have made the shader's compile/link/draw path not run. A direct probe —
+      fresh browser per trial, ask for a context, report what comes back —
+      granted one **9 times out of 9**. The compile path was never the
+      problem.
+
+      The swinging band (192–205) was `destroy()` and the `webglcontextlost`
+      handler. Those run only when a page detaches the canvas before closing,
+      which is a RACE between navigation and page teardown — so the lines
+      landed or did not depending on timing, about one run in three, exactly
+      as observed. Nothing was broken; nothing was being driven.
+
+      Fixed by driving it: the e2e now calls
+      `WEBGL_lose_context.loseContext()`, which is how a real browser reports
+      a lost context (driver reset, memory pressure), and asserts the canvas
+      is gone. The teardown is deterministic.
+
+      Residual drift is ~3 lines a run in shader.ts's uniform setup, about
+      0.03pp. Six measurements — five on the dev box, one in CI — spanned
+      97.87–97.92%, so the floor is 97.5 with 0.37pp of headroom. The margin
+      is wider than the 0.06pp the old floor used, on purpose: CON-COV-002
+      forbids lowering a floor, so too tight has to be walked back while too
+      loose merely ratchets again.
+
+      The lesson worth keeping is not about WebGL. A diagnosis was written
+      into this file as a finding and then believed for three weeks, and the
+      measurement that disproved it took one probe and two minutes
+      (CON-VER-006: don't re-derive what you can execute).
       Superseded note — the original gap was: tilt.ts (31% — attaches under emulated
       pointer but its rAF handler still isn't captured) and the deep branches
       of the session renderers. Needs either full session play-through in the
