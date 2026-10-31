@@ -128,7 +128,12 @@ async function newPage(port) {
     source: `
       window.__e2eErrors = []
       window.addEventListener('error', (e) => {
-        window.__e2eErrors.push(String((e && e.message) || e))
+        // Prefer the message, fall back to the ERROR, and only then to the
+        // event — String(event) is "[object ErrorEvent]", which tells the
+        // next reader nothing, in a collector whose whole job is a legible
+        // failure.
+        var m = (e && e.message) || (e && e.error && (e.error.stack || e.error.message))
+        window.__e2eErrors.push(String(m || (e && e.type) || e))
       })
       window.addEventListener('unhandledrejection', (e) => {
         window.__e2eErrors.push('unhandled rejection: ' + String((e && e.reason) || e))

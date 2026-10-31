@@ -415,12 +415,27 @@ try {
         // offers. Which ones exist differs per kind; clicking what is there is
         // the point, not clicking a specific thing.
         const clicked = await page.evaluate(`(() => {
+          // Every kind's OWN control. Three were missing — decision's doors
+          // are .fork-door, hotspot's bars .hotspot-bar, lab's machine room
+          // .sim-btn — so for those three the selector matched nothing, the
+          // loop clicked nothing, and "interacting must not blank the page"
+          // compared the stage length to itself (the run output said it
+          // plainly: "decision — 0 interaction(s), stage 531->531 chars").
+          // uncaughtErrors() then named an interaction that never happened.
           const targets = document.querySelectorAll(
-            '.choice-btn, .clue-card, .classify-card, .seq-move, .pillar-tile, .score-btn, .bp-part, .primary')
+            '.choice-btn, .clue-card, .classify-card, .seq-move, .pillar-tile, .score-btn, ' +
+            '.bp-part, .fork-door, .hotspot-bar, .sim-btn, .primary')
           let n = 0
           for (const el of targets) { if (n >= 3) break; el.click(); n++ }
           return n
         })()`)
+
+        // SOMETHING must have been clickable. Without this, a kind whose
+        // controls the selector does not know about passes forever while
+        // testing nothing — which is how three of the twelve had been
+        // passing. A new session kind now fails here until its control is
+        // listed, which is the right place to find out.
+        if (!clicked) throw new Error(`no interactive control found for ${kind} — the selector does not know this kind`)
 
         // Interacting must not blank the page — the failure mode that matters.
         const after = await page.evaluate('document.querySelector(".stage")?.textContent.length ?? 0')
@@ -707,14 +722,33 @@ try {
         const real = URL.createObjectURL
         let captured = null
         URL.createObjectURL = (blob) => { captured = blob; return real.call(URL, blob) }
-        for (const b of document.querySelectorAll('button')) {
-          if (/export/i.test(b.textContent)) b.click()
+        // ONE export control, and say so if that is not what is there.
+        // Clicking every match fired a real download per button and left
+        // the capture holding only the last, so a second export control
+        // would have been silently untested and doubly downloaded.
+        // (No backticks in here: this whole function is inside a template
+        // literal and an unescaped one ends it. Written with them first,
+        // again, after a comment ten checks up says exactly this.)
+        const buttons = [...document.querySelectorAll('button')].filter((b) => /export/i.test(b.textContent))
+        if (buttons.length !== 1) {
+          URL.createObjectURL = real
+          return JSON.stringify({ error: buttons.length + ' export controls, expected exactly 1' })
         }
+        buttons[0].click()
+        // The restore is synchronous, which is only safe while report.ts's
+        // export handler is synchronous too. It is today. If it ever awaits
+        // before building the blob, nothing is captured and the assertion
+        // below would blame "no blob" — the symptom, not the cause — so the
+        // check says which it was instead of leaving that to be guessed.
         URL.createObjectURL = real
-        return captured ? await captured.text() : ''
+        if (!captured) return JSON.stringify({ error: 'the export handler produced no blob before the patch was restored (has it become async?)' })
+        return JSON.stringify({ text: await captured.text() })
       })()`)
-      assert(exported, 'clicking export produced no blob')
-      const parsed = JSON.parse(exported)
+      const exportResult = JSON.parse(exported || '{"error":"export evaluate returned nothing"}')
+      assert(!exportResult.error, `export: ${exportResult.error}`)
+      const exportedText = exportResult.text
+      assert(exportedText, 'clicking export produced no blob')
+      const parsed = JSON.parse(exportedText)
       assert(parsed.version === 2, `exported ledger is not a v2 store (version ${parsed.version})`)
       assert(parsed.sessions['p1::s1'], 'the exported ledger lost the session it was holding')
 

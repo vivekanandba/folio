@@ -236,9 +236,17 @@ export class StubElement extends StubNode {
 
   get className(): string {
     // The ATTRIBUTE, raw — not the normalised token set. In the DOM,
-    // className, getAttribute('class') and classList.value all return the
-    // attribute value verbatim, so `setAttribute('class', '  a  b ')` leaves
-    // all three reading '  a  b '. Returning the serialised set here made
+    // className and getAttribute('class') both return the attribute value
+    // verbatim, so `setAttribute('class', '  a  b ')` leaves both reading
+    // '  a  b '.
+    //
+    // classList.value does too in a browser, and this stub's does NOT — it
+    // returns the serialised token set, so the two disagree on irregular
+    // spacing. Said here rather than quietly implied, because the sentence
+    // used to claim all three agreed, which was the overclaiming this file
+    // argues against. Nothing in src/ reads classList.value (grepped), so
+    // it is left as it is instead of being changed under a test suite that
+    // could not notice either way. Returning the serialised set here made
     // className and getAttribute('class') disagree for any value with
     // irregular spacing, and matches() then answered `[class="a b"]` through
     // whichever of them it happened to consult.

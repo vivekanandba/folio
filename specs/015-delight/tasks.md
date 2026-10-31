@@ -201,9 +201,12 @@
 - [ ] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
        the chart point click (82.94% lines / 56.60% branches today). Split
        out of task 20, which silently dropped it; see the note there. Open
-       on purpose: this is the branch floor's thin margin (0.30pp) and the
-       cheapest place to earn it back, recorded in package.json's
-       `comment:coverage`.
+       on purpose: the branch floor has the thinnest margin of the three and this is the
+       cheapest place to earn it back. The margin itself is NOT repeated
+       here — it said 0.30pp while package.json said 0.42pp, two records of
+       one measurement disagreeing, which is the defect this PR spends
+       several comments arguing against. package.json's `comment:coverage`
+       is the one copy, and it names the command to re-measure with.
 
 ## Manual verification (cannot be gated headlessly — CON-VER-007)
 

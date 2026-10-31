@@ -74,15 +74,14 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       a lost context (driver reset, memory pressure), and asserts the canvas
       is gone. The teardown is deterministic.
 
-      Residual drift, measured rather than inferred: the combined figure has
-      been observed between **97.85% and 98.08%** across twenty runs — a
-      0.23pp band, about 20 lines of 8807. The top moved from 98.06 as
-      review rounds 5-11 added tests; `package.json`'s
-      `comment:coverage-combined` is the primary record and this copy is
-      kept in step with it deliberately. Two records of one measurement
-      disagreeing is precisely what 14c was reopened to fix, so letting
-      this one drift while correcting the other would have reproduced the
-      defect inside its own fix. The browser
+      Residual drift, measured rather than inferred: the LOWEST combined
+      figure observed is **97.85%**, and the floor is 97.5. Only the
+      minimum is recorded — an upper bound has to be re-typed whenever a
+      commit adds a line, and the records carrying one went stale four
+      times during PR #74 while the floor only ever rested on the bottom.
+      `package.json`'s `comment:coverage-combined` is the primary copy and
+      names the command to re-measure with; this entry deliberately
+      repeats no figure that moves. The browser
       half underneath swings much wider, 3965–4089 covered lines over six
       runs, most of it absorbed by the union because the unit half already
       covers those lines. shader.ts itself varies by three lines (150–153).
@@ -93,7 +92,7 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       rested on, so it mattered. Caught in review, re-measured, corrected.
 
       The floor is 97.5: 0.35pp below the lowest figure ever observed, about
-      1.5× the measured band (it read 1.7× against the superseded 0.21pp band, which contradicted both the re-measured figure ten lines above and package.json — the two-records-disagreeing defect 14c was reopened for, inside the fix for it). The margin is wider than the 0.06pp the old
+      comfortably wider than any single-run variation measured. (This read "1.7× the measured band" against a band that had since been re-measured, contradicting both the figure ten lines above and package.json — so the ratio is gone with the band it depended on.) The margin is wider than the 0.06pp the old
       floor used, on purpose — CON-COV-002 forbids lowering a floor, so too
       tight has to be walked back while too loose merely ratchets again.
 
