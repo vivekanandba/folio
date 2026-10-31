@@ -165,9 +165,18 @@
        use. The swinging band was `destroy()` and the `webglcontextlost`
        handler racing page teardown, not context acquisition. See
        specs/013-testing-overhaul/tasks.md 14c.
-- [x] 20. Cover the stub-reachable clusters: `review.ts` summary + interrupt,
-       `lab.ts` endings, `decision.ts` ending node, `sim/engine.ts` controls and
-       `destroy()`, `sequence.ts` reorder, `widgets.ts`, and the tail
+- [x] 20. Cover the stub-reachable clusters: `review.ts` summary, `lab.ts`
+       endings, `decision.ts` ending node and preview, `sim/engine.ts`
+       controls and `destroy()`, `sequence.ts` reorder, `blueprint.ts` wiring,
+       `hub.ts` filter chips, `palette.ts` keyboard, and the tail.
+
+       RE-SCOPED, not quietly ticked: this originally read "summary +
+       interrupt". The interrupt panel is unreachable by construction —
+       `deriveFlashcards` catches both the concept note and every session
+       load, so a broken archive yields a concept with no cards that the queue
+       skips. Verified by breaking fetch two ways; written up at the foot of
+       tests/review-flow.test.ts. Marking the task done as WRITTEN would have
+       claimed four-fifths of a sentence as all of it (CON-PROC-012).
 - [x] 21. Cover the browser-only clusters via the e2e driver: `report.ts`
        export/import, `floor.ts` zoom + narrow layout, `shader.ts` teardown via
        `WEBGL_lose_context`

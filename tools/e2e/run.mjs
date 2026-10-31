@@ -197,6 +197,27 @@ const SHOTS_INFORMATIONAL = !(recordedBrowser && recordedBrowser === currentBrow
 
 mkdirSync(BASELINES, { recursive: true })
 const server = await serve(PREVIEW, PORT)
+/**
+ * How many uncaught errors a page has collected — and a refusal, not a zero,
+ * if the collector is not there.
+ *
+ * The incident this guards (see tools/e2e/cdp.mjs) was four assertions
+ * comparing 0 against 0 because nothing ever created window.__e2eErrors. The
+ * first fix installed the collector; this is the second half of it, because
+ * `window.__e2eErrors ? ….length : 0` would go quietly green again the day
+ * the injection stops being applied. "Could not determine" is not "none"
+ * (CON-DATA-001, CON-VER-005).
+ */
+async function uncaughtErrors(page, where) {
+  const n = await page.evaluate(
+    'Array.isArray(window.__e2eErrors) ? window.__e2eErrors.length : -1',
+  )
+  assert(n >= 0, `the error collector was not installed on the page (${where})`)
+  if (!n) return
+  const seen = await page.evaluate('JSON.stringify(window.__e2eErrors.slice(0, 3))')
+  assert(false, `${n} uncaught error(s) ${where}: ${seen}`)
+}
+
 const browser = instrument(await launch(chrome, { port: 9344 }))
 const origin = `http://127.0.0.1:${PORT}`
 
@@ -355,8 +376,7 @@ try {
         // Interacting must not blank the page — the failure mode that matters.
         const after = await page.evaluate('document.querySelector(".stage")?.textContent.length ?? 0')
         if (!after) throw new Error(`the stage went blank after ${clicked} interaction(s)`)
-        const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
-        if (errors) throw new Error(`${errors} uncaught error(s) during interaction`)
+        await uncaughtErrors(page, `during ${kind} interaction`)
         return `${clicked} interaction(s), stage ${before}→${after} chars`
       } finally {
         await page.close()
@@ -656,7 +676,13 @@ try {
       // It passed by outrunning the very reload it claimed to be holding.
       await page.waitFor(
         `(localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')`,
-        { timeoutMs: 500, intervalMs: 25, label: 'the imported ledger reaches storage' },
+        // 5000ms like its neighbours. The import must await file.text() and
+        // then write, polled over a cross-process CDP round trip, on a box
+        // the fleet notes describe as reaching load 10 under three Playwright
+        // jobs. A tight budget buys nothing — the written value stays true
+        // indefinitely, since the 600ms reload does not clear it — and only
+        // makes the gate red for timing (CON-VER-008).
+        { timeoutMs: 5000, intervalMs: 25, label: 'the imported ledger reaches storage' },
       )
       return 'export → parse → import'
     } finally {
@@ -677,8 +703,7 @@ try {
         return n
       })()`)
       assert(clicked >= 3, `expected zoom in/out/fit, found ${clicked} control(s)`)
-      let errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
-      assert(!errors, `${errors} uncaught error(s) while working the floor controls`)
+      await uncaughtErrors(page, 'while working the floor controls')
 
       // And at phone width, where the floor re-lays-out around a single hall.
       await page.send('Emulation.setDeviceMetricsOverride', {
@@ -698,8 +723,7 @@ try {
         narrow.canvas > 0 && narrow.canvas <= narrow.width,
         `the floor canvas is ${narrow.canvas}px inside a ${narrow.width}px viewport`,
       )
-      errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
-      assert(!errors, `${errors} uncaught error(s) on a phone-width floor`)
+      await uncaughtErrors(page, 'on a phone-width floor')
       return `${clicked} controls, then ${narrow.width}px wide`
     } finally {
       await page.close()
@@ -732,8 +756,7 @@ try {
         timeoutMs: 5000,
         label: 'the aurora removes itself',
       })
-      const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
-      assert(!errors, `${errors} uncaught error(s) during teardown`)
+      await uncaughtErrors(page, 'during aurora teardown')
       return 'context lost → canvas removed'
     } finally {
       await page.close()

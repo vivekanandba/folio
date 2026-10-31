@@ -234,18 +234,20 @@ export class StubElement extends StubNode {
           // approximates is worse than one that refuses, because the wrong
           // match is a green test on a false premise.
           if (!m) return false
-          // `class` is read off the element, not the map. Not because
-          // setAttribute diverts it — it writes attributes too — but because
-          // classList.add() afterwards updates className WITHOUT refreshing
-          // the map, so the stored value goes stale. `id` needs no special
-          // case; an earlier comment here claimed both did, which would have
-          // invited someone to delete a branch that is load-bearing.
+          // `class` is read off classList, which is the live value; the
+          // attributes map is kept in step by sync() and the className
+          // setter, so this is belt-and-braces rather than a fix for a stale
+          // entry. Two earlier comments here each gave a WRONG reason for it
+          // — that setAttribute diverts class and id away from the map, then
+          // that classList.add leaves the map stale — and neither is true
+          // (CON-DATA-001). `id` needs nothing special.
           const name = m[1]
           const actual = name === 'class' ? this.className : this.getAttribute(name)
-          // Presence matches an EMPTY value: [hidden], [open] and [data-x]
-          // are all set with ''. Treating empty as absent fails closed, and a
-          // silent non-match is the "looks untestable" dead end this matcher
-          // exists to remove.
+          // Presence matches an EMPTY value, the way CSS does: an attribute
+          // written as `data-x=""` is present. Note that properties set
+          // directly on a stub element — `el.hidden = true`, `dialog.open` —
+          // never reach the attributes map at all, so `[hidden]` and `[open]`
+          // match nothing here however they are written.
           if (actual == null) return false
           return m[2] ? actual === m[3] : true
         }
