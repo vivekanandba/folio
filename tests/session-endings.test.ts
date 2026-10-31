@@ -133,6 +133,69 @@ test('a decision walked to an ending renders the result and reports the score', 
   )
 })
 
+test('a decision door pressed twice counts once', async () => {
+  // The defect this guards was found by review of PR #74, and it was found
+  // because an earlier version of the walk above described it in a comment
+  // and then routed around it with a condition-based wait. The wait was the
+  // right fix for the TEST; it was the wrong place to stop.
+  //
+  // A door applies its effect and defers the re-render by 180ms, so for that
+  // whole window it is still on screen and still live. Double-clicking it —
+  // or double-tapping, on the phone this is mostly used on — pushed the note
+  // twice, applied the meter shift twice, advanced depth twice, and if the
+  // choice led to an ending, called onComplete twice: the session recorded
+  // twice in the attempt log and in daily[today].
+  const mod = getModule('decision')!
+  const session = firstOfKind('decision') as { nodes: { id: string; ending?: unknown }[]; startId?: string }
+  const host = root()
+  const scores: [number, number][] = []
+  mod.mount(host, session as never, (sc, m) => scores.push([sc, m]))
+
+  let presses = 0
+  for (let step = 0; step < 24 && !scores.length; step++) {
+    const door = node(host).querySelector('.fork-door')
+    if (!door) break
+    // TWICE, with no wait between — the whole point. The second press lands
+    // inside the 180ms window, against a door the renderer has not replaced.
+    door.click()
+    door.click()
+    presses += 1
+    await until(
+      () => scores.length > 0 || node(host).querySelector('.fork-door') !== door,
+      'the decision to re-render after a door was taken',
+    )
+  }
+
+  assert.equal(scores.length, 1, 'a double-pressed door completes the session exactly once')
+
+  // And give the deferred render every chance to fire a second time.
+  await new Promise((r) => setTimeout(r, 300))
+  assert.equal(scores.length, 1, 'and no late render reports it again')
+
+  // The TRAIL, not just the score. There are two guards here and either one
+  // alone keeps onComplete to a single call, so the assertions above cannot
+  // tell which is working — they go red only if BOTH are removed. This one
+  // is what the click gate specifically protects: without it, each
+  // double-press pushed its note to the trail twice and applied its meter
+  // shift twice, so the ending card read back a path the learner never took
+  // even when the score was right.
+  //
+  // The list's CHILDREN, not `.viz-path-list li`. That is a descendant
+  // selector, which this stub refuses by design — so the query returned 0
+  // and `0 <= presses` was true however badly the code behaved. Written
+  // that way first, and caught only by mutating the gate and finding the
+  // assertion still green, which is the whole argument for mutating a new
+  // assertion before trusting it (CON-PROC-005).
+  const list = node(host).querySelector('.viz-path-list') as unknown as
+    { childNodes: unknown[] } | null
+  const steps = list ? list.childNodes.length : 0
+  assert.ok(steps > 0, 'the ending card shows the path that was taken')
+  assert.ok(
+    steps <= presses,
+    `the path records ${steps} steps for ${presses} door presses — a door was counted twice`,
+  )
+})
+
 test('a decision tree pointing nowhere says so rather than rendering blank', async () => {
   const mod = getModule('decision')!
   const base = firstOfKind('decision') as Record<string, unknown>
@@ -196,8 +259,26 @@ test('the transport runs, steps and resets the machine', () => {
   playBtn.click()
   assert.notEqual(handle!.running(), wasRunning, 'play/pause toggles the loop')
 
-  assert.doesNotThrow(() => btn(/Step/).click(), 'stepping must work whether or not it runs')
-  assert.doesNotThrow(() => btn(/Reset/).click(), 'and so must resetting')
+  // Step and Reset are judged by what they CHANGE, not by not throwing.
+  // doesNotThrow cannot fail for the behaviour this test is named after: an
+  // early return, or a dropped tick(), leaves both buttons inert and the
+  // test green — while their lines still count toward the floor this PR is
+  // ratcheting. Both write to .sim-readout, so both are observable, and the
+  // play/pause assertion above already works this way.
+  const readouts = (): string =>
+    node(host).querySelectorAll('.sim-readout-value').map((v) => v.textContent).join('|')
+
+  const beforeStep = readouts()
+  btn(/Step/).click()
+  const afterStep = readouts()
+  assert.notEqual(afterStep, beforeStep, 'stepping advances the machine')
+
+  // Reset goes BACK — so it is judged against the stepped state, not against
+  // beforeStep. Asserting it differs from beforeStep was wrong in the
+  // obvious way: reset restores the initial state, which is where
+  // beforeStep already was, so a correct Reset failed. Caught by running it.
+  btn(/Reset/).click()
+  assert.notEqual(readouts(), afterStep, 'and resetting undoes the step')
   handle!.destroy()
 })
 

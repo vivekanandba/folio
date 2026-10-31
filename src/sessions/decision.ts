@@ -18,6 +18,26 @@ function mountDecision(
   let current = session.startId
   const notes: string[] = []
   let depth = 0
+  /**
+   * One ending, one onComplete — and one choice per door press.
+   *
+   * A door's click handler applies its effect and then defers the re-render
+   * by 180ms, leaving the door on screen and live for that whole window. A
+   * double-click, or a mobile double-tap, therefore ran it twice: the note
+   * was pushed to the trail twice, the meter shift applied twice, depth
+   * advanced twice, and if the choice led to an ending, render() reached
+   * onComplete() unguarded on both renders — recording the session twice in
+   * the attempt log and in daily[today], under an ending card whose meter
+   * had double-counted the last choice.
+   *
+   * lab, blueprint, estimate and hotspot all carry a flag like this; decision
+   * was the one ending path without one. Found by review of PR #74, whose
+   * tests had documented the defect in a comment and then stepped around it
+   * with a condition-based wait so the suite stayed green — which is the
+   * wrong half to fix (CON-PROC-003).
+   */
+  let ended = false
+  let choosing = false
 
   const meter = session.meter
   let meterVal = meter?.start ?? 0
@@ -78,7 +98,10 @@ function mountDecision(
         stage('decision', `Fork ${depth + 1}`, session.title, [layout]),
       )
       if (node.ending.score > 0) burst(scene)
-      onComplete(node.ending.score, 1)
+      if (!ended) {
+        ended = true
+        onComplete(node.ending.score, 1)
+      }
       return
     }
 
@@ -127,12 +150,20 @@ function mountDecision(
       door.addEventListener('mouseleave', clearPreview)
       door.addEventListener('blur', clearPreview)
       door.addEventListener('click', () => {
+        // Shut the gate before doing anything. The render that replaces
+        // these doors is 180ms away, and until it lands every door on screen
+        // is still clickable.
+        if (choosing || ended) return
+        choosing = true
         burst(door, i % 2 === 0 ? ['#f59e0b', '#fbbf24'] : ['#6366f1', '#a5b4fc'])
         if (choice.note) notes.push(choice.note)
         if (choice.effect != null) meterVal = clamp(meterVal + choice.effect)
         current = choice.next
         depth += 1
-        window.setTimeout(render, 180)
+        window.setTimeout(() => {
+          choosing = false
+          render()
+        }, 180)
       })
       doors.append(door)
     })
