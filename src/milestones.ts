@@ -190,15 +190,20 @@ export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[
   // ([].some() is false) — so one concepts-only or half-authored pack in the
   // catalog would hand out a plaque for an empty room and make "every hall"
   // unearnable forever, with nothing to explain why. It is not a hall yet.
-  const rooms = ctx.halls.filter((hall) => hall.sessionIds.length > 0)
+  // Filtered once, used by both rules — they are supposed to judge the same
+  // set. A hall is skipped if it has no sessions (vacuously complete under
+  // every(), permanently unvisitable under some()) or if this version cannot
+  // name it. The naming check is skipped rather than thrown because
+  // satisfied() runs inside award(), before persist(): nothing in the content
+  // linter constrains pack-id shape, and the cost of being wrong is a save.
+  const rooms = ctx.halls.filter(
+    (hall) => hall.sessionIds.length > 0 && describe(`hall-complete:${hall.packId}`, ctx),
+  )
 
   for (const hall of rooms) {
-    const id = `hall-complete:${hall.packId}`
-    // Skipped, never thrown: a pack id this version will not describe is a
-    // content question, and nothing in the linter constrains pack-id shape.
-    // The cost of being wrong here is the learner's save.
-    if (!describe(id, ctx)) continue
-    if (hall.sessionIds.every((s) => store.sessions?.[`${hall.packId}::${s}`])) ids.push(id)
+    if (hall.sessionIds.every((s) => store.sessions?.[`${hall.packId}::${s}`])) {
+      ids.push(`hall-complete:${hall.packId}`)
+    }
   }
 
   if (

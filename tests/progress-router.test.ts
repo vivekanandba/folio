@@ -275,6 +275,42 @@ test('a hand-edited ledger date is dropped rather than rendered', () => {
   )
 })
 
+test('a review can record progress without spending the plaque', () => {
+  // The daily round shows its plaques once at the end, so it must not AWARD
+  // them per concept: awarding records, and a recorded plaque is never
+  // offered again — a learner who closed the tab mid-round would have spent
+  // the moment without seeing it.
+  reset()
+  const none = progress.recordConceptReview('p1', 'c1', 1, null)
+  assert.deepEqual(none, [], 'nothing is awarded when the caller opts out')
+  assert.ok(progress.getConceptState('p1', 'c1'), 'but the review itself is recorded')
+  assert.deepEqual(progress.earnedMilestones({ halls: [] }), [], 'and the wall is still bare')
+
+  // ...and it is still there to be earned when the summary asks for it.
+  assert.ok(
+    progress.awardMilestones({ halls: [] }).some((m) => m.id === 'visits-10') === false,
+    'one review is not ten',
+  )
+  for (let i = 0; i < 12; i++) progress.recordConceptReview('p1', `c${i}`, 1, null)
+  assert.ok(
+    progress.awardMilestones({ halls: [] }).some((m) => m.id === 'visits-10'),
+    'the plaque the round earned is awarded when the round ends',
+  )
+})
+
+test('a backup with a malformed plaque record is refused', () => {
+  reset()
+  progress.saveSessionResult(result() as never, [])
+  for (const bad of ['"abc"', '["x"]', '42']) {
+    const res = progress.importProgress(
+      `{"version":2,"sessions":{},"concepts":{},"attempts":[],"daily":{},"milestones":${bad}}`,
+    )
+    assert.equal(res.ok, false, `milestones: ${bad} must be refused`)
+    assert.match(res.error ?? '', /plaque/, 'and say what is wrong')
+  }
+  assert.equal(progress.getSessionResult('p1', 's1')?.score, 4, 'existing progress survived')
+})
+
 test('importing rubbish is refused and leaves the store intact', () => {
   reset()
   progress.saveSessionResult(result() as never, [])

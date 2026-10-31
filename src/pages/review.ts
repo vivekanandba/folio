@@ -1,3 +1,4 @@
+import { liveAnnounce } from '../a11y'
 import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
 import { el, prettyId } from '../dom'
 import { cue, resetRun } from '../feedback'
@@ -5,8 +6,7 @@ import { deriveFlashcards } from '../flashcards'
 import { acquisitionCard, burst } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
 import { dailyDrill } from '../gauntlet/generators'
-import { loadProgress, recordConceptReview } from '../progress'
-import type { Milestone } from '../milestones'
+import { awardMilestones, loadProgress, recordConceptReview } from '../progress'
 import { href } from '../router'
 import { mountFlashcards } from '../sessions/flashcard'
 import { mountSim } from '../sim/engine'
@@ -45,9 +45,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   }))
   // Plaques earned across the whole round, shown once at the end rather than
   // interrupting between cards.
-  // Keyed on the stable id, not the inscription: two packs sharing a title
-  // would produce the same words for different halls and collapse to one.
-  const earnedThisRound: Milestone[] = []
+
 
   const store = loadProgress()
   const queue = buildToday(store.concepts, allConcepts) // already pack-interleaved
@@ -111,10 +109,22 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       cue('complete', { perfect: false })
       burst(stamp)
     }
-    const plaques = acquisitionCard(earnedThisRound)
+    // Awarded here, where they are also shown — recorded and celebrated in
+    // the same breath, so neither can happen without the other.
+    const earned = awardMilestones({ halls })
+    const plaques = acquisitionCard(earned)
     if (plaques) {
       cue('milestone')
       root.append(plaques)
+      // A live region appended ALREADY populated is not reliably announced,
+      // so the shared one carries it — otherwise a plaque earned in the daily
+      // review is a purely visual reward, while the same plaque on a session
+      // page is announced.
+      liveAnnounce(
+        earned.length === 1
+          ? `Plaque earned: ${earned[0].title}`
+          : `${earned.length} plaques earned: ${earned.map((m) => m.title).join(', ')}`,
+      )
     }
   }
 
@@ -168,14 +178,12 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // into the SRS grade: objective performance tempers self-assessment.
       const finishConcept = (flashAvg: number, drillScore: number | null): void => {
         const normalized = drillScore == null ? flashAvg : flashAvg * 0.6 + drillScore * 0.4
-        for (const m of recordConceptReview(
-          item.ref.packId,
-          item.ref.conceptId,
-          normalized,
-          { halls },
-        )) {
-          if (!earnedThisRound.some((e) => e.id === m.id)) earnedThisRound.push(m)
-        }
+        // `null`: record the progress, award nothing yet. The round shows its
+        // plaques once at the end, and awarding here would RECORD them — so a
+        // learner who closed the tab before the summary would have spent the
+        // moment without ever seeing it (detect() never offers a recorded
+        // plaque again). session.ts guards the same hole on its own path.
+        recordConceptReview(item.ref.packId, item.ref.conceptId, normalized, null)
         advance()
       }
 

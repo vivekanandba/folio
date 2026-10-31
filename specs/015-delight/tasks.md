@@ -35,6 +35,20 @@
 - [x] 11. The moment: brass plaque in `pages/session.ts` + `pages/review.ts`
 - [x] 12. The permanence: Acquisitions shelf in `pages/report.ts`
 - [x] 13. Mutation-check; gates; ship
+- [x] 13b. Six adversarial review rounds (CON-PROC-009), 25 findings fixed
+
+### Carried forward from round 6 — known, small, not blocking
+
+- [ ] 13c. `session.ts` can render TWO plaque cards for one finish (the
+       synchronous ones, then the hall-shaped ones after `loadHalls()`), with
+       two `cue('milestone')` calls ~2.3s apart. It fires on the best finish
+       there is — the last exhibit of a hall. Merge the second into the first
+       card if one is already on screen.
+- [ ] 13d. `feedback.ts`'s queue exempts `correct`/`wrong`/`reveal` from
+       waiting AND from being waited for, so a `reveal` landing just before a
+       queued `milestone` still has its haptic truncated — the failure the
+       queue exists to prevent, in the one direction its tests do not cover.
+       No page produces that ordering today.
 
 ## PR 3 — the curator's voice, and the polish
 

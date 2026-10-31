@@ -167,15 +167,24 @@ export function saveSessionResult(
 }
 
 /** Record a flashcard review round for one concept. */
+/**
+ * Record a flashcard review round for one concept.
+ *
+ * `ctx` may be null to record the progress and award NOTHING — which the
+ * daily review needs, because it shows its plaques once at the end. Awarding
+ * mid-round would RECORD them, and detect() never offers a recorded plaque
+ * again, so a learner who closed the tab before the summary would have spent
+ * the moment without ever seeing it.
+ */
 export function recordConceptReview(
   packId: string,
   conceptId: string,
   normalized: number,
-  ctx: MilestoneCtx = NO_HALLS,
+  ctx: MilestoneCtx | null = NO_HALLS,
 ): Milestone[] {
   const store = loadProgress()
   applyReview(store, packId, [conceptId], normalized, 'flashcard', conceptId)
-  const earned = award(store, ctx)
+  const earned = ctx ? award(store, ctx) : []
   persist(store)
   return earned
 }
@@ -278,6 +287,13 @@ export function importProgress(json: string): { ok: boolean; error?: string } {
   if (!Array.isArray(d.attempts)) return { ok: false, error: 'Backup is missing the attempt log.' }
   if (!d.daily || typeof d.daily !== 'object' || Array.isArray(d.daily)) {
     return { ok: false, error: 'Backup is missing the daily log.' }
+  }
+  // Optional, but if present it must be a map. A string would spread to
+  // {0:'a',1:'b'} inside award() and be persisted in that shape; an array
+  // would be silently rewritten as an object. The other four fields are
+  // checked, and ledger content is not trusted anywhere else in this file.
+  if (d.milestones !== undefined && (typeof d.milestones !== 'object' || d.milestones === null || Array.isArray(d.milestones))) {
+    return { ok: false, error: 'Backup has a malformed plaque record.' }
   }
   persist(d as ProgressStoreV2)
   return { ok: true }
