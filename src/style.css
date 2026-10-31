@@ -2197,6 +2197,59 @@ input[type='range'] {
 .acquisition.plaque-in {
   animation: plaque-in 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
 }
+
+/* The curator's greeting on the floor. Brass, because it is the museum
+   speaking rather than the interface labelling itself. */
+.floor-greeting {
+  margin: 0 0 0.35rem;
+  font-family: var(--font);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: var(--brass);
+}
+
+/* A streak worth keeping. Brass rather than the usual teal, and a slow
+   breath rather than a pulse — the museum noticing, not nagging. */
+.stat-tile.tile-alight {
+  border-color: var(--brass-soft);
+  background: linear-gradient(180deg, var(--brass-soft), var(--surface));
+}
+.stat-tile.tile-alight .stat-value { color: var(--brass-bright); }
+@keyframes tile-breathe {
+  from { box-shadow: 0 0 0 0 rgba(201, 168, 106, 0); }
+  to   { box-shadow: 0 0 18px 0 rgba(201, 168, 106, 0.28); }
+}
+.stat-tile.tile-alight { animation: tile-breathe 3.2s ease-in-out infinite alternate; }
+
+/* The keyboard path, designed rather than defaulted. Three :focus-visible
+   rules in 2800 lines meant tabbing through the museum looked like tabbing
+   through a form; the ring is now brass and lands with the same overshoot
+   the stamp does. Width and offset only — never a layout shift, which is what
+   makes a focus style feel broken. */
+@keyframes focus-land {
+  from { outline-offset: 6px; outline-color: transparent; }
+  to   { outline-offset: 2px; }
+}
+:focus-visible {
+  outline: 2px solid var(--brass-bright);
+  outline-offset: 2px;
+  border-radius: 4px;
+  animation: focus-land 0.18s cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+.choice-btn:focus-visible,
+.choice-tile:focus-visible,
+.clue-card:focus-visible,
+.pack-card:focus-visible,
+.item-card:focus-visible {
+  outline-offset: 3px;
+  box-shadow: var(--shadow-2);
+}
+
+/* The exhibit's plaque, pressed in rather than printed on. */
+.saved-note.plaque-card {
+  border-left: 3px solid var(--brass);
+  background: linear-gradient(180deg, var(--brass-soft), var(--surface));
+}
 .theme-toggle {
   font: inherit;
   font-size: 1.05rem;

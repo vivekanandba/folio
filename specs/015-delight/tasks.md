@@ -52,14 +52,44 @@
 
 ## PR 3 — the curator's voice, and the polish
 
-- [ ] 14. Pin the clock for the four e2e captures **before** any time-varying
+- [x] 14. Pin the clock for the four e2e captures **before** any time-varying
        copy lands, so the gate cannot erode unnoticed
-- [ ] 15. `src/curator.ts` — per-route loading lines, time-of-day arrival line
-- [ ] 16. `ceremony()` called from `pages/review.ts` instead of its hand-copied
+- [x] 15. `src/curator.ts` — per-route loading lines, time-of-day arrival line
+- [x] 16. `ceremony()` called from `pages/review.ts` instead of its hand-copied
        stamp; `countUp()` on `.score-hero`; streak tile alive at ≥3 days;
        focus-visible choreography; the saved-note becomes a real plaque
-- [ ] 17. Recapture the four baselines in the pinned container; report drift
-- [ ] 18. Mutation-check; gates; ship
+- [x] 17. Recapture the four baselines in the pinned container; report drift —
+       only `floor.png` changed (16.43%, the greeting); the other three came
+       back byte-identical, which is the evidence that the greeting is the
+       whole of the visual delta
+- [x] 18. Mutation-check; gates; ship
+
+### Found while shipping PR 3 — the capture was racing the page
+
+- [x] 18b. The screenshot step waited a fixed 600ms and then fired. Under load
+       a concept page's interactive figures had not hydrated, so the capture
+       had a figure-sized hole and reported 9.54% drift — a timing failure
+       wearing the costume of a design regression, and the same
+       duration-instead-of-condition mistake the smoke suite was rebuilt to
+       remove. It now waits for every `.viz-slot` to hydrate and for
+       `document.fonts.ready`, and the capture asserts SIX named conditions
+       (storage, resume card, live aurora, reduced-motion, unhydrated figures,
+       font status) so a future race says what it was rather than printing a
+       percentage for the reader to guess at (CON-VER-005).
+
+       Correction to the record: PR 1 attributed an earlier intermittent 8.55%
+       to the resume card. That was inferred, never observed — the measured
+       cause is this one.
+
+### Carried forward — e2e load sensitivity (wider than first recorded)
+
+- [ ] 18c. Several e2e checks assume the page has finished loading and time
+       out under heavy load: `explainer`, `blueprint`, the manifest link, and
+       the screenshot furniture waits. Reproduced deliberately at load ~6 with
+       three container runs beside four unit suites. CI runs the e2e alone in
+       its own job, so this is not reached there — but by the fleet's own rule
+       a check that fails under load is a suite defect, and the fix belongs to
+       the harness rather than to any one feature PR.
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 

@@ -103,6 +103,38 @@ export function donut(
   return wrap
 }
 
+/**
+ * Count a number up to its value instead of printing it.
+ *
+ * The score is the one number a learner actually looks at, and watching it
+ * climb reads as a tally being added up rather than a verdict already decided.
+ * Under reduced motion it is simply the final value — the figure IS the
+ * information, and only the counting is decoration.
+ */
+export function countUp(node: HTMLElement, to: number, durationMs = 650): void {
+  if (prefersReducedMotion() || !Number.isFinite(to) || to <= 0) {
+    node.textContent = String(to)
+    return
+  }
+  const start = performance.now()
+  node.textContent = '0'
+  const step = (now: number): void => {
+    // Bail if the page moved on — a counter ticking into a detached node is
+    // work nobody sees.
+    if (!node.isConnected) return
+    const t = Math.min(1, (now - start) / durationMs)
+    // Ease out: fast at first, settling onto the number rather than stopping.
+    const eased = 1 - (1 - t) ** 3
+    // No separate "land on it exactly" assignment: the loop's last frame is
+    // t === 1, where eased is 1 and Math.round(to) is `to`. A branch that
+    // cannot behave differently from the line above it is a line nobody can
+    // test and everybody has to read.
+    node.textContent = String(Math.round(to * eased))
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
 /** Dark immersive stage wrapper shared by every session kind. */
 export function stage(
   kind: string,
@@ -160,10 +192,13 @@ export function acquisitionCard(items: { title: string; note: string }[]): HTMLE
  * stamp lands on the exhibit. Under reduced motion the stamp still renders
  * (it's information) — only the motion is dropped.
  */
-export function ceremony(stageEl: HTMLElement, opts: { perfect: boolean }): void {
+export function ceremony(
+  stageEl: HTMLElement,
+  opts: { perfect: boolean; label?: string },
+): void {
   stageEl.classList.add('stage-bloom')
   const stamp = el('div', { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}`, role: 'status' }, [
-    opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited',
+    opts.label ?? (opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited'),
   ])
   const inner = stageEl.querySelector('.stage-inner') ?? stageEl
   inner.append(stamp)

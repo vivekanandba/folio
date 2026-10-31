@@ -1,5 +1,6 @@
 import './style.css'
 import { liveAnnounce, setLiveRegion } from './a11y'
+import { loadingLine } from './curator'
 import { el } from './dom'
 import { adoptStoredPreference, cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
 import { initPalette } from './palette'
@@ -99,7 +100,9 @@ function notFound(): void {
 onRoute(async (route) => {
   const render = async (): Promise<void> => {
     main.classList.remove('main-wide')
-    main.replaceChildren(el('p', { class: 'muted', role: 'status' }, ['Loading…']))
+    main.replaceChildren(
+      el('p', { class: 'muted', role: 'status' }, [loadingLine(route.name)]),
+    )
     try {
       switch (route.name) {
         case 'hub':

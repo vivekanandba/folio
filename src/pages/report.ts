@@ -1,4 +1,5 @@
 import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
+import { loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { earnedMilestones, exportProgress, importProgress, loadProgress, packCompletion } from '../progress'
 import { href } from '../router'
@@ -120,7 +121,7 @@ function ledgerSection(): HTMLElement {
 }
 
 export async function renderReport(root: HTMLElement): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['The curator is tallying…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('report')]))
   const catalog = await loadCatalog()
   const metas: FolioPackMeta[] = await Promise.all(catalog.packs.map((r) => loadPackMeta(r.path)))
   const store = loadProgress()

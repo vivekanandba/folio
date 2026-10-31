@@ -1,9 +1,10 @@
 import { liveAnnounce } from '../a11y'
 import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
+import { loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { deriveFlashcards } from '../flashcards'
-import { acquisitionCard, burst } from '../fx'
+import { acquisitionCard, ceremony, countUp } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
 import { dailyDrill } from '../gauntlet/generators'
 import { awardMilestones, loadProgress, recordConceptReview } from '../progress'
@@ -24,7 +25,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   // The daily round is its own run; it does not inherit one from a session.
   resetRun()
   root.classList.add('main-wide')
-  root.replaceChildren(el('p', { class: 'muted' }, ['Building your review…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('today')]))
 
   const catalog = await loadCatalog()
   const metas = await Promise.all(
@@ -77,37 +78,39 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
-    // Not `mastered`: finishing the round is attendance, not mastery — the
-    // grades were self-reported. The ordinary chord below says the same thing.
-    // And a round where every concept was skipped cleared no gauntlet at all,
-    // so it gets no stamp either — the stamp is the loudest claim on the card,
-    // and suppressing only the chord would leave the two disagreeing.
-    const stamp = reviewed > 0
-      ? el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
-      // role="status" either way: a learner on a screen reader who finishes a
-      // round where nothing had material still deserves to be told so.
-      : el('div', { class: 'muted small', role: 'status' }, [
-          'Nothing was due that had material to review.',
-        ])
-    root.replaceChildren(
-      header(),
-      el('div', { class: 'result-card pop-in review-summary' }, [
-        el('h2', {}, ['Review complete']),
-        el('p', { class: 'score-hero' }, [String(reviewed)]),
-        el('p', {}, [
-          `concept${reviewed === 1 ? '' : 's'} reviewed today. Fresh drills return tomorrow.`,
-        ]),
-        stamp,
-        el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
+    const score = el('p', { class: 'score-hero' }, [String(reviewed)])
+    const card = el('div', { class: 'result-card pop-in review-summary' }, [
+      el('h2', {}, ['Review complete']),
+      score,
+      el('p', {}, [
+        `concept${reviewed === 1 ? '' : 's'} reviewed today. Fresh drills return tomorrow.`,
       ]),
+    ])
+    if (reviewed === 0) {
+      // A round where every concept was skipped cleared no gauntlet, so it is
+      // not stamped — the stamp is the loudest claim on the card, and sounding
+      // nothing while stamping "cleared" would leave the two disagreeing.
+      // role="status" so a screen reader is told as much (CON-DATA-001).
+      card.append(
+        el('div', { class: 'muted small', role: 'status' }, [
+          'Nothing was due that had material to review.',
+        ]),
+      )
+    }
+    card.append(
+      el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
     )
-    // A queue whose every concept was skipped (no cards, no drill) still
-    // reaches here. "0 concepts reviewed" is not an achievement, and sounding
-    // a chord plus a five-beat haptic over it rewards a round that never
-    // happened (CON-DATA-001: praise tracks something the learner did).
+    root.replaceChildren(header(), card)
+    countUp(score, reviewed)
+
     if (reviewed > 0) {
       cue('complete', { perfect: false })
-      burst(stamp)
+      // ceremony(), not a hand-built stamp. This page used to re-implement
+      // the markup and the burst, so a change to how the museum celebrates
+      // reached every session and not the daily round. `perfect` stays false:
+      // these grades are self-reported, so this is attendance rather than
+      // mastery, and the label says exactly that.
+      ceremony(card, { perfect: false, label: 'Gauntlet cleared' })
     }
     // Awarded here, where they are also shown — recorded and celebrated in
     // the same breath, so neither can happen without the other.

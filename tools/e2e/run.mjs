@@ -616,6 +616,26 @@ try {
         await page.send('Emulation.setEmulatedMedia', {
           features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
         })
+        // Freeze the clock as well as the motion. Anything the app derives
+        // from "now" — a streak, a lamp coming due, a greeting that changes
+        // with the hour — would otherwise drift the fingerprint by the day or
+        // the time of day, and the gate would erode without anyone touching
+        // the design. Combined with the storage clear below, every capture is
+        // the same visitor arriving at the same moment.
+        await page.send('Page.addScriptToEvaluateOnNewDocument', {
+          source: `(() => {
+            const FIXED = 1781038800000 // 2026-06-06T09:00:00Z, a Saturday morning
+            const Real = Date
+            function Pinned(...args) {
+              return args.length === 0 ? new Real(FIXED) : new Real(...args)
+            }
+            Pinned.prototype = Real.prototype
+            Pinned.now = () => FIXED
+            Pinned.parse = Real.parse
+            Pinned.UTC = Real.UTC
+            globalThis.Date = Pinned
+          })()`,
+        })
         // Capture a FIRST-TIME visitor, every time. Every page in this run
         // shares one profile, and the session-kind checks above PLAY sessions
         // — which writes real progress. The committed baselines had therefore
@@ -656,13 +676,51 @@ try {
         await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
         await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
-        const leftovers = await page.evaluate('localStorage.length')
-        assert(
-          leftovers === 0,
-          `the capture is not a first-time visitor — ${leftovers} key(s) survived the clear`,
+        // Wait for CONDITIONS, then settle. A fixed sleep was the whole of it
+        // before, and under load a concept page's interactive figures had not
+        // hydrated when the shutter fired — a figure-sized hole, 9.54% of the
+        // frame, indistinguishable from a design regression. This is the same
+        // "duration instead of condition" mistake the smoke suite was rebuilt
+        // to remove; it had simply survived here (CON-VER-008).
+        await page.waitFor(
+          `document.querySelectorAll('.viz-slot:not(.widget-mounted)').length === 0`,
+          { label: `${shot.name} figures hydrated` },
         )
-        // Settle entry animations so the capture is comparable run to run.
-        await page.evaluate(`new Promise(r => setTimeout(r, 600))`)
+        // Webfonts: style.css imports Google Fonts at runtime, and a capture
+        // taken on the fallback face differs from one taken on Source Serif
+        // everywhere there is text.
+        await page.evaluate(`document.fonts ? document.fonts.ready.then(() => true) : true`)
+        // Then a short settle for entry animations, which reduced motion has
+        // already collapsed to nothing.
+        await page.evaluate(`new Promise(r => setTimeout(r, 400))`)
+        // Checked HERE, immediately before the shutter, not before the settle:
+        // the earlier placement could not see anything written during those
+        // 600ms, and an `halls` capture carrying a resume card drifted 8.55%
+        // while the assertion reported a clean store.
+        const state = JSON.parse(await page.evaluate(`JSON.stringify({
+          keys: Object.keys(localStorage),
+          resume: !!document.querySelector('.resume-card'),
+          // The aurora is a LIVE WebGL canvas. mountAurora returns null under
+          // reduced motion and the CSS hides the element, so one on screen
+          // here means the emulation did not take — and an animating canvas
+          // in a fingerprint is drift by construction.
+          aurora: !!document.querySelector('.aurora-canvas'),
+          motion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+          unhydrated: document.querySelectorAll('.viz-slot:not(.widget-mounted)').length,
+          fonts: document.fonts ? document.fonts.status : 'loaded',
+        })`))
+        const wrong = [
+          state.keys.length ? `storage kept [${state.keys.join(', ')}]` : '',
+          state.resume ? 'a resume card is on screen' : '',
+          state.aurora ? 'a live aurora canvas is on screen' : '',
+          state.motion ? '' : 'reduced-motion emulation did not take',
+          state.unhydrated ? `${state.unhydrated} figure(s) had not hydrated` : '',
+          state.fonts === 'loaded' ? '' : `fonts are ${state.fonts}`,
+        ].filter(Boolean)
+        // Named causes, not a bare "it differs". An intermittent screenshot
+        // failure that says only "8.55% changed" sends the next reader after
+        // a design regression that is not there (CON-VER-005).
+        assert(!wrong.length, `the capture is not a clean first visit — ${wrong.join('; ')}`)
         const png = await page.screenshot()
         // Full capture for humans/CI artifacts (gitignored); fingerprint for the gate.
         writeFileSync(join(BASELINES, `${shot.name}.current.png`), png)

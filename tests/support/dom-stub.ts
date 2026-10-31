@@ -396,7 +396,12 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
     g.requestAnimationFrame = (fn: (t: number) => void): number => {
       if (frames >= FRAME_BUDGET) return 0
       frames += 1
-      const id = setTimeout(() => fn(frames * 16), 0)
+      // performance.now(), NOT a frame counter. The real rAF timestamp shares
+      // a clock with performance.now(), and code that measures elapsed time
+      // by subtracting one from the other — fx.ts's countUp does — got a
+      // huge negative number here and rendered nonsense. A stub that lies
+      // about an API's contract tests the lie.
+      const id = setTimeout(() => fn(performance.now()), 0)
       if (typeof id === 'object' && id && 'unref' in id) (id as { unref: () => void }).unref()
       return frames
     }

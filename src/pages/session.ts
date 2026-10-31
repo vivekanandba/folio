@@ -1,5 +1,6 @@
 import { liveAnnounce } from '../a11y'
 import { loadHalls, loadPackMeta, loadSession } from '../content'
+import { loadingLine } from '../curator'
 import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { acquisitionCard, ceremony } from '../fx'
@@ -14,7 +15,7 @@ export async function renderSession(
   packId: string,
   sessionId: string,
 ): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('session')]))
   const packPath = await resolvePackPath(packId)
   const meta = await loadPackMeta(packPath)
 

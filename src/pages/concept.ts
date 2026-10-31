@@ -1,4 +1,5 @@
 import { loadCatalog, loadConcept, loadPackMeta, loadSession } from '../content'
+import { loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { getConceptState, getSessionResult, markConceptLearned } from '../progress'
 import { href } from '../router'
@@ -21,7 +22,7 @@ export async function renderConcept(
   packId: string,
   conceptId: string,
 ): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('concept')]))
   const packPath = await resolvePackPath(packId)
   const [catalog, meta, md] = await Promise.all([
     loadCatalog(),
