@@ -111,8 +111,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          # Everything, not just *.lcov: the e2e log lives here too, and when
-          # coverage:gate fails inside CI that log is the only account of
-          # WHICH check failed. The runner workspace is discarded after.
+          # include-hidden-files, because `.coverage` starts with a dot and
+          # upload-artifact@v4 skips hidden paths by DEFAULT. This step has
+          # been uploading nothing since it was written — the job log says
+          # "No files were found with the provided path" — and
+          # if-no-files-found: warn kept it green while it did. Widening the
+          # glob from *.lcov did not help; the dot was the problem.
+          #
+          # The e2e log is not the primary route anyway: coverage:all cats it
+          # on failure, so a red run explains itself in the job log. This is
+          # the artifact copy, for reading afterwards.
           path: .coverage/*
+          include-hidden-files: true
           if-no-files-found: warn

@@ -220,7 +220,7 @@ test('a sequence can be reordered from the keyboard, and scored', () => {
 
 /* ------------------------------------------------------------ blueprint --- */
 
-test('a blueprint can be wired, cut and inspected to a pass', async () => {
+test('a blueprint wired to its spec inspects to a pass, and completes', async () => {
   // The whole wiring interaction — arming a node, joining two, drawing the
   // wires, listing them, cutting one, and the all-rules-pass branch that ends
   // the session — had never run. Two things kept it out of reach: nothing
@@ -242,14 +242,31 @@ test('a blueprint can be wired, cut and inspected to a pass', async () => {
   // Place every part the board offers, so each rule has endpoints to join.
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
 
-  // Wire exactly what the rules ask for: tap one component, then another.
-  for (const rule of session.rules) {
-    const a = byName(session.parts.find((p) => p.id === rule.a)?.label ?? '')
-    const b = byName(session.parts.find((p) => p.id === rule.b)?.label ?? '')
-    if (!a || !b) continue
-    a.click()
-    b.click()
+  // Wire what the rules ASK FOR, and nothing they forbid.
+  //
+  // An earlier version looped over every rule, which wired the `noDirect`
+  // pairs too — so the board was deliberately built wrong, never passed, and
+  // `onComplete` was never called. The test passed anyway, because it only
+  // checked that each rule had been JUDGED. It claimed to cover the
+  // all-rules-pass branch while never reaching it, and the task file repeated
+  // the claim.
+  //
+  // And the lookup failed OPEN: a rule with no `a`/`b` (pathExists,
+  // survivesKill, minCount, maxCount) resolved through `byName('')`, and
+  // `startsWith('')` matches the FIRST label unconditionally — so those rules
+  // silently wired an arbitrary node to itself.
+  const wireUp = (): void => {
+    for (const rule of session.rules) {
+      if (rule.rule !== 'connected') continue
+      if (rule.a == null || rule.b == null) continue
+      const a = byName(session.parts.find((p) => p.id === rule.a)!.label)
+      const b = byName(session.parts.find((p) => p.id === rule.b)!.label)
+      if (!a || !b) continue
+      a.click()
+      b.click()
+    }
   }
+  wireUp()
   // drawWires runs on an animation frame, and renderAll() requests one on
   // every click — so by now the stub's three-frame budget is long spent and
   // the wire layer has never been drawn. Give it a frame back and let it run.
@@ -272,16 +289,44 @@ test('a blueprint can be wired, cut and inspected to a pass', async () => {
     'and drawWires put lines into it',
   )
 
-  // Cutting is the inverse, and the list is how a learner reaches it.
-  const before = wires.length
-  wires[0].click()
-  assert.equal(
-    node(host).querySelectorAll('.bp-wire-chip').length,
-    before - 1,
-    'cutting a wire removes exactly that one',
-  )
+  const inspect = () => node(host).querySelectorAll('button').find((b) => /inspect/i.test(b.textContent))
+  assert.ok(inspect(), 'the board can be inspected')
+  inspect()!.click()
 
-  // Arming a node and tapping it again disarms rather than wiring it to
+  // Every rule the session asked for is satisfied, so inspecting FINISHES it.
+  assert.equal(scores.length, 1, 'a board that meets every rule completes the session')
+  assert.equal(scores[0][0], session.rules.length, 'scoring every rule')
+  assert.equal(scores[0][1], session.rules.length, 'out of every rule')
+  assert.ok(node(host).querySelector('.score-hero'), 'and the result screen carries the tally')
+})
+
+test('a wire can be cut, and a component armed and let go', () => {
+  // Separate from the pass test on purpose: wiring is a TOGGLE, so a loop
+  // that re-wires every required pair would REMOVE the ones already there.
+  // Cutting inside that test therefore left the board unfixable, and an
+  // earlier version inspected it in that state, never passed, and still
+  // called itself "inspected to a pass".
+  const mod = getModule('blueprint')!
+  const session = firstOfKind('blueprint') as {
+    parts: { id: string; label: string }[]
+    rules: { rule: string; a?: string; b?: string }[]
+  }
+  const host = root()
+  mod.mount(host, session as never, () => {})
+  for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
+
+  const labels = () => node(host).querySelectorAll('.bp-node-label')
+  const byName = (n: string) => labels().find((b) => b.textContent.trim().startsWith(n))
+  const joined = session.rules.find((r) => r.rule === 'connected' && r.a && r.b)!
+  byName(session.parts.find((p) => p.id === joined.a)!.label)!.click()
+  byName(session.parts.find((p) => p.id === joined.b)!.label)!.click()
+
+  const wires = () => node(host).querySelectorAll('.bp-wire-chip')
+  assert.equal(wires().length, 1, 'wiring two components lists one wire')
+  wires()[0].click()
+  assert.equal(wires().length, 0, 'cutting it removes exactly that one')
+
+  // Arming a node and tapping it again lets go, rather than wiring it to
   // itself. Re-queried after every click: renderAll() rebuilds the board, so
   // the element clicked a moment ago is detached and its attributes are a
   // snapshot of a DOM nobody is looking at.
@@ -289,17 +334,36 @@ test('a blueprint can be wired, cut and inspected to a pass', async () => {
   assert.equal(labels()[0].getAttribute('aria-pressed'), 'true', 'tapping a component arms it')
   labels()[0].click()
   assert.equal(labels()[0].getAttribute('aria-pressed'), 'false', 'tapping it again lets go')
+})
 
-  // Inspect is formative and re-pressable; it must not complete a wrong board.
-  const inspect = node(host).querySelectorAll('button').find((b) => /inspect/i.test(b.textContent))
-  assert.ok(inspect, 'the board can be inspected')
-  inspect!.click()
+test('inspecting a board that breaks a rule reports it, and does NOT finish', () => {
+  // Inspect is formative: it is pressed repeatedly WHILE wiring. A board that
+  // breaks a rule must come back judged and still editable, not completed.
+  const mod = getModule('blueprint')!
+  const session = firstOfKind('blueprint') as {
+    parts: { id: string; label: string }[]
+    rules: { rule: string; a?: string; b?: string; label: string }[]
+  }
+  const forbidden = session.rules.find((r) => r.rule === 'noDirect' && r.a && r.b)
+  assert.ok(forbidden, 'this board forbids at least one direct connection')
+
+  const host = root()
+  const scores: unknown[] = []
+  mod.mount(host, session as never, () => scores.push(1))
+  for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
+
+  // Wire exactly the pair the rules say must not be wired.
+  const labels = () => node(host).querySelectorAll('.bp-node-label')
+  const byName = (n: string) => labels().find((b) => b.textContent.trim().startsWith(n))
+  byName(session.parts.find((p) => p.id === forbidden!.a)!.label)!.click()
+  byName(session.parts.find((p) => p.id === forbidden!.b)!.label)!.click()
+
+  node(host).querySelectorAll('button').find((b) => /inspect/i.test(b.textContent))!.click()
+
   const verdicts = node(host).querySelectorAll('.lab-goal-val')
-  assert.equal(verdicts.length, session.rules.length, 'and reports a verdict for every rule')
-  assert.ok(
-    verdicts.every((v) => /holds|broken/.test(v.textContent)),
-    'each one judged rather than left "uninspected"',
-  )
+  assert.equal(verdicts.length, session.rules.length, 'every rule is judged')
+  assert.ok(verdicts.some((v) => /broken/.test(v.textContent)), 'and the broken one says so')
+  assert.deepEqual(scores, [], 'a board that breaks a rule is not completed')
 })
 
 test('a blueprint part can be removed again, taking its wires with it', () => {
