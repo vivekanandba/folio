@@ -237,6 +237,41 @@ test('a corrupt ledger renders oddly but never costs a save', () => {
   )
 })
 
+test('a pack id this version cannot describe is skipped, not thrown', () => {
+  // satisfied() runs inside award(), BEFORE persist(). Nothing in the content
+  // linter constrains pack-id shape, so the day someone authors `Pack 1` a
+  // throw here would take down the completion handler and lose the session
+  // the learner had just finished — in every pack, not only that one.
+  const odd = [
+    { packId: 'has space', title: 'Spaced', sessionIds: ['s1'] },
+    { packId: '../escape', title: 'Escape', sessionIds: ['s1'] },
+    { packId: '', title: 'Nameless', sessionIds: ['s1'] },
+  ]
+  const done = store({
+    sessions: {
+      'has space::s1': { packId: 'has space', sessionId: 's1', kind: 'quiz', score: 1, maxScore: 1, completedAt: '2026-10-01T00:00:00.000Z' } as never,
+      '../escape::s1': { packId: '../escape', sessionId: 's1', kind: 'quiz', score: 1, maxScore: 1, completedAt: '2026-10-01T00:00:00.000Z' } as never,
+      '::s1': { packId: '', sessionId: 's1', kind: 'quiz', score: 1, maxScore: 1, completedAt: '2026-10-01T00:00:00.000Z' } as never,
+    },
+  })
+  assert.doesNotThrow(() => satisfied(done, { halls: odd }), 'an odd pack id must not cost a save')
+  const found = ids(satisfied(done, { halls: odd }))
+  assert.ok(found.includes('first-exhibit'), 'the rest of the rules still run')
+  assert.deepEqual(
+    found.filter((i) => i.startsWith('hall-complete')),
+    [],
+    'and the halls it cannot name are simply left out',
+  )
+
+  // An ordinary id with an underscore or a dot is still a hall: the shape
+  // check exists to reject crafted LEDGER keys, not to police content.
+  const ordinary = [{ packId: 'ai_sdd.2026', title: 'SDD', sessionIds: ['s1'] }]
+  const played = store({
+    sessions: { 'ai_sdd.2026::s1': { packId: 'ai_sdd.2026', sessionId: 's1', kind: 'quiz', score: 1, maxScore: 1, completedAt: '2026-10-01T00:00:00.000Z' } as never },
+  })
+  assert.ok(ids(satisfied(played, { halls: ordinary })).includes('hall-complete:ai_sdd.2026'))
+})
+
 test('the id list is exhaustive over what detection can produce', () => {
   // A new rule without an entry here is a plaque the report cannot describe.
   const everything = satisfied(

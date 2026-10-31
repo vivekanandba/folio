@@ -131,8 +131,10 @@ export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
     // A pack id, or nothing. `hall-complete:` alone would hang a nameless
     // plaque reading " — complete" on the wall, and an arbitrary suffix would
     // put learner-supplied text in a heading. Ids reach here from a ledger
-    // that can be hand-edited, so the shape is checked like any other.
-    if (!/^[a-z0-9][a-z0-9-]*$/i.test(packId)) return null
+    // that can be hand-edited, so the shape is checked like any other —
+    // permissively, because a real pack id is content, not code: anything
+    // without whitespace or a path separator is plausibly somebody's hall.
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(packId)) return null
     const hall = ctx.halls.find((h) => h.packId === packId)
     return {
       id,
@@ -153,7 +155,14 @@ export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
   return tier ? { id, title: tier[1], note: tier[2] } : null
 }
 
-/** `describe` for an id known to exist — keeps `satisfied` free of null checks. */
+/**
+ * `describe` for an id this module built itself, which is a programming error
+ * if it has no words. Hall ids are NOT resolved through here — their suffix
+ * comes from pack metadata, so an id this version will not describe is a
+ * content problem, and satisfied() skips those rather than throwing. It runs
+ * inside award(), before persist(): a throw would take down the completion
+ * handler and lose the session the learner has just finished.
+ */
 function plaque(id: string, ctx: MilestoneCtx): Milestone {
   const m = describe(id, ctx)
   if (!m) throw new Error(`milestone ${id} has no inscription`)
@@ -184,9 +193,12 @@ export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[
   const rooms = ctx.halls.filter((hall) => hall.sessionIds.length > 0)
 
   for (const hall of rooms) {
-    if (hall.sessionIds.every((id) => store.sessions?.[`${hall.packId}::${id}`])) {
-      ids.push(`hall-complete:${hall.packId}`)
-    }
+    const id = `hall-complete:${hall.packId}`
+    // Skipped, never thrown: a pack id this version will not describe is a
+    // content question, and nothing in the linter constrains pack-id shape.
+    // The cost of being wrong here is the learner's save.
+    if (!describe(id, ctx)) continue
+    if (hall.sessionIds.every((s) => store.sessions?.[`${hall.packId}::${s}`])) ids.push(id)
   }
 
   if (

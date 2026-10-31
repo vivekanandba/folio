@@ -1,9 +1,10 @@
+import { liveAnnounce } from '../a11y'
 import { loadHalls, loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { acquisitionCard, ceremony } from '../fx'
 import { awardMilestones, saveSessionResult } from '../progress'
-import type { Hall } from '../milestones'
+import type { Hall, Milestone } from '../milestones'
 import { href } from '../router'
 import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
 import { resolvePackPath } from './pack'
@@ -53,17 +54,23 @@ export async function renderSession(
   )
   shell.append(mount)
 
-  // Started here, never awaited here: loadHalls() fetches the catalog and then
-  // every pack's metadata, and awaiting it would leave the exhibit blank until
-  // all of them settled — on a page that used to become interactive as soon as
-  // its one session JSON arrived.
-  //
-  // It is also not raced. An earlier draft kept a mutable `halls` and read
-  // whatever had arrived, which on a cold visit meant a short session finishing
-  // first and the hall-shaped plaques being missed on the very save that earned
-  // them. Progress is saved the instant the learner finishes; the plaques that
-  // need the whole catalog are awarded a beat later, when it is actually known.
-  const hallsReady = loadHalls().catch((): Hall[] => [])
+
+  /** Hang plaques on the wall, and say so out loud. */
+  const showPlaques = (items: Milestone[]): void => {
+    const card = acquisitionCard(items)
+    if (!card) return
+    cue('milestone')
+    shell.append(card)
+    // A live region that is inserted ALREADY holding its content is not
+    // reliably announced — the region has to exist before the mutation. The
+    // app keeps one for exactly this, so the plaque reaches a screen reader
+    // rather than being a purely visual reward.
+    liveAnnounce(
+      items.length === 1
+        ? `Plaque earned: ${items[0].title}`
+        : `${items.length} plaques earned: ${items.map((m) => m.title).join(', ')}`,
+    )
+  }
 
   let saved = false
   mountSession(mount, session, (score, maxScore) => {
@@ -87,27 +94,31 @@ export async function renderSession(
     // The room celebrates: bloom + bursts + a brass stamp on the exhibit.
     const stageEl = shell.querySelector<HTMLElement>('.stage')
     if (stageEl) ceremony(stageEl, { perfect })
-    // The plaque goes up once the halls are known, so a hall completed by THIS
-    // session is on it. cue() queues the shimmer behind the finishing chord,
-    // so the two moments read as a sequence rather than a pile-up.
-    void hallsReady.then((halls) => {
-      // Only if the learner is still here. Otherwise the shimmer would play
-      // over whatever page they navigated to and the card would be appended
-      // to a shell nobody can see — and feedback.ts's own rule is that a
-      // learner who has left an exhibit is not sung to by it. cancelPending()
-      // cannot help: it drops cues already queued, and this would be a fresh
-      // one made after the navigation.
-      //
-      // Skipping the award, not just the display, is deliberate:
-      // awardMilestones() RECORDS what it hands out, so granting plaques to an
-      // empty room would spend them — detect() never offers a recorded plaque
-      // again. Left ungranted, they are earned on the next save instead.
-      if (!shell.isConnected) return
-      const plaques = acquisitionCard([...earned, ...awardMilestones({ halls })])
-      if (!plaques) return
-      cue('milestone')
-      shell.append(plaques)
-    })
+    // What was earned without hall knowledge is shown NOW. saveSessionResult
+    // has already recorded it, so deferring it behind a network round-trip
+    // risked spending a plaque the learner never saw — detect() never offers a
+    // recorded one again, and it would only ever turn up on the shelf.
+    showPlaques(earned)
+
+    // The hall-shaped plaques need the whole catalog, which is fetched only
+    // now: at render it would have contended with the session's own assets on
+    // every visit, including the many that earn nothing.
+    void loadHalls()
+      .catch((): Hall[] => [])
+      .then((halls) => {
+        // Only if the learner is still here. Otherwise the shimmer would play
+        // over whatever page they navigated to and the card would go onto a
+        // shell nobody can see — and feedback.ts's own rule is that a learner
+        // who has left an exhibit is not sung to by it. cancelPending() cannot
+        // help: this would be a FRESH cue made after the navigation.
+        //
+        // Skipping the award, not just the display, is the load-bearing half:
+        // awardMilestones() RECORDS what it hands out, so granting into an
+        // empty room would spend the plaque. Left ungranted it is earned on
+        // the next save, which is why detection is satisfied-minus-recorded.
+        if (!shell.isConnected) return
+        showPlaques(awardMilestones({ halls }))
+      })
     shell.append(
       el('div', { class: 'saved-note plaque-card' }, [
         el('span', { class: 'plaque' }, ['Progress saved']),
