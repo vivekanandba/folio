@@ -58,10 +58,14 @@
 - [x] 16. `ceremony()` called from `pages/review.ts` instead of its hand-copied
        stamp; `countUp()` on `.score-hero`; streak tile alive at ≥3 days;
        focus-visible choreography; the saved-note becomes a real plaque
-- [x] 17. Recapture the four baselines in the pinned container; report drift —
-       only `floor.png` changed (16.43%, the greeting); the other three came
-       back byte-identical, which is the evidence that the greeting is the
-       whole of the visual delta
+- [x] 17. Recapture the four baselines in the pinned container; report drift.
+       ALL FOUR were re-recorded over this PR: `floor.png` for the greeting
+       (16.43%), and `halls`/`pack-math`/`concept-matrices` when the capture
+       scroll was pinned — which is itself the evidence that those three had
+       been photographed 68px down. (An earlier version of this line claimed
+       only `floor.png` changed. It was true of the first commit and is struck
+       here rather than only rebutted at 18h: a reader who stops at task 17
+       should not carry away a finding the same file later retracts.)
 - [x] 18. Mutation-check; gates; ship
 
 ### Found while shipping PR 3 — the capture was racing the page

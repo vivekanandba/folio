@@ -82,6 +82,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
+    // Everything this screen wants said, gathered and spoken ONCE. The live
+    // region holds one message at a time.
+    const spoken: string[] = [`Review complete. ${reviewed} concept${reviewed === 1 ? '' : 's'} reviewed.`]
     const score = el('p', { class: 'score-hero' }, [String(reviewed)])
     const card = el('div', { class: 'result-card pop-in review-summary' }, [
       el('h2', {}, ['Review complete']),
@@ -95,16 +98,17 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // not stamped — the stamp is the loudest claim on the card, and sounding
       // nothing while stamping "cleared" would leave the two disagreeing.
       // role="status" so a screen reader is told as much (CON-DATA-001).
-      // liveAnnounce ONLY, and the note is plain text. A region inserted
-      // already populated is not reliably announced — but where it IS
-      // honoured, carrying role="status" as well means the sentence is read
-      // out twice. One channel, the one that works everywhere.
+      // The note is plain text and the announcement is COMPOSED below, not
+      // made here. a11y.ts clears the one shared region and re-fills it on a
+      // 30ms timer, so two liveAnnounce calls in the same synchronous pass
+      // leave only the second — and an empty round that also earns a plaque
+      // would lose exactly this sentence to the plaque's.
       card.append(
         el('div', { class: 'muted small' }, [
           'Nothing was due that had material to review.',
         ]),
       )
-      liveAnnounce('Review complete. Nothing was due that had material to review.')
+      spoken.push('Nothing was due that had material to review.')
     }
     const cta = el('p', {}, [
       el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum']),
@@ -137,12 +141,13 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // so the shared one carries it — otherwise a plaque earned in the daily
       // review is a purely visual reward, while the same plaque on a session
       // page is announced.
-      liveAnnounce(
+      spoken.push(
         earned.length === 1
           ? `Plaque earned: ${earned[0].title}`
           : `${earned.length} plaques earned: ${earned.map((m) => m.title).join(', ')}`,
       )
     }
+    liveAnnounce(spoken.join(' '))
   }
 
   const runNext = async () => {
