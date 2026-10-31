@@ -53,7 +53,11 @@ export function mountFlashcards(
           GRADES.map((g) => {
             const b = el('button', { class: `grade-btn ${g.cls}`, type: 'button' }, [g.label])
             b.addEventListener('click', () => {
-              cue(g.value >= 0.75 ? 'correct' : 'wrong')
+              // Again (0.2) is a miss; Good and Easy keep the run. Hard (0.5)
+              // means recalled, just not easily — a neutral tick, because
+              // losing a run of six for remembering something slowly is a
+              // punishment the learner did not earn.
+              cue(g.value <= 0.2 ? 'wrong' : g.value >= 0.75 ? 'correct' : 'reveal')
               grades.push(g.value)
               index += 1
               render()

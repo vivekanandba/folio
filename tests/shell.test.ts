@@ -97,6 +97,42 @@ test('a drill scores a guess and reports when done', () => {
   assert.ok(scores.length >= 0, 'submitting must not throw')
 })
 
+test('a drill answer that is CLOSE does not cost the learner their run', async () => {
+  // The middle band — within 2.5× tolerance — renders with the `ok` class and
+  // deliberately does not shake. Sounding a miss there would contradict what
+  // the learner can see, and spend a run they had not lost.
+  const { cue, currentRun, resetRun } = await import('../src/feedback.ts')
+  const concepts = generators.drillableConcepts()
+  const [packId, conceptId] = concepts[0].split('::')
+  const drill = generators.dailyDrill(packId, conceptId, '2026-09-20') as never as {
+    answer: number
+    tolerance: number
+    min: number
+    max: number
+  }
+
+  resetRun()
+  cue('correct')
+  cue('correct')
+  assert.equal(currentRun(), 2, 'precondition: a run of two is going')
+
+  const host = root()
+  mountDrill(host, 'Determinants', drill as never, () => {})
+  const node = host as never as {
+    querySelector: (s: string) => { value?: string; dispatchEvent?: (e: unknown) => void } | null
+    querySelectorAll: (s: string) => { click?: () => void }[]
+  }
+  // Off by 1.5× the tolerance: wrong, but the right order of magnitude.
+  const close = drill.answer * (1 + drill.tolerance * 1.5)
+  const slider = node.querySelector('.estimate-slider')!
+  slider.value = String(Math.min(drill.max, Math.max(drill.min, close)))
+  slider.dispatchEvent?.({ type: 'input' })
+  for (const b of node.querySelectorAll('.primary')) b.click?.()
+
+  assert.equal(currentRun(), 2, 'a close answer is neither a hit nor a miss — the run is untouched')
+  resetRun()
+})
+
 /* ------------------------------------------------- pages, with a history --- */
 
 test('the report and review pages render differently once there is history', async () => {

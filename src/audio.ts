@@ -44,7 +44,11 @@ function contextCtor(): Ctor | null {
 }
 
 function context(): AudioContext | null {
-  if (ctx) return ctx
+  // A closed context never works again. iOS tears one down when an audio
+  // session is interrupted, so caching it blindly would make every later cue
+  // a silent no-op for the life of the page, with no way back but a reload.
+  if (ctx && ctx.state !== 'closed') return ctx
+  ctx = null
   const Ctor = contextCtor()
   if (!Ctor) return null
   try {
@@ -114,6 +118,9 @@ export function play(notes: Note[]): void {
       osc.stop(start + note.dur)
     }
   } catch {
-    /* a cue is never worth failing a session over */
+    // A cue is never worth failing a session over — but a context that has
+    // started refusing nodes is not going to recover, so drop it and let the
+    // next cue build a fresh one.
+    ctx = null
   }
 }

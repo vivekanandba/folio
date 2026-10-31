@@ -60,6 +60,15 @@ export function resetRun(): void {
  */
 let sessionChoice: boolean | null = null
 
+/**
+ * Whether storage may be believed over this session's own choice. It may not,
+ * once a write has failed to land: a localStorage that READS fine but refuses
+ * to WRITE — a quota-exceeded profile, and folio writes progress to the same
+ * store — would otherwise keep handing back the stale 'on' while the learner
+ * presses Mute, and the button would repaint itself to "Sound on" each time.
+ */
+let storageAuthoritative = true
+
 /** `null` when storage holds no answer, or cannot be read at all. */
 function storedChoice(): boolean | null {
   try {
@@ -71,20 +80,30 @@ function storedChoice(): boolean | null {
 }
 
 /**
- * Is the learner listening? Storage wins when it has an answer — so a change
- * made in another tab is honoured — and this session's own choice is the
- * fallback. On unless someone has said otherwise.
+ * Is the learner listening? Storage wins when it has an answer and has proved
+ * writable — so a change made in another tab is honoured — and this session's
+ * own choice is the fallback. On unless someone has said otherwise.
  */
 export function feedbackEnabled(): boolean {
-  return storedChoice() ?? sessionChoice ?? true
+  if (storageAuthoritative) {
+    const stored = storedChoice()
+    if (stored !== null) return stored
+  }
+  return sessionChoice ?? storedChoice() ?? true
 }
 
 export function setFeedbackEnabled(on: boolean): void {
   sessionChoice = on
+  const want = on ? 'on' : 'off'
   try {
-    localStorage.setItem(KEY, on ? 'on' : 'off')
+    localStorage.setItem(KEY, want)
+    // Read it back rather than trusting that setItem not throwing means it
+    // stored anything (CON-VER-003). Some profiles accept the call and drop
+    // the value; a mute that silently un-mutes itself is worse than one that
+    // simply does not persist.
+    storageAuthoritative = localStorage.getItem(KEY) === want
   } catch {
-    /* unwritable storage costs persistence, never the mute itself */
+    storageAuthoritative = false
   }
   // Muting releases the audio device rather than leaving it open and idle.
   if (!on) closeAudio()

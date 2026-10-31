@@ -241,6 +241,94 @@ test('a platform with no audio and no vibration is silent, not broken', () => {
   }
 })
 
+test('a mute that cannot be saved is still a mute', () => {
+  fresh() // leaves 'on' in storage, which is the whole trap
+  const realStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  // The nastier half of a broken store: reads work, writes do not. A quota
+  // -exceeded profile looks exactly like this — and folio writes progress to
+  // the same store, so it is reachable. Naively trusting storage here means
+  // the stale 'on' keeps winning and the mute button does nothing at all.
+  const frozen = new Map<string, string>([['folio-feedback', 'on']])
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: {
+      getItem: (k: string) => frozen.get(k) ?? null,
+      setItem: () => { throw new Error('QuotaExceededError') },
+      removeItem: () => {},
+    },
+    configurable: true,
+    writable: true,
+  })
+  try {
+    assert.equal(feedbackEnabled(), true, 'precondition: storage says the museum is audible')
+    setFeedbackEnabled(false)
+    assert.equal(feedbackEnabled(), false, 'the mute must win over a stale value it could not overwrite')
+    g.__resetAudio()
+    g.__resetVibrate()
+    cue('correct')
+    assert.deepEqual(g.__audioLog, [], 'no tone after an unsaveable mute')
+    assert.deepEqual(g.__vibrateLog, [], 'no vibration after an unsaveable mute')
+  } finally {
+    if (realStorage) Object.defineProperty(globalThis, 'localStorage', realStorage)
+    fresh()
+  }
+})
+
+test('a storage that accepts writes and drops them is not believed', () => {
+  fresh()
+  const realStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  // setItem that neither throws nor stores. Reading the value back is the
+  // only way to tell this apart from a working store (CON-VER-003).
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: {
+      getItem: (k: string) => (k === 'folio-feedback' ? 'on' : null),
+      setItem: () => {},
+      removeItem: () => {},
+    },
+    configurable: true,
+    writable: true,
+  })
+  try {
+    setFeedbackEnabled(false)
+    assert.equal(feedbackEnabled(), false, 'a write that silently vanished must not re-enable sound')
+  } finally {
+    if (realStorage) Object.defineProperty(globalThis, 'localStorage', realStorage)
+    fresh()
+  }
+})
+
+test('a closed audio context is replaced, not kept forever', () => {
+  fresh()
+  const realAudio = g.AudioContext
+  let built = 0
+  try {
+    g.AudioContext = class {
+      state = 'running'
+      currentTime = 0
+      destination = {}
+      constructor() { built += 1 }
+      resume(): void {}
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown {
+        // The platform tears the audio session down underneath the page —
+        // iOS does this on an interruption — without telling anyone.
+        this.state = 'closed'
+        return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} }
+      }
+      close(): void {}
+    }
+    cue('correct')
+    assert.equal(built, 1, 'precondition: one context built')
+
+    g.__resetAudio()
+    cue('correct')
+    assert.equal(built, 2, 'a context that died must be rebuilt, not cached as a silent no-op')
+    assert.equal(g.__audioLog.length, 0, 'the fake schedules nothing — the point is that it TRIED again')
+  } finally {
+    g.AudioContext = realAudio
+    fresh()
+  }
+})
+
 test('an audio device that misbehaves is still only silence', () => {
   fresh()
   const realAudio = g.AudioContext
@@ -266,7 +354,19 @@ test('an audio device that misbehaves is still only silence', () => {
     })
     assert.doesNotThrow(() => cue('complete', { perfect: true }), 'a failed schedule must not reach the session')
 
-    // 3. ...and a context that refuses to close does not break muting.
+    // 3. A context that works but refuses to CLOSE must not break muting.
+    //    It has to schedule successfully first, or there would be no live
+    //    context left for the mute to try to close.
+    install(class {
+      state = 'running'
+      currentTime = 0
+      destination = {}
+      resume(): void {}
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown { return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} } }
+      close(): void { throw new Error('InvalidStateError') }
+    })
+    cue('correct')
     assert.doesNotThrow(() => setFeedbackEnabled(false), 'a context that will not close must not break the mute')
 
     // 4. A context that REJECTS rather than throws. Chrome does exactly this:

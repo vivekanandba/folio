@@ -48,7 +48,11 @@ export function mountDrill(
 
     const relErr = Math.abs(guess - drill.answer) / Math.max(Math.abs(drill.answer), 1e-9)
     const score = relErr <= drill.tolerance ? 1 : relErr <= drill.tolerance * 2.5 ? 0.4 : 0
-    cue(score === 1 ? 'correct' : 'wrong')
+    // Three bands, three voices. The middle one — "Close, right order of
+    // magnitude" — renders with the `ok` class and deliberately does NOT
+    // shake, so sounding a miss there would tell the learner the opposite of
+    // what they can see, and would spend a run they had not lost.
+    cue(score === 1 ? 'correct' : score === 0 ? 'wrong' : 'reveal')
     if (score === 1) burst(lock)
     else if (score === 0) shake(lock)
 

@@ -46,6 +46,14 @@ soundBtn.addEventListener('click', () => {
   if (next) cue('reveal')
 })
 paintSoundBtn()
+// feedbackEnabled() reads storage first so a change made in another tab is
+// honoured. Without this listener the OTHER tab's button would keep showing
+// a speaker — and telling a screen reader aria-pressed="true" — while the
+// museum was in fact silent. A control that reports the opposite of the
+// truth is worse than one that does not update.
+window.addEventListener('storage', (e) => {
+  if (e.key === null || e.key === 'folio-feedback') paintSoundBtn()
+})
 
 const skipLink = el('a', { class: 'skip-link', href: '#main' }, ['Skip to content'])
 const liveRegion = el('div', { class: 'sr-only', id: 'sr-status', 'aria-live': 'polite', role: 'status' })

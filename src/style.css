@@ -2156,12 +2156,13 @@ input[type='range'] {
 }
 .topbar-sound:hover { border-color: var(--accent); color: var(--ink); }
 .topbar-sound:active { transform: scale(0.94); }
-/* Muted reads as dimmed and outlined, so the state is legible without colour
-   alone carrying it (the icon changes too). --muted, not --line: --line is
-   exempted by tools/contrast.py as a decorative hairline (1.25:1), and a
-   glyph drawn in it vanishes wherever the speaker renders as text rather
-   than as a colour emoji. */
-.topbar-sound.is-muted { color: var(--muted); border-style: dashed; }
+/* Muted is carried by the GLYPH (speaker → crossed speaker) and by the border
+   going dashed — not by colour. Colour would be the obvious lever and is the
+   wrong one here twice over: --line, the dimmer token, is exempted by
+   tools/contrast.py as a decorative hairline at 1.25:1 and would make the
+   icon near-invisible; and 🔊/🔇 render as colour emoji on most platforms,
+   where `color` does nothing at all. The dashed ring works everywhere. */
+.topbar-sound.is-muted { border-style: dashed; border-color: var(--muted); }
 .theme-toggle {
   font: inherit;
   font-size: 1.05rem;

@@ -491,7 +491,25 @@ try {
       assert((await pressed()) === 'true', 'the control did not unmute')
       const back = await page.evaluate(`localStorage.getItem('folio-feedback')`)
       assert(back === 'on', `unmuting did not reach storage (got ${back})`)
-      return 'mute → real reload → unmute'
+
+      // Cross-tab. feedbackEnabled() reads storage first precisely so another
+      // tab's choice is honoured; without the storage listener this page would
+      // keep showing a speaker, and keep telling a screen reader
+      // aria-pressed="true", while the museum was in fact silent.
+      const other = await browser.newPage()
+      try {
+        await other.goto(`${origin}/index.html?tab=2#/`)
+        await other.waitFor('!!document.querySelector(".topbar-sound")', { label: 'second tab' })
+        await other.evaluate(`document.querySelector('.topbar-sound').click()`)
+        await page.evaluate(`new Promise(r => setTimeout(r, 300))`)
+        assert(
+          (await pressed()) === 'false',
+          'muting in another tab left this one claiming the sound is still on',
+        )
+      } finally {
+        await other.close()
+      }
+      return 'mute → real reload → unmute → cross-tab'
     } finally {
       await page.close()
     }
