@@ -242,6 +242,11 @@ export class StubElement extends StubNode {
           // that classList.add leaves the map stale — and neither is true
           // (CON-DATA-001). `id` needs nothing special.
           const name = m[1]
+          // Presence asks hasAttribute, because className is '' (not null) on
+          // an element that never had a class — so `[class]` would otherwise
+          // match EVERY element, where CSS matches only those carrying the
+          // attribute.
+          if (!m[2]) return this.hasAttribute(name)
           const actual = name === 'class' ? this.className : this.getAttribute(name)
           // Presence matches an EMPTY value, the way CSS does: an attribute
           // written as `data-x=""` is present. Note that properties set
@@ -249,7 +254,7 @@ export class StubElement extends StubNode {
           // never reach the attributes map at all, so `[hidden]` and `[open]`
           // match nothing here however they are written.
           if (actual == null) return false
-          return m[2] ? actual === m[3] : true
+          return actual === m[3]
         }
         return this.tagName.toLowerCase() === piece.toLowerCase()
       })

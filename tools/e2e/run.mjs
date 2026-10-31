@@ -667,6 +667,10 @@ try {
         return 'dispatched'
       })()`)
       assert(imported === 'dispatched', `the ledger offers no file input (${imported})`)
+      // The heaviest browser path in this suite — a synthetic download, a
+      // File read, a store rewrite and a reload — and the only new check that
+      // was not asking whether any of it threw.
+      await uncaughtErrors(page, 'while exporting and importing the ledger')
       // Poll for the WRITE, do not sleep past it. The handler awaits
       // file.text() before writing and report.ts then schedules a reload
       // 600ms later, so a fixed wait is squeezed between two timings it does
@@ -697,12 +701,31 @@ try {
       await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'floor canvas' })
       // The zoom controls are the pointer-free half of the floor, and a stub
       // with no layout can never drive the other half.
-      const clicked = await page.evaluate(`(() => {
-        let n = 0
-        for (const b of document.querySelectorAll('.floor-controls button')) { b.click(); n++ }
-        return n
-      })()`)
-      assert(clicked >= 3, `expected zoom in/out/fit, found ${clicked} control(s)`)
+      // Compare the CANVAS, not just the absence of a throw. `scale` lives in
+      // a closure and nothing in the DOM reflects it, so a zoom button that
+      // regressed to a no-op would leave a check named "the floor zooms"
+      // perfectly green. The drawn bitmap is what a learner actually sees.
+      const zoom = JSON.parse(await page.evaluate(`(async () => {
+        const canvas = document.querySelector('.floor-canvas')
+        const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+        const shot = () => canvas.toDataURL()
+        const buttons = [...document.querySelectorAll('.floor-controls button')]
+        const before = shot()
+        await frame()
+        buttons[0].click() // zoom in
+        await frame()
+        const zoomed = shot()
+        buttons[2].click() // fit
+        await frame()
+        const fitted = shot()
+        for (const b of buttons) b.click()
+        await frame()
+        return JSON.stringify({ n: buttons.length, zoomedChanged: zoomed !== before, fitChanged: fitted !== zoomed })
+      })()`))
+      assert(zoom.n >= 3, `expected zoom in/out/fit, found ${zoom.n} control(s)`)
+      assert(zoom.zoomedChanged, 'zooming in redrew nothing — the control is a no-op')
+      assert(zoom.fitChanged, 'fit redrew nothing after a zoom')
+      const clicked = zoom.n
       await uncaughtErrors(page, 'while working the floor controls')
 
       // And at phone width, where the floor re-lays-out around a single hall.

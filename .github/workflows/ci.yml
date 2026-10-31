@@ -123,4 +123,8 @@ jobs:
           # the artifact copy, for reading afterwards.
           path: .coverage/*
           include-hidden-files: true
-          if-no-files-found: warn
+          # error, not warn. `warn` is what kept this step green for weeks
+          # while it uploaded nothing — fixing the no-op and leaving the thing
+          # that hid it would invite the next one (CON-PROC-003). The sibling
+          # upload at the e2e job already uses error.
+          if-no-files-found: error

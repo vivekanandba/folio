@@ -220,6 +220,27 @@ test('a sequence can be reordered from the keyboard, and scored', () => {
 
 /* ------------------------------------------------------------ blueprint --- */
 
+interface BlueprintSpec {
+  parts: { id: string; label: string; fixed?: boolean; max?: number }[]
+  rules: { rule: string; a?: string; b?: string; label: string }[]
+}
+
+/**
+ * The first shipped blueprint whose every rule is satisfied by "place each
+ * part once, wire what `connected` asks for". That excludes boards needing
+ * minCount (more than one of a part) and leaves noDirect and pathExists,
+ * which hold automatically for such a board.
+ */
+function satisfiableBlueprint(): BlueprintSpec {
+  const found = sessionsOfKind('blueprint').find((d) => {
+    const spec = d as unknown as BlueprintSpec
+    if (spec.parts.some((p) => (p.max ?? 1) > 1)) return false
+    return spec.rules.every((r) => ['connected', 'noDirect', 'pathExists'].includes(r.rule))
+  })
+  assert.ok(found, 'no shipped blueprint is satisfiable by one of each part')
+  return found as unknown as BlueprintSpec
+}
+
 test('a blueprint wired to its spec inspects to a pass, and completes', async () => {
   // The whole wiring interaction — arming a node, joining two, drawing the
   // wires, listing them, cutting one, and the all-rules-pass branch that ends
@@ -227,10 +248,13 @@ test('a blueprint wired to its spec inspects to a pass, and completes', async ()
   // ever created an edge, and the stub could not match the `[data-uid="…"]`
   // selector drawWires uses to find a node's endpoints.
   const mod = getModule('blueprint')!
-  const session = firstOfKind('blueprint') as {
-    parts: { id: string; label: string; fixed?: boolean }[]
-    rules: { rule: string; a: string; b: string }[]
-  }
+  // A board this walk can actually satisfy: place each part once, wire the
+  // `connected` rules, wire nothing forbidden. `firstOfKind` would take
+  // whichever pack sorts first, and sysarch's fault-tolerant blueprint needs
+  // minCount 2/4/3 — so a content-only change that added a pack sorting
+  // earlier would fail this on "a board that meets every rule completes",
+  // pointing at the renderer instead of at the fixture.
+  const session = satisfiableBlueprint()
   const host = root()
   const scores: [number, number][] = []
   mod.mount(host, session as never, (s, m) => scores.push([s, m]))

@@ -299,14 +299,15 @@ test('the palette answers Home, End and a click on its backdrop', async () => {
 
   const key = (k: string) =>
     input.dispatchEvent({ type: 'keydown', key: k, preventDefault: () => {}, target: input })
-  key('End')
   const activeIndex = (): number =>
     rows().findIndex((r) => (r as unknown as { className: string }).className.includes('active'))
-  const atEnd = activeIndex()
+  key('End')
+  // The LAST row, BY INDEX — not merely "different from where Home lands".
+  // activeIndex() is -1 when nothing is active, and notEqual(-1, 0) passes,
+  // so an End key that selected nothing would have read as working.
+  assert.equal(activeIndex(), rows().length - 1, 'End lands on the last result')
   key('Home')
-  const atHome = activeIndex()
-  assert.notEqual(atEnd, atHome, 'End and Home land in different places')
-  assert.equal(atHome, 0, 'and Home is the first result')
+  assert.equal(activeIndex(), 0, 'and Home on the first')
 
   // Hovering a row makes it the active one — the mouse path beside the keys.
   rows()[1].dispatchEvent({ type: 'mousemove' })
