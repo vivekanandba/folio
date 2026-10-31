@@ -455,17 +455,20 @@ try {
         // Not every kind re-renders, so a change is not required — but the
         // deferred ones must be given their window, and uncaughtErrors must
         // run after it rather than before.
+        // Poll for the stage to change, then stop waiting at 400ms — a kind
+        // that legitimately does not change its stage (sequence reorders in
+        // place) must not cost a timeout every run, and the fixed wait below
+        // is what actually guarantees the deferred render its 180ms.
+        //
+        // An earlier version OR-ed in `window.__stageSettled === true`,
+        // which nothing in this repo ever sets: a permanently-false
+        // disjunct, reading as a real escape hatch with nothing behind it.
+        // Dropped rather than wired, because the fixed wait already covers
+        // the case it pretended to.
         await page.waitFor(
-          `(() => {
-            const n = document.querySelector('.stage')?.textContent.length ?? 0
-            return n !== window.__stageAtClick || window.__stageSettled === true
-          })()`,
+          `(document.querySelector('.stage')?.textContent.length ?? 0) !== window.__stageAtClick`,
           { timeoutMs: 400, intervalMs: 25, label: `${kind} answered` },
         ).catch(() => {})
-        // 400ms then stop waiting: a kind that legitimately does not change
-        // its stage would otherwise spend a timeout each run. What matters
-        // is that the deferred render has had more than its 180ms, which
-        // this guarantees either way.
         await page.evaluate('new Promise((r) => setTimeout(r, 250))')
 
         // Interacting must not blank the page — the failure mode that matters.
@@ -844,7 +847,14 @@ try {
           // which names the symptom while the reason sat on screen the whole
           // time (CON-VER-005).
           const refusal = /Import refused: .*/.exec(document.body.textContent || '')
-          if (!written && !refusal && !(errors && errors.length)) return ''
+          // A MISSING collector stops the poll immediately. Treating it as
+          // "nothing has happened yet" ran the full 5s and reported "timed
+          // out waiting for the imported ledger to reach storage" — while
+          // the assertion written for exactly this case, twelve lines below,
+          // could then never fire. Same reasoning as uncaughtErrors()'s -1
+          // sentinel: "could not determine" is not "no".
+          if (errors === null) return JSON.stringify({ written, refused: null, errorCount: null, errors: null })
+          if (!written && !refusal && !errors.length) return ''
           return JSON.stringify({
             written,
             // The TRUE count, separate from the sample. Reporting

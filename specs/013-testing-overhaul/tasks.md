@@ -91,10 +91,17 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       whole (CON-DATA-001) — and it was the number the headroom argument
       rested on, so it mattered. Caught in review, re-measured, corrected.
 
-      The floor is 97.5: 0.35pp below the lowest figure ever observed, about
-      comfortably wider than any single-run variation measured. (This read "1.7× the measured band" against a band that had since been re-measured, contradicting both the figure ten lines above and package.json — so the ratio is gone with the band it depended on.) The margin is wider than the 0.06pp the old
-      floor used, on purpose — CON-COV-002 forbids lowering a floor, so too
-      tight has to be walked back while too loose merely ratchets again.
+      The floor is 97.5: 0.35pp below the lowest figure ever observed, and
+      comfortably wider than any single-run variation measured. (This used
+      to read "about 1.7× the measured band", against a band that had since
+      been re-measured — it contradicted both the figure ten lines above and
+      package.json, so the ratio went with the band it divided by. Removing
+      it left a stray "about" dangling mid-sentence, which review caught: an
+      entry whose lesson is that a misdescribing record is worse than none
+      had been left not parsing at all.) The margin is wider than the 0.06pp
+      the old floor used, on purpose — CON-COV-002 forbids lowering a floor,
+      so too tight has to be walked back while too loose merely ratchets
+      again.
 
       The lesson worth keeping is not about WebGL. A diagnosis was written
       into this file as a finding and then believed for three weeks, and the
