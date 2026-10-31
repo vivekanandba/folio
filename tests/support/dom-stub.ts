@@ -205,11 +205,16 @@ export class StubElement extends StubNode {
    * in any combination, plus comma lists. Still no combinators — descendant
    * and child selectors stay the browser suite's job.
    *
-   * Attribute selectors were the missing piece. src/sessions/blueprint.ts
-   * finds its wires with `[data-uid="…"]` and classify its buckets with
-   * `[data-bucket="…"] .bucket-drop`, so without them those queries returned
-   * null, the loops around them did nothing, and whole interactions looked
-   * untestable when they were only unsupported.
+   * Attribute selectors were the missing piece for src/sessions/blueprint.ts,
+   * which finds its wire endpoints with `[data-uid="…"]`: without them those
+   * queries returned null, the loop around them did nothing, and an
+   * interaction that was merely UNSUPPORTED looked untestable.
+   *
+   * NOT classify. Its drop target is `[data-bucket="…"] .bucket-drop`, a
+   * DESCENDANT selector, which this matcher still refuses — so classify's
+   * drop path remains browser-only. An earlier version of this comment
+   * claimed otherwise, which would have had the next reader assume a
+   * coverage gap was closed when it was not (CON-DATA-001).
    */
   matches(sel: string): boolean {
     return sel.split(',').some((part) => {
@@ -222,12 +227,20 @@ export class StubElement extends StubNode {
         if (piece.startsWith('.')) return this.classList.contains(piece.slice(1))
         if (piece.startsWith('#')) return this.id === piece.slice(1)
         if (piece.startsWith('[')) {
-          const m = /^\[([\w-]+)(?:([~|^$*]?=)"?([^"\]]*)"?)?\]$/.exec(piece)
+          const m = /^\[([\w-]+)(?:(=)"?([^"\]]*)"?)?\]$/.exec(piece)
+          // Only presence and exact `=`. An earlier version accepted
+          // ~= |= ^= $= *= and collapsed all five to `includes`, which FAILS
+          // OPEN: [href^="/a"] would have matched "/b/a". A matcher that
+          // approximates is worse than one that refuses, because the wrong
+          // match is a green test on a false premise.
           if (!m) return false
-          const actual = this.getAttribute(m[1])
-          if (actual == null) return false
-          if (!m[2]) return true
-          return m[2] === '=' ? actual === m[3] : actual.includes(m[3])
+          // `class` and `id` never reach the attributes map — setAttribute
+          // diverts them to className/id — so ask the element, not the map.
+          const name = m[1]
+          const actual =
+            name === 'class' ? this.className : name === 'id' ? this.id : this.getAttribute(name)
+          if (actual == null || actual === '') return false
+          return m[2] ? actual === m[3] : true
         }
         return this.tagName.toLowerCase() === piece.toLowerCase()
       })

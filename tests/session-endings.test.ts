@@ -32,10 +32,15 @@ const { mountSim, simModelExists } = await import('../src/sim/engine.ts')
 const PACKS = new URL('../public/content/packs/', import.meta.url).pathname
 function sessionsOfKind(kind: string): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = []
-  for (const pack of readdirSync(PACKS)) {
+  // .sort() on both, because readdirSync is not ordered on Linux: which pack
+  // and which file come "first" can differ between this box and the CI
+  // runner, so a different session would be driven, different lines hit, and
+  // the per-file coverage would shift — in a change whose whole argument is a
+  // floor measured to 0.03pp (CON-VER-008).
+  for (const pack of readdirSync(PACKS).sort()) {
     const dir = join(PACKS, pack, 'sessions')
     if (!existsSync(dir)) continue
-    for (const file of readdirSync(dir)) {
+    for (const file of readdirSync(dir).sort()) {
       const data = JSON.parse(readFileSync(join(dir, file), 'utf8')) as Record<string, unknown>
       if (data.kind === kind) out.push(data)
     }
@@ -245,14 +250,26 @@ test('a blueprint can be wired, cut and inspected to a pass', async () => {
     a.click()
     b.click()
   }
-  await new Promise((r) => setTimeout(r, 30)) // drawWires runs on a frame
+  // drawWires runs on an animation frame, and renderAll() requests one on
+  // every click — so by now the stub's three-frame budget is long spent and
+  // the wire layer has never been drawn. Give it a frame back and let it run.
+  ;(globalThis as unknown as { __resetFrames: () => void }).__resetFrames()
+  node(host).querySelectorAll('.bp-node-label')[0].click() // re-render → rAF
+  node(host).querySelectorAll('.bp-node-label')[0].click() // and disarm again
+  await new Promise((r) => setTimeout(r, 30))
 
   const wires = node(host).querySelectorAll('.bp-wire-chip')
   assert.ok(wires.length > 0, 'wiring two components lists a wire that can be cut')
+  // The svg's CHILDREN, not a descendant selector and not the svg itself.
+  // `.bp-wires line` needs a combinator this stub refuses, so it is always 0;
+  // `.bp-wires` is created once at mount and never removed, so it is always
+  // ≥1. An OR of those two can never be false — it read as proof that the
+  // board draws its wires while proving nothing at all.
+  const svg = node(host).querySelector('.bp-wires')
+  assert.ok(svg, 'the board has a wire layer')
   assert.ok(
-    node(host).querySelectorAll('.bp-wires line').length > 0 ||
-      node(host).querySelectorAll('.bp-wires').length > 0,
-    'and the board draws them',
+    (svg as unknown as { childNodes: unknown[] }).childNodes.length > 0,
+    'and drawWires put lines into it',
   )
 
   // Cutting is the inverse, and the list is how a learner reaches it.
@@ -311,11 +328,18 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   // A session whose FIRST node has an authored preview — 22 choices across
   // the shipped decisions carry one, but not the first door of every tree,
   // and hovering a door without one legitimately changes nothing.
-  const session = sessionsOfKind('decision').find((d) => {
-    const nodes = (d as { nodes: { choices?: { preview?: string }[] }[] }).nodes
-    const start = nodes.find((n) => n.choices?.length)
-    return start?.choices?.some((c) => c.preview)
-  }) as { nodes: { id: string; choices?: { preview?: string }[] }[]; meter?: unknown }
+  // Resolved through startId, which is what decision.ts renders first. Taking
+  // the first node in the ARRAY that has choices happens to agree today, and
+  // would quietly disagree the moment a pack authors a node above its start —
+  // and the failure would read as "hovering says nothing" rather than as a
+  // test indexing the wrong door.
+  const startNode = (d: Record<string, unknown>) => {
+    const { nodes, startId } = d as { nodes: { id: string; choices?: { preview?: string }[] }[]; startId?: string }
+    return nodes.find((n) => n.id === startId) ?? nodes[0]
+  }
+  const session = sessionsOfKind('decision').find((d) =>
+    startNode(d)?.choices?.some((c) => c.preview),
+  ) as { nodes: { id: string; choices?: { preview?: string }[] }[]; startId?: string; meter?: unknown }
   assert.ok(session, 'no shipped decision opens on a door with a preview')
 
   const host = root()
@@ -326,8 +350,8 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   // though it cannot hover. This is the half of the decision page a learner
   // spends the most time in — weighing, before committing.
   const doors = node(host).querySelectorAll('.fork-door')
-  const withPreview = session.nodes.find((n) => n.choices?.length)!.choices!
-    .findIndex((c) => c.preview)
+  const withPreview = startNode(session as never)!.choices!.findIndex((c) => c.preview)
+  assert.ok(withPreview >= 0 && withPreview < doors.length, 'the previewing door is on screen')
   doors[withPreview].dispatchEvent({ type: 'mouseenter' })
   const weighing = node(host).querySelector('.fork-preview')!.textContent
   doors[withPreview].dispatchEvent({ type: 'mouseleave' })

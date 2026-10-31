@@ -644,12 +644,17 @@ try {
         const file = new File([text], 'folio-progress.json', { type: 'application/json' })
         Object.defineProperty(input, 'files', { value: [file], configurable: true })
         input.dispatchEvent(new Event('change', { bubbles: true }))
-        // The handler awaits file.text() and then schedules a reload on
-        // success; hold the reload so it cannot take the page away mid-check.
-        const realReload = location.reload
-        location.reload = () => {}
+        // The handler awaits file.text() and then schedules a reload 600ms
+        // later on success. We read the store before that fires.
+        //
+        // NOT by monkeypatching location.reload: Location members are
+        // [LegacyUnforgeable], so the assignment silently does nothing and
+        // the restore afterwards is equally a no-op. An earlier version did
+        // exactly that and passed anyway — by outrunning the very reload its
+        // comment claimed to be holding. Shorten report.ts's delay and the
+        // page would navigate mid-evaluate, and the failure would point at
+        // the import handler rather than at a broken test guard.
         await new Promise((r) => setTimeout(r, 150))
-        location.reload = realReload
         return localStorage.getItem('folio-progress-v2') || ''
       })()`)
       assert(imported.includes('p2::s9'), `importing a ledger did not replace the store (${imported.slice(0, 60)})`)
