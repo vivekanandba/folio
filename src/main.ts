@@ -1,7 +1,7 @@
 import './style.css'
 import { liveAnnounce, setLiveRegion } from './a11y'
 import { el } from './dom'
-import { cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
+import { adoptStoredPreference, cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
 import { initPalette } from './palette'
 import { onRoute } from './router'
 import { renderConcept } from './pages/concept'
@@ -56,7 +56,11 @@ paintSoundBtn()
 // museum was in fact silent. A control that reports the opposite of the
 // truth is worse than one that does not update.
 window.addEventListener('storage', (e) => {
-  if (e.key === null || e.key === FEEDBACK_KEY) paintSoundBtn()
+  if (e.key !== null && e.key !== FEEDBACK_KEY) return
+  // Repaint AND act on it: a cross-tab mute that leaves this tab holding an
+  // open audio device is silent but still rude to the rest of the system.
+  adoptStoredPreference()
+  paintSoundBtn()
 })
 
 const skipLink = el('a', { class: 'skip-link', href: '#main' }, ['Skip to content'])

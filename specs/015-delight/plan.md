@@ -25,8 +25,12 @@ field keeps every existing backup importable with no migration code.
 
 - **Create:** `src/audio.ts`, `src/feedback.ts`, `src/milestones.ts`,
   `src/curator.ts`, `tests/feedback.test.ts`, `tests/milestones.test.ts`
-- **Modify:** `src/main.ts` (topbar control), `src/sessions/mcq.ts`,
-  `src/fx.ts` (`ceremony` fires the completion cue; new `countUp`),
+- **Modify:** `src/main.ts` (topbar control), the session kinds that have a
+  correctness or reveal moment (`mcq`, `hotspot`, `estimate`, `classify`,
+  `sequence`, `blueprint`, `detective`, `audit`, `flashcard`),
+  `src/fx.ts` (new `countUp`; the completion cue went to the PAGES instead —
+  `ceremony()` only runs when a `.stage` is found, and the chord should not
+  depend on that),
   `src/pages/session.ts`, `src/pages/review.ts` (call `ceremony` instead of
   re-implementing it), `src/pages/report.ts` (Acquisitions), `src/pages/hub.ts`,
   `src/pages/pack.ts`, `src/pages/concept.ts`, `src/progress.ts`,

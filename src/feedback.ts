@@ -113,6 +113,18 @@ export function setFeedbackEnabled(on: boolean): void {
   if (!on) closeAudio()
 }
 
+/**
+ * Adopt a preference another tab wrote. Deliberately NOT setFeedbackEnabled:
+ * that writes storage, which would fire a storage event in the first tab,
+ * which would write back — two tabs echoing at each other forever. This only
+ * does the part that has a side effect worth doing, releasing the audio
+ * device, so closeAudio()'s own rule (never hold a device for a feature
+ * somebody has switched off) holds for a cross-tab mute as well as a local one.
+ */
+export function adoptStoredPreference(): void {
+  if (!feedbackEnabled()) closeAudio()
+}
+
 /** Short taps, never a long buzz. A phone in a pocket is not a drum. */
 const HAPTICS: Record<CueName, number | number[]> = {
   correct: 8,

@@ -462,6 +462,15 @@ try {
   await check('the museum can be silenced, and stays silenced', async () => {
     const page = await browser.newPage()
     try {
+      // Make the precondition rather than assuming it. Every page in this run
+      // shares one profile, so "a fresh visitor" is only true while this check
+      // happens to be the sole writer of the preference — exactly the
+      // order-dependence the screenshot loop below clears storage to escape
+      // (CON-VER-008). Relying on it here would be the same bug, one hunk up.
+      await page.send('Storage.clearDataForOrigin', {
+        origin,
+        storageTypes: 'local_storage',
+      })
       await page.goto(`${origin}/index.html#/`)
       await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control' })
       const pressed = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-pressed')`)

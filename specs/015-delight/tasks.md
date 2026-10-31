@@ -9,8 +9,13 @@
 - [x] 3. `src/audio.ts` — zero-asset Web Audio synth, context created lazily on
        the first gesture, never at import
 - [x] 4. `src/feedback.ts` — cue table, the scale ladder, the mute preference
-- [x] 5. Wire the cues: `sessions/mcq.ts`, `fx.ts` (`ceremony`), `pages/review.ts`,
-       `gauntlet/drill.ts`
+- [x] 5. Wire the cues: `sessions/mcq.ts` (which covers quiz, detective and
+       calculator), plus `hotspot`, `estimate`, `classify`, `sequence`,
+       `blueprint`, `detective`, `audit` and `flashcard`; `gauntlet/drill.ts`;
+       and the completion chord in `pages/session.ts` + `pages/review.ts`.
+       NOT in `fx.ts` as planned: `ceremony()` only runs when a `.stage`
+       element is found, and finishing an exhibit deserves the chord whether
+       or not the kind rendered one — so `fx.ts` stays purely visual
 - [x] 6. Topbar mute control in `main.ts` + `style.css`
 - [x] 7. Mutation-check each new assertion; gates; ship
 

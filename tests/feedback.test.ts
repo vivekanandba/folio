@@ -17,6 +17,7 @@ installModuleHooks()
 installDomStub()
 
 const {
+  adoptStoredPreference,
   cue,
   currentRun,
   feedbackEnabled,
@@ -35,8 +36,14 @@ type G = {
 }
 const g = globalThis as unknown as G
 
-/** Clean slate: no recorded sound, no recorded buzz, run counter at the bottom. */
+/**
+ * Clean slate: no recorded sound, no recorded buzz, run counter at the bottom,
+ * and — importantly — no context left cached from the previous test. Swapping
+ * `globalThis.AudioContext` back only changes the constructor; a fake INSTANCE
+ * built by an earlier case survives and silently answers the next one.
+ */
 function fresh(): void {
+  setFeedbackEnabled(false) // the only thing that releases the cached context
   g.__resetAudio()
   g.__resetVibrate()
   localStorage.removeItem('folio-feedback')
@@ -452,6 +459,135 @@ test('a suspended context is resumed BEFORE anything is scheduled', async () => 
       g.__audioLog[0].startAt >= 10,
       `the clock was read before the resume (startAt ${g.__audioLog[0].startAt}, expected >= 10)`,
     )
+  } finally {
+    g.AudioContext = realAudio
+    fresh()
+  }
+})
+
+test('a cue waiting on a resume does not sound after the learner mutes', async () => {
+  fresh()
+  const realAudio = g.AudioContext
+  setFeedbackEnabled(false) // release whatever context is cached
+  let release: (() => void) | null = null
+  const gate = new Promise<void>((r) => { release = r })
+  try {
+    g.AudioContext = class {
+      state = 'suspended'
+      currentTime = 0
+      destination = {}
+      async resume(): Promise<void> {
+        await gate
+        this.state = 'running'
+        this.currentTime = 5
+      }
+      close(): Promise<void> { return Promise.resolve() }
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown {
+        return {
+          type: 'sine',
+          frequency: { value: 0, setValueAtTime(v: number) { this.value = v } },
+          connect() {},
+          start(t: number) { (this as { _s: number })._s = t },
+          stop(t: number) { g.__audioLog.push({ type: 'sine', freq: 0, startAt: (this as { _s: number })._s, stopAt: t }) },
+        }
+      }
+    }
+    setFeedbackEnabled(true)
+    g.__resetAudio()
+
+    cue('correct')            // parked, waiting on the resume
+    setFeedbackEnabled(false) // ...and the learner reaches for the mute
+    release!()
+    for (let i = 0; i < 5; i++) await Promise.resolve()
+
+    assert.deepEqual(
+      g.__audioLog,
+      [],
+      'a cue that was mid-resume when the mute landed must never arrive',
+    )
+  } finally {
+    g.AudioContext = realAudio
+    fresh()
+  }
+})
+
+test('a late rejection retires its own context, not whichever is current', async () => {
+  fresh()
+  const realAudio = g.AudioContext
+  setFeedbackEnabled(false)
+  let built = 0
+  const closed: number[] = []
+  let rejectFirst: ((e: Error) => void) | null = null
+  try {
+    g.AudioContext = class {
+      id: number
+      state: string
+      currentTime = 0
+      destination = {}
+      constructor() {
+        built += 1
+        this.id = built
+        // Only the first context is parked; the replacement is live.
+        this.state = built === 1 ? 'suspended' : 'running'
+      }
+      resume(): Promise<void> { return new Promise((_, rej) => { rejectFirst = rej }) }
+      close(): Promise<void> { closed.push(this.id); return Promise.resolve() }
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown { return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} } }
+    }
+    setFeedbackEnabled(true)
+
+    cue('correct')                       // builds ctx1, resume pending
+    assert.equal(built, 1)
+    setFeedbackEnabled(false)            // mute: ctx1 released
+    setFeedbackEnabled(true)
+    cue('reveal')                        // builds ctx2 — this is the live one
+    assert.equal(built, 2)
+
+    // ctx1's resume finally fails, long after it stopped being current.
+    rejectFirst!(new Error('InvalidStateError'))
+    for (let i = 0; i < 5; i++) await Promise.resolve()
+
+    assert.ok(
+      !closed.includes(2),
+      `the stale rejection closed the LIVE context (closed: ${closed.join(', ')})`,
+    )
+    cue('correct')
+    assert.equal(built, 2, 'and the live context is still usable, not rebuilt')
+  } finally {
+    g.AudioContext = realAudio
+    fresh()
+  }
+})
+
+test('a mute made in another tab releases this tab\'s audio device too', () => {
+  fresh()
+  const realAudio = g.AudioContext
+  let closed = 0
+  try {
+    g.AudioContext = class {
+      state = 'running'
+      currentTime = 0
+      destination = {}
+      resume(): Promise<void> { return Promise.resolve() }
+      close(): Promise<void> { closed += 1; return Promise.resolve() }
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown { return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} } }
+    }
+    cue('correct')
+    assert.equal(closed, 0, 'precondition: a live context is open')
+
+    // What a `storage` event looks like from in here: the value changed
+    // underneath us, and nothing in this tab called setFeedbackEnabled.
+    localStorage.setItem('folio-feedback', 'off')
+    adoptStoredPreference()
+    assert.equal(closed, 1, 'a cross-tab mute must release the device, not just repaint a button')
+
+    // And the reverse is not destructive.
+    localStorage.setItem('folio-feedback', 'on')
+    assert.doesNotThrow(() => adoptStoredPreference())
+    assert.equal(closed, 1, 'an unmute elsewhere must not close anything')
   } finally {
     g.AudioContext = realAudio
     fresh()

@@ -37,6 +37,14 @@ type Ctor = new () => AudioContext
 
 let ctx: AudioContext | null = null
 
+/**
+ * Bumped whenever the audio device is deliberately released. A cue that had
+ * to wait for a resume checks this before laying anything down: without it, a
+ * learner who mutes between the cue and the resume resolving would hear the
+ * cue anyway, which is the one thing this whole feature must never do.
+ */
+let epoch = 0
+
 /** Resolve the constructor at CALL time — the stub installs it after import. */
 function contextCtor(): Ctor | null {
   const g = globalThis as unknown as { AudioContext?: Ctor; webkitAudioContext?: Ctor }
@@ -78,6 +86,7 @@ function settle(result: unknown): void {
  * system, and it means the next unmute re-checks the platform from scratch.
  */
 export function closeAudio(): void {
+  epoch += 1
   const open = ctx
   ctx = null
   try {
@@ -93,10 +102,13 @@ export function closeAudio(): void {
  * dropped — leaking one per failed cue would exhaust the cap and kill audio
  * for the page outright, with no way back but a reload.
  */
-function dropContext(): void {
-  const dead = ctx
-  ctx = null
-  settle(dead?.close())
+function retire(dead: AudioContext): void {
+  // Only clear the cache if THIS is still the cached context. A rejection can
+  // arrive long after the fact — mute, unmute, and the old context's resume
+  // finally fails — and closing whatever happens to be current would cut off
+  // the cue the learner is hearing right now.
+  if (ctx === dead) ctx = null
+  settle(dead.close())
 }
 
 /** Schedule a cue. Silent and side-effect-free when audio is unavailable. */
@@ -112,14 +124,23 @@ export function play(notes: Note[]): void {
     // resume is refused — no user activation, an interrupted iOS session —
     // nothing is scheduled and nothing accumulates.
     if (audio.state === 'suspended') {
-      audio.resume().then(() => schedule(audio, notes)).catch(dropContext)
+      const mine = epoch
+      audio
+        .resume()
+        .then(() => {
+          // Still the same device, and nobody has reached for the mute in the
+          // meantime? closeAudio() is asynchronous, so without this check a
+          // cue could start oscillators on a context that is mid-close.
+          if (epoch === mine && ctx === audio) schedule(audio, notes)
+        })
+        .catch(() => retire(audio))
       return
     }
     schedule(audio, notes)
   } catch {
     // A cue is never worth failing a session over, and a context that has
     // started refusing nodes is not going to recover.
-    dropContext()
+    retire(audio)
   }
 }
 
