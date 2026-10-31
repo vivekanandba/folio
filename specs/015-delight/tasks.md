@@ -159,17 +159,60 @@
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 
-- [ ] 19. Measure `--enable-unsafe-swiftshader` over ≥9 runs before claiming
-       anything about task 14c
-- [ ] 20. Cover the stub-reachable clusters: `review.ts` summary + interrupt,
-       `lab.ts` endings, `decision.ts` ending node, `sim/engine.ts` controls and
-       `destroy()`, `sequence.ts` reorder, `widgets.ts`, and the tail
-- [ ] 21. Cover the browser-only clusters via the e2e driver: `report.ts`
+- [x] 19. Measured, and the hypothesis was WRONG — which is the point of
+       measuring. `--enable-unsafe-swiftshader` was never needed: a probe
+       granted a WebGL context 9 times out of 9 with the flags already in
+       use. The swinging band was `destroy()` and the `webglcontextlost`
+       handler racing page teardown, not context acquisition. See
+       specs/013-testing-overhaul/tasks.md 14c.
+- [x] 20. Cover the stub-reachable clusters: `review.ts` summary, `lab.ts`
+       endings, `decision.ts` ending node and preview, `sim/engine.ts`
+       controls and `destroy()`, `sequence.ts` reorder, `blueprint.ts` wiring,
+       `hub.ts` filter chips, `palette.ts` keyboard, and the tail.
+
+       RE-SCOPED, not quietly ticked. TWO things changed from the original
+       sentence, and the second was missed until review round 6 caught it.
+
+       (a) `widgets.ts` was in the original list and is NOT in the ticked
+       one. It was not done: it still measures 82.94% lines / 56.60%
+       branches (combined 86.3%), among the lowest in `src/`, with the
+       malformed-viz catch, the range input and the chart point click
+       uncovered. Dropping it from the sentence while ticking the box is
+       exactly the "four-fifths of a sentence counted as all of it" that
+       CON-PROC-012 forbids, and it is worse than leaving the box open,
+       because the record then reads as if the work were finished. Carried
+       forward as task 24 below rather than edited out of the task it
+       belonged to.
+
+       (b) The original also read "summary + interrupt". The interrupt
+       panel is not reachable BY A FETCH FAILURE —
+       `deriveFlashcards` catches both the concept note and every session
+       load, so a broken archive yields a concept with no cards that the queue
+       skips. Verified by breaking fetch two ways; written up at the foot of
+       tests/review-flow.test.ts. Marking the task done as WRITTEN would have
+       claimed four-fifths of a sentence as all of it (CON-PROC-012).
+- [x] 21. Cover the browser-only clusters via the e2e driver: `report.ts`
        export/import, `floor.ts` zoom + narrow layout, `shader.ts` teardown via
        `WEBGL_lose_context`
-- [ ] 22. Ratchet the floor ONCE, from the measured minimum across runs — never
-       from a lucky run
-- [ ] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
+- [x] 22. Ratchet the floor ONCE, from the measured minimum across runs —
+       never from a lucky run. The floor is 97.5, up from 94.8. The figure
+       it was set from lives in one place, `package.json`'s
+       `comment:coverage-combined`, which also names the command to
+       re-measure with. This entry used to quote "97.87–97.92% across six
+       measurements" while that record said the lowest ever observed was
+       97.85 — two records of one measurement disagreeing, leaving a reader
+       unable to tell whether the margin was 0.35pp or 0.37pp, or which copy
+       was stale. The number is gone from here rather than re-typed.
+- [x] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
+- [ ] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
+       the chart point click (82.94% lines / 56.60% branches today). Split
+       out of task 20, which silently dropped it; see the note there. Open
+       on purpose: the branch floor has the thinnest margin of the three and this is the
+       cheapest place to earn it back. The margin itself is NOT repeated
+       here — it said 0.30pp while package.json said 0.42pp, two records of
+       one measurement disagreeing, which is the defect this PR spends
+       several comments arguing against. package.json's `comment:coverage`
+       is the one copy, and it names the command to re-measure with.
 
 ## Manual verification (cannot be gated headlessly — CON-VER-007)
 

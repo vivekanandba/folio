@@ -180,9 +180,16 @@ test('an empty review explains itself rather than showing a blank page', async (
 
 test('the palette searches, navigates by keyboard, and closes', async () => {
   const handle = initPalette()
-  handle.open()
+  // Awaited, and the LAST dialog — the last of the three palette tests to
+  // get both corrections. This one is first in the file, so
+  // querySelector('.cmdk') happened to return its own dialog and the fixed
+  // tick(20) happened to outrun buildIndex(); adding any palette test above
+  // it would silently retarget it, and a slow index build would fail it on
+  // timing in a merge gate (CON-VER-008).
+  await handle.open()
 
-  const dialog = document.querySelector('.cmdk') as unknown as (El & { open: boolean }) | null
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as (El & { open: boolean }) | null
   assert.ok(dialog, 'the palette is in the document')
   assert.equal(dialog!.open, true)
 
@@ -199,19 +206,47 @@ test('the palette searches, navigates by keyboard, and closes', async () => {
   input.dispatchEvent({ type: 'keydown', key: 'Enter', preventDefault: () => {}, target: input })
   await tick(20)
 
-  handle.open()
-  const again = document.querySelector('.cmdk') as unknown as (El & { open: boolean }) | null
-  again!.querySelector('.cmdk-input')?.dispatchEvent({
+  // The tail of this test kept BOTH patterns the other three call sites
+  // dropped: an unawaited open() and a first-dialog lookup. It reopens the
+  // palette, so `again` must be THIS test's dialog — and the block ended in
+  // `assert.ok(true)`, so if it ever resolved to an earlier, already-closed
+  // one, nothing would have gone red.
+  // CLOSED first, then reopened. `again.open === true` on its own cannot
+  // tell "reopened" from "never closed": open() begins with
+  // `if (dialog.open) return`, so if Enter ever stopped choosing a result
+  // (choose() no-ops on an empty `results`), the dialog would simply stay
+  // open, the second open() would be a no-op, and the assertion would still
+  // pass. It is non-vacuous today only because the query 'determinants'
+  // happens to match shipped content — which is a fact about the packs, not
+  // about the palette.
+  assert.equal(dialog!.open, false, 'choosing a result closes the palette')
+
+  await handle.open()
+  const reopened = document.querySelectorAll('.cmdk')
+  const again = reopened[reopened.length - 1] as unknown as (El & { open: boolean })
+  assert.equal(again.open, true, 'and it can be reopened')
+
+  again.querySelector('.cmdk-input')?.dispatchEvent({
     type: 'keydown', key: 'Escape', preventDefault: () => {}, target: again,
   })
   await tick()
-  assert.ok(true, 'driving the palette by keyboard must not throw')
+  // Something observable, instead of assert.ok(true). palette.ts has no
+  // Escape handler and the stub's <dialog> implements none either, so the
+  // dialog legitimately stays open — what this asserts is that driving it
+  // by keyboard leaves it in a usable state rather than throwing or
+  // tearing itself down.
+  assert.ok(again.querySelector('.cmdk-input'), 'the palette survives being driven by keyboard')
 })
 
 test('the palette handles a query that matches nothing', async () => {
   const handle = initPalette()
-  handle.open()
-  const dialog = document.querySelector('.cmdk') as unknown as El
+  // Awaited, and the LAST dialog — the same two corrections the backdrop
+  // test below documents at length. This one was not vacuous (the empty
+  // path still ran, through the earlier palette's closure) but it was
+  // driving a dialog it had not opened, which is the bug next door.
+  await handle.open()
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as El
   const input = dialog.querySelector('.cmdk-input')!
   input.value = 'zzzzqqqxx-no-such-thing'
   input.dispatchEvent({ type: 'input', target: input })
@@ -253,4 +288,84 @@ test('a genuinely empty queue shows the forgetting curve instead of a blank page
   assert.ok(page.childNodes.length > 0, 'an empty queue must still render')
   assert.ok(page.textContent.trim().length > 0, 'and must explain itself')
   storage().clear()
+})
+
+/* ----------------------------------------------- the halls, and the palette --- */
+
+test('the hall filter chips hide and show categories', async () => {
+  storage().clear()
+  const hub = await import('../src/pages/hub.ts')
+  const el = root()
+  await hub.renderHub(el)
+  const page = el as unknown as El
+
+  const chips = page.querySelectorAll('.cat-chip')
+  assert.ok(chips.length > 1, 'more than one category, so filtering is offered')
+  const sections = () => page.querySelectorAll('.cat-section')
+  assert.ok(sections().length > 1, 'and a section per category')
+
+  // Pick a named category, not "All" — the branch that actually hides things.
+  const named = chips.slice(1)[0]
+  named.click()
+  const hidden = sections().filter((s) => s.hidden === true)
+  assert.ok(hidden.length > 0, 'choosing a category hides the others')
+  assert.equal(named.getAttribute('aria-pressed'), 'true', 'and the chip says it is chosen')
+
+  chips[0].click() // All
+  assert.equal(
+    sections().filter((s) => s.hidden === true).length,
+    0,
+    'and "All" brings them back',
+  )
+  storage().clear()
+})
+
+test('the palette answers Home, End and a click on its backdrop', async () => {
+  const handle = initPalette()
+  // AWAIT the open. open() is async — it awaits buildIndex() before the
+  // first refresh() — and until that resolves the list renders a single
+  // `.cmdk-empty`, not `.cmdk-item`. The fixed `tick(20)` below was the only
+  // thing standing in for that, so an index build slower than 20ms on a
+  // loaded box would fail `rows().length > 1` on timing, in a merge gate, in
+  // the very PR that was removing this pattern from the e2e (CON-VER-008).
+  await handle.open()
+  // The LAST .cmdk, not the first. initPalette() appends a fresh <dialog> to
+  // document.body on every call and never removes it, so by this point in the
+  // file there are three — and `querySelector` returns the one an EARLIER
+  // test built. This test was driving a dialog it had not opened: the closing
+  // `dialog.open === false` passed only because that earlier test happened to
+  // leave its own dialog open, so the backdrop-dismiss branch never ran. Add
+  // an Escape handler to palette.ts, or reorder the tests above, and the
+  // assertion would have gone on passing against an already-closed dialog.
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as (El & { open: boolean })
+  assert.equal(dialog.open, true, 'the palette this test opened is the one it drives')
+  const input = dialog.querySelector('.cmdk-input')!
+  input.value = 'a'
+  input.dispatchEvent({ type: 'input', target: input })
+  await tick(20)
+
+  const rows = () => dialog.querySelectorAll('.cmdk-item')
+  assert.ok(rows().length > 1, 'a broad query offers several results')
+
+  const key = (k: string) =>
+    input.dispatchEvent({ type: 'keydown', key: k, preventDefault: () => {}, target: input })
+  const activeIndex = (): number =>
+    rows().findIndex((r) => (r as unknown as { className: string }).className.includes('active'))
+  key('End')
+  // The LAST row, BY INDEX — not merely "different from where Home lands".
+  // activeIndex() is -1 when nothing is active, and notEqual(-1, 0) passes,
+  // so an End key that selected nothing would have read as working.
+  assert.equal(activeIndex(), rows().length - 1, 'End lands on the last result')
+  key('Home')
+  assert.equal(activeIndex(), 0, 'and Home on the first')
+
+  // Hovering a row makes it the active one — the mouse path beside the keys.
+  rows()[1].dispatchEvent({ type: 'mousemove' })
+  assert.equal(activeIndex(), 1, 'hovering a row selects it')
+
+  // Clicking the backdrop (the dialog itself, not a child) dismisses.
+  dialog.dispatchEvent({ type: 'click', target: dialog })
+  await tick()
+  assert.equal(dialog.open, false, 'a click outside closes the palette')
 })

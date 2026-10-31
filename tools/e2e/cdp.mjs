@@ -104,6 +104,43 @@ async function newPage(port) {
       ws.send(JSON.stringify({ id, method, params }))
     })
 
+  // Collect uncaught errors and unhandled rejections from EVERY document this
+  // page loads, before any page script runs.
+  //
+  // run.mjs asserts `window.__e2eErrors` is empty, and nothing ever created
+  // it: reads, and zero writes. ONE of those reads predates this change —
+  // the session-kind check, which had been reporting "no uncaught errors" for
+  // all twelve kinds, in CI, for weeks while comparing 0 against 0. The rest
+  // were added alongside this collector: three more through uncaughtErrors()
+  // and one inlined into the ledger check, which needs its snapshot taken in
+  // the same evaluate as the write it polls for.
+  //
+  // Deliberately not carrying a COUNT any more. This comment has now been
+  // wrong twice in opposite directions: first it said all four reads had been
+  // live for weeks (overstating a real incident fourfold), then the corrected
+  // version said "four reads" and went stale the moment a fifth was added.
+  // A number that must be hand-maintained to stay true, in a file arguing
+  // that a misdescribing record is worse than none (CON-VER-005), is a
+  // liability; `grep -c '__e2eErrors' tools/e2e/run.mjs` is not.
+  await send('Page.enable')
+  await send('Runtime.enable')
+  await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: `
+      window.__e2eErrors = []
+      window.addEventListener('error', (e) => {
+        // Prefer the message, fall back to the ERROR, and only then to the
+        // event — String(event) is "[object ErrorEvent]", which tells the
+        // next reader nothing, in a collector whose whole job is a legible
+        // failure.
+        var m = (e && e.message) || (e && e.error && (e.error.stack || e.error.message))
+        window.__e2eErrors.push(String(m || (e && e.type) || e))
+      })
+      window.addEventListener('unhandledrejection', (e) => {
+        window.__e2eErrors.push('unhandled rejection: ' + String((e && e.reason) || e))
+      })
+    `,
+  })
+
   const page = {
     send,
     /** Evaluate an expression in the page and return its JSON value. */
@@ -129,7 +166,13 @@ async function newPage(port) {
       let lastErr = null
       while (Date.now() < deadline) {
         try {
-          if (await page.evaluate(expression)) return true
+          // Return the VALUE, not `true`. Truthiness is unchanged for every
+          // caller that just waits, but a caller that needs the state it
+          // polled for can now take it from the same evaluate that observed
+          // it — rather than asking again afterwards, on a page that may
+          // have navigated in between.
+          const value = await page.evaluate(expression)
+          if (value) return value
           lastErr = null
         } catch (err) {
           lastErr = err

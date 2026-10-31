@@ -53,16 +53,60 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       **94**, not 95: measured 94.95–95.05 across runs because the browser half
       varies by a few lines, and a floor at the peak would fail on rendering
       timing rather than on a regression.
-- [~] 14c. Browser determinism — **narrowed to a single cause, floor ratcheted
-      94 → 94.8**. Nine runs measured 94.86–95.07%. A per-file diff across runs
-      shows every module is now deterministic to the line EXCEPT `src/shader.ts`,
-      which swings 192–205 covered roughly one run in three: headless Chrome
-      intermittently fails to hand the aurora a WebGL context, so the shader
-      compile/link/draw path does not run. sim/engine.ts and floor.ts turned out
-      to be stable after all — the earlier suspicion was wrong.
-      Remaining: make that context acquisition reliable (or cover those lines
-      without a GPU), then the floor can go to 95. Do not raise it on a lucky
-      run.
+- [x] 14c. Browser determinism — **CLOSED 2026-10-31, floor ratcheted
+      94.8 → 97.5** (specs/015-delight, PR #74).
+
+      The recorded cause was wrong. This task said headless Chrome
+      "intermittently fails to hand the aurora a WebGL context", which would
+      have made the shader's compile/link/draw path not run. A direct probe —
+      fresh browser per trial, ask for a context, report what comes back —
+      granted one **9 times out of 9**. The compile path was never the
+      problem.
+
+      The swinging band (192–205) was `destroy()` and the `webglcontextlost`
+      handler. Those run only when a page detaches the canvas before closing,
+      which is a RACE between navigation and page teardown — so the lines
+      landed or did not depending on timing, about one run in three, exactly
+      as observed. Nothing was broken; nothing was being driven.
+
+      Fixed by driving it: the e2e now calls
+      `WEBGL_lose_context.loseContext()`, which is how a real browser reports
+      a lost context (driver reset, memory pressure), and asserts the canvas
+      is gone. The teardown is deterministic.
+
+      Residual drift, measured rather than inferred: the LOWEST combined
+      figure observed is **97.85%**, and the floor is 97.5. Only the
+      minimum is recorded — an upper bound has to be re-typed whenever a
+      commit adds a line, and the records carrying one went stale four
+      times during PR #74 while the floor only ever rested on the bottom.
+      `package.json`'s `comment:coverage-combined` is the primary copy and
+      names the command to re-measure with; this entry deliberately
+      repeats no figure that moves. The browser
+      half underneath swings much wider, 3965–4089 covered lines over six
+      runs, most of it absorbed by the union because the unit half already
+      covers those lines. shader.ts itself varies by three lines (150–153).
+
+      An earlier version of this entry said that three-line shader figure WAS
+      the drift. It was not; it was one file's share of it, generalised to the
+      whole (CON-DATA-001) — and it was the number the headroom argument
+      rested on, so it mattered. Caught in review, re-measured, corrected.
+
+      The floor is 97.5: 0.35pp below the lowest figure ever observed, and
+      comfortably wider than any single-run variation measured. (This used
+      to read "about 1.7× the measured band", against a band that had since
+      been re-measured — it contradicted both the figure ten lines above and
+      package.json, so the ratio went with the band it divided by. Removing
+      it left a stray "about" dangling mid-sentence, which review caught: an
+      entry whose lesson is that a misdescribing record is worse than none
+      had been left not parsing at all.) The margin is wider than the 0.06pp
+      the old floor used, on purpose — CON-COV-002 forbids lowering a floor,
+      so too tight has to be walked back while too loose merely ratchets
+      again.
+
+      The lesson worth keeping is not about WebGL. A diagnosis was written
+      into this file as a finding and then believed for three weeks, and the
+      measurement that disproved it took one probe and two minutes
+      (CON-VER-006: don't re-derive what you can execute).
       Superseded note — the original gap was: tilt.ts (31% — attaches under emulated
       pointer but its rAF handler still isn't captured) and the deep branches
       of the session renderers. Needs either full session play-through in the

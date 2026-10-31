@@ -197,6 +197,71 @@ const SHOTS_INFORMATIONAL = !(recordedBrowser && recordedBrowser === currentBrow
 
 mkdirSync(BASELINES, { recursive: true })
 const server = await serve(PREVIEW, PORT)
+/**
+ * Wait until a tab that was on about:blank has reached the app, with storage
+ * reachable.
+ *
+ * NOT a general cross-document guard, and the name should not be read as
+ * one. All three of its conditions are already true of a same-origin page,
+ * so after a goto from one app URL to another it returns on the first poll
+ * and proves nothing. That case needs a marker set on the OLD document and
+ * waited for to disappear — which is what __beforeClear and __beforeNarrow
+ * do below, and why they are not redundant with this.
+ *
+ * Stated plainly because the failure mode of getting it wrong is a guard
+ * that reads as protection and gives none, which is the specific trap this
+ * file has now fallen into twice.
+ *
+ * `document.readyState !== "loading"` does NOT prove that, and every use of
+ * it as a commit guard in this file was wrong. page.goto is a bare
+ * Page.navigate, and a fresh tab starts on about:blank — which, probed
+ * against this repo's own CDP client, reports readyState "complete", origin
+ * "null", and throws SecurityError the moment anything touches localStorage.
+ * So the guard was satisfied before the navigation landed, and the very next
+ * statement in three different checks was a localStorage read or write.
+ *
+ * Asking whether storage is REACHABLE, rather than inferring it from a
+ * readiness signal that does not imply it, is the whole point: this waits for
+ * the thing the caller is about to depend on (CON-VER-006).
+ */
+async function committed(page, origin, label) {
+  await page.waitFor(
+    `(() => {
+      if (location.origin !== ${JSON.stringify(origin)}) return false
+      if (document.readyState === 'loading') return false
+      try { localStorage.length; return true } catch { return false }
+    })()`,
+    { label },
+  )
+}
+
+/**
+ * How many uncaught errors a page has collected — and a refusal, not a zero,
+ * if the collector is not there.
+ *
+ * The incident this guards is recorded in tools/e2e/cdp.mjs, which is the
+ * single account of it: reads of window.__e2eErrors with nothing ever
+ * creating it. This comment used to carry its own count ("four assertions
+ * comparing 0 against 0"), which contradicted cdp.mjs in the same PR — that
+ * file says the fourfold figure was itself an overstatement, and that one of
+ * the reads predates the change. Two records of one incident disagreeing is
+ * the failure both of them are arguing against, so this one no longer
+ * restates what the other owns.
+ *
+ * The refusal is the second half of the fix: `window.__e2eErrors ? ….length
+ * : 0` would go quietly green again the day the injection stops being
+ * applied. "Could not determine" is not "none" (CON-DATA-001, CON-VER-005).
+ */
+async function uncaughtErrors(page, where) {
+  const n = await page.evaluate(
+    'Array.isArray(window.__e2eErrors) ? window.__e2eErrors.length : -1',
+  )
+  assert(n >= 0, `the error collector was not installed on the page (${where})`)
+  if (!n) return
+  const seen = await page.evaluate('JSON.stringify(window.__e2eErrors.slice(0, 3))')
+  assert(false, `${n} uncaught error(s) ${where}: ${seen}`)
+}
+
 const browser = instrument(await launch(chrome, { port: 9344 }))
 const origin = `http://127.0.0.1:${PORT}`
 
@@ -249,7 +314,7 @@ try {
     const page = await browser.newPage()
     try {
       await page.goto(`${origin}/index.html`)
-      await page.waitFor('document.readyState === "complete"', { label: 'document ready' })
+      await committed(page, origin, 'document ready')
       const manifestHref = await page.evaluate(`document.querySelector('link[rel="manifest"]')?.getAttribute('href') ?? ''`)
       assert(manifestHref, 'no <link rel="manifest"> in the document')
       const apple = await page.evaluate(`!!document.querySelector('link[rel="apple-touch-icon"]')`)
@@ -266,7 +331,12 @@ try {
     const page = await browser.newPage()
     try {
       await page.goto(`${origin}/index.html#/`)
-      await page.waitFor('!!navigator.serviceWorker', { label: 'serviceWorker API' })
+      // committed(), not `!!navigator.serviceWorker`. That property is
+      // exposed on about:blank too — it is a potentially-trustworthy origin
+      // — so the guard passed before the navigation landed, and the
+      // register('/sw.js') on the next line would reject against a null
+      // origin rather than registering anything.
+      await committed(page, origin, 'serviceWorker API')
       const state = await page.evaluate(`(async () => {
         const reg = await navigator.serviceWorker.register('/sw.js')
         await navigator.serviceWorker.ready
@@ -345,19 +415,75 @@ try {
         // offers. Which ones exist differs per kind; clicking what is there is
         // the point, not clicking a specific thing.
         const clicked = await page.evaluate(`(() => {
+          // Every kind's OWN control. Three were missing — decision's doors
+          // are .fork-door, hotspot's bars .hotspot-bar, lab's machine room
+          // .sim-btn — so for those three the selector matched nothing, the
+          // loop clicked nothing, and "interacting must not blank the page"
+          // compared the stage length to itself (the run output said it
+          // plainly: "decision — 0 interaction(s), stage 531->531 chars").
+          // uncaughtErrors() then named an interaction that never happened.
           const targets = document.querySelectorAll(
-            '.choice-btn, .clue-card, .classify-card, .seq-move, .pillar-tile, .score-btn, .bp-part, .primary')
+            '.choice-btn, .clue-card, .classify-card, .seq-move, .pillar-tile, .score-btn, ' +
+            '.bp-part, .fork-door, .hotspot-bar, .sim-btn, .primary')
           let n = 0
           for (const el of targets) { if (n >= 3) break; el.click(); n++ }
           return n
         })()`)
 
+        // SOMETHING must have been clickable. Without this, a kind whose
+        // controls the selector does not know about passes forever while
+        // testing nothing — which is how three of the twelve had been
+        // passing. A new session kind now fails here until its control is
+        // listed, which is the right place to find out.
+        if (!clicked) throw new Error(`no interactive control found for ${kind} — the selector does not know this kind`)
+
+        // Give a DEFERRED answer time to arrive before measuring.
+        //
+        // decision re-renders through window.setTimeout(render, 180), so the
+        // round trip straight after the click lands before anything has
+        // happened — and the page is closed before the render fires. Adding
+        // .fork-door to the selector above made `clicked` non-zero without
+        // making this assertion observe anything: a decision re-render that
+        // blanked the stage, or threw, still passed, and the run output kept
+        // printing the same "531→531" signature that was the evidence the
+        // check was vacuous in the first place. Fixing the click count and
+        // calling that the fix was treating the symptom.
+        //
+        // Not every kind re-renders, so a change is not required — but the
+        // deferred ones must be given their window, and uncaughtErrors must
+        // run after it rather than before.
+        // Compared against the length BEFORE the clicks, interpolated from
+        // `before`. An earlier version stamped the length inside the click
+        // evaluate, AFTER the clicks — so for every kind that re-renders
+        // synchronously it recorded the already-changed value, the poll
+        // could never become true, and each of those kinds paid the full
+        // 400ms timeout: the exact cost this comment says it avoids, while
+        // only `decision` was ever observed answering at all.
+        //
+        // Poll for the stage to change, then stop waiting at 400ms — a kind
+        // that legitimately does not change its stage (sequence reorders in
+        // place) must not cost a timeout every run, and the fixed wait below
+        // is what actually guarantees the deferred render its 180ms.
+        //
+        // An earlier version OR-ed in `window.__stageSettled === true`,
+        // which nothing in this repo ever sets: a permanently-false
+        // disjunct, reading as a real escape hatch with nothing behind it.
+        // Dropped rather than wired, because the fixed wait already covers
+        // the case it pretended to.
+        await page.waitFor(
+          `(document.querySelector('.stage')?.textContent.length ?? 0) !== ${before}`,
+          { timeoutMs: 400, intervalMs: 25, label: `${kind} answered` },
+        ).catch(() => {})
+        await page.evaluate('new Promise((r) => setTimeout(r, 250))')
+
         // Interacting must not blank the page — the failure mode that matters.
         const after = await page.evaluate('document.querySelector(".stage")?.textContent.length ?? 0')
         if (!after) throw new Error(`the stage went blank after ${clicked} interaction(s)`)
-        const errors = await page.evaluate('window.__e2eErrors ? window.__e2eErrors.length : 0')
-        if (errors) throw new Error(`${errors} uncaught error(s) during interaction`)
-        return `${clicked} interaction(s), stage ${before}→${after} chars`
+        await uncaughtErrors(page, `during ${kind} interaction`)
+        // "presses", not "interactions": decision's own re-entry gate means a
+        // second press inside its 180ms window is deliberately ignored, so
+        // the count is what was PRESSED, not what took effect.
+        return `${clicked} press(es), stage ${before}→${after} chars`
       } finally {
         await page.close()
       }
@@ -371,7 +497,7 @@ try {
       // is the whole feature end to end: play a real session to completion in
       // a real browser, and the museum should notice.
       await page.goto(`${origin}/index.html?plaques=1`)
-      await page.waitFor('document.readyState !== "loading"', { label: 'app booted' })
+      await committed(page, origin, 'app booted')
       await page.evaluate('localStorage.clear()')
       // A quiz, because it completes by clicking alone — classify needs a drag
       // the driver cannot do, and a check that cannot finish proves nothing.
@@ -591,6 +717,396 @@ try {
     }
   })
 
+  /* ------------------------------- the parts only a browser can reach ----- */
+
+  await check('the ledger exports and imports, in a real browser', async () => {
+    const page = await browser.newPage()
+    try {
+      // Blob, URL.createObjectURL, a synthetic <a>.click() download and
+      // File.text() are all browser APIs the DOM stub has no answer for, so
+      // the ledger — the only way progress leaves this device — had never
+      // been exercised end to end.
+      await page.goto(`${origin}/index.html?ledger=1`)
+      await committed(page, origin, 'app booted')
+      await page.evaluate(`localStorage.setItem('folio-progress-v2', JSON.stringify({
+        version: 2,
+        sessions: { 'p1::s1': { packId: 'p1', sessionId: 's1', kind: 'quiz', score: 4, maxScore: 5, completedAt: '2026-09-01T00:00:00.000Z' } },
+        concepts: {},
+        attempts: [{ id: 'a', packId: 'p1', conceptIds: [], source: 'session', ref: 's1', normalized: 0.8, grade: 4, at: '2026-09-01T00:00:00.000Z' }],
+        daily: { '2026-09-01': 1 },
+      }))`)
+      // Marker, like every other cross-document goto in this file. Waiting on
+      // `input[type=file]` is a condition the PREVIOUS document could in
+      // principle satisfy; it holds today only because the page this
+      // navigates away from happens to have no file input (report.ts has the
+      // only one in src/). "Correct by what the other page happens not to
+      // contain" is exactly the assumption the __beforeClear markers were
+      // added to stop relying on.
+      await page.evaluate('window.__beforeReport = true')
+      await page.goto(`${origin}/index.html?ledger=1&go=1#/report`)
+      await page.waitFor('!window.__beforeReport', { label: 'report document' })
+      await page.waitFor(
+        'document.querySelectorAll("input[type=file]").length > 0',
+        { label: 'ledger section' },
+      )
+
+      // Export: capture what the page hands the browser.
+      //
+      // It DOES download. The patch records the blob and then calls the real
+      // createObjectURL, so report.ts gets a live URL and its a.click()
+      // starts a genuine download into the runner's default directory —
+      // inside the pinned container too. Harmless, but the comment used to
+      // say "without downloading", which is a property this code does not
+      // have and a side effect invisible to anyone reading it. Returning a
+      // dummy URL instead would make the click a no-op, at the cost of no
+      // longer exercising the real path; the real path is the point.
+      const exported = await page.evaluate(`(async () => {
+        const real = URL.createObjectURL
+        let captured = null
+        URL.createObjectURL = (blob) => { captured = blob; return real.call(URL, blob) }
+        // ONE export control, and say so if that is not what is there.
+        // Clicking every match fired a real download per button and left
+        // the capture holding only the last, so a second export control
+        // would have been silently untested and doubly downloaded.
+        // (No backticks in here: this whole function is inside a template
+        // literal and an unescaped one ends it. Written with them first,
+        // again, after a comment ten checks up says exactly this.)
+        const buttons = [...document.querySelectorAll('button')].filter((b) => /export/i.test(b.textContent))
+        if (buttons.length !== 1) {
+          URL.createObjectURL = real
+          return JSON.stringify({ error: buttons.length + ' export controls, expected exactly 1' })
+        }
+        buttons[0].click()
+        // The restore is synchronous, which is only safe while report.ts's
+        // export handler is synchronous too. It is today. If it ever awaits
+        // before building the blob, nothing is captured and the assertion
+        // below would blame "no blob" — the symptom, not the cause — so the
+        // check says which it was instead of leaving that to be guessed.
+        URL.createObjectURL = real
+        if (!captured) return JSON.stringify({ error: 'the export handler produced no blob before the patch was restored (has it become async?)' })
+        return JSON.stringify({ text: await captured.text() })
+      })()`)
+      const exportResult = JSON.parse(exported || '{"error":"export evaluate returned nothing"}')
+      assert(!exportResult.error, `export: ${exportResult.error}`)
+      const exportedText = exportResult.text
+      assert(exportedText, 'clicking export produced no blob')
+      const parsed = JSON.parse(exportedText)
+      assert(parsed.version === 2, `exported ledger is not a v2 store (version ${parsed.version})`)
+      assert(parsed.sessions['p1::s1'], 'the exported ledger lost the session it was holding')
+
+      // Import: hand the file input a File and let the page read it back.
+      const imported = await page.evaluate(`(async () => {
+        localStorage.removeItem('folio-progress-v2')
+        const input = document.querySelector('input[type=file]')
+        if (!input) return 'no file input'
+        const text = JSON.stringify({
+          version: 2,
+          sessions: { 'p2::s9': { packId: 'p2', sessionId: 's9', kind: 'quiz', score: 2, maxScore: 2, completedAt: '2026-10-01T00:00:00.000Z' } },
+          concepts: {}, attempts: [], daily: {},
+        })
+        const file = new File([text], 'folio-progress.json', { type: 'application/json' })
+        Object.defineProperty(input, 'files', { value: [file], configurable: true })
+        // The marker goes on THIS document, in the same evaluate, BEFORE the
+        // event. Setting it in a round trip of its own after the dispatch
+        // left the marker itself racing the reload: if report.ts's 600ms
+        // reload beat that round trip, __preImport was written on the FRESH
+        // document, the poll then saw marker true, write true (localStorage
+        // survives a reload) and an empty error list — and an exception
+        // thrown by the import was reported as a pass. Which is the exact
+        // failure the marker was added to close.
+        window.__preImport = true
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+        return 'dispatched'
+      })()`)
+      assert(imported === 'dispatched', `the ledger offers no file input (${imported})`)
+      // Poll for the WRITE, do not sleep past it. The handler awaits
+      // file.text() before writing and report.ts then schedules a reload
+      // 600ms later, so a fixed wait is squeezed between two timings it does
+      // not control — and on a loaded box it loses. An earlier version slept
+      // 150ms and also monkeypatched location.reload to hold the navigation,
+      // which does nothing at all: Location members are [LegacyUnforgeable].
+      // It passed by outrunning the very reload it claimed to be holding.
+      // Poll for the write AND the error list in ONE expression, AND require
+      // the snapshot to come from the pre-reload document.
+      //
+      // The single expression alone narrows the race without closing it,
+      // which an earlier version of this comment claimed it did. report.ts
+      // schedules location.reload() 600ms after a successful import, and
+      // waitFor does not start polling until the dispatchEvent round trip
+      // returns. If the first poll lands after the reload, `written` reads
+      // true out of localStorage — which survives it — while __e2eErrors is
+      // the FRESH document's empty array, so an exception thrown by the
+      // import handler is reported as a pass. The marker is the only lever:
+      // location.reload is [LegacyUnforgeable] and cannot be stubbed.
+      //
+      // Reading them in two round trips raced report.ts's own reload: the
+      // import schedules location.reload() 600ms after it writes, and
+      // waitFor returns the moment the write is visible. A reload landing in
+      // the gap either destroys the execution context mid-evaluate (red for
+      // timing — CON-VER-008, the thing the note below argues against) or
+      // hands back the fresh document's empty __e2eErrors, which is worse,
+      // because it looks like a pass. Both windows are narrow; the fleet
+      // notes describe this box reaching load 10 under three Playwright jobs,
+      // which is exactly when narrow windows stop being narrow.
+      const verdict = await page.waitFor(
+        // Returns a JSON snapshot as soon as there is anything to report —
+        // the write landing, OR an error appearing — and '' (falsy) while
+        // neither has happened, so the poll keeps polling.
+        //
+        // Stopping on an ERROR too, not just on the write, is what keeps the
+        // failure legible. An exception thrown before the store is written
+        // means the write never lands, so a poll that waits only for the
+        // write times out and reports "timed out waiting for the imported
+        // ledger to reach storage" — true, but it names the symptom and
+        // swallows the cause (CON-VER-005). Verified by throwing inside the
+        // import handler: this form names the exception instead.
+        `(() => {
+          // The reload would wipe this, so its absence means the document
+          // under the microscope is no longer the one that did the import —
+          // and anything it threw went with it. Reported as its own
+          // condition rather than silently passing.
+          if (!window.__preImport) {
+            return JSON.stringify({ reloaded: true, written: true, refused: null, errorCount: null, errors: null })
+          }
+          const errors = Array.isArray(window.__e2eErrors) ? window.__e2eErrors : null
+          const written = (localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')
+          // A REFUSAL is neither a write nor a throw. importProgress()
+          // returning { ok: false } puts "Import refused: <reason>" in the
+          // note and returns quietly, so a fixture that stops validating —
+          // a schema tweak, a version bump — produced no write, no error,
+          // and a 5s timeout reporting "the imported ledger reaches storage",
+          // which names the symptom while the reason sat on screen the whole
+          // time (CON-VER-005).
+          const refusal = /Import refused: .*/.exec(document.body.textContent || '')
+          // A MISSING collector stops the poll immediately. Treating it as
+          // "nothing has happened yet" ran the full 5s and reported "timed
+          // out waiting for the imported ledger to reach storage" — while
+          // the assertion written for exactly this case, twelve lines below,
+          // could then never fire. Same reasoning as uncaughtErrors()'s -1
+          // sentinel: "could not determine" is not "no".
+          if (errors === null) return JSON.stringify({ written, refused: null, errorCount: null, errors: null })
+          if (!written && !refusal && !errors.length) return ''
+          return JSON.stringify({
+            written,
+            // The TRUE count, separate from the sample. Reporting
+            // errors.length after slicing to three said "3 uncaught
+            // error(s)" when there were ten — a failure message that
+            // understates the failure, which the sibling uncaughtErrors()
+            // helper gets right by keeping the two apart (CON-VER-005).
+            errorCount: errors ? errors.length : null,
+            // Bounded. body.textContent runs every element's text together
+            // with no separators, so an unbounded match drags the rest of the
+            // page into the failure message and buries the reason it exists
+            // to surface.
+            refused: refusal ? refusal[0].slice(0, 120) : null,
+            errors: errors && errors.slice(0, 3),
+          })
+        })()`,
+        // 5000ms like its neighbours. The import must await file.text() and
+        // then write, polled over a cross-process CDP round trip, on a box
+        // the fleet notes describe as reaching load 10 under three Playwright
+        // jobs. A tight budget buys nothing — the written value stays true
+        // indefinitely, since the 600ms reload does not clear it — and only
+        // makes the gate red for timing (CON-VER-008).
+        { timeoutMs: 5000, intervalMs: 25, label: 'the imported ledger reaches storage' },
+      )
+      // The verdict was captured in the same evaluate as the write, above —
+      // not here, where the reload may already have replaced the document.
+      // Checked after the write rather than before it: report.ts's change
+      // handler is async and awaits file.text(), so asking straight after
+      // dispatchEvent could only ever observe the export half.
+      const ledger = JSON.parse(verdict)
+      assert(
+        !ledger.reloaded,
+        'the page reloaded before the import could be judged — anything it threw was lost with the document',
+      )
+      assert(
+        ledger.errorCount !== null,
+        'the error collector was not installed (while exporting and importing the ledger)',
+      )
+      // Errors first: they are the CAUSE when the write is also missing.
+      assert(
+        ledger.errorCount === 0,
+        `${ledger.errorCount} uncaught error(s) while exporting and importing the ledger` +
+          `${ledger.errorCount > 3 ? ' (first 3)' : ''}: ${JSON.stringify(ledger.errors)}`,
+      )
+      // The refusal, in its own words, before the generic "never reached
+      // storage" — the reason beats the symptom.
+      assert(!ledger.refused, `the ledger refused the import: ${ledger.refused}`)
+      assert(ledger.written, 'the imported ledger never reached storage')
+      return 'export → parse → import'
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('the floor zooms, fits, and survives a phone-width viewport', async () => {
+    const page = await browser.newPage()
+    try {
+      // Clear the profile FIRST. Every page in this run shares one origin,
+      // and the checks above write real progress — the session-play checks
+      // deliberately, the ledger check by importing a store. floor.ts keeps
+      // its rAF loop running for as long as any concept is due (it pulses
+      // the due lamps off Math.sin(now / 450)), so inheriting a store with
+      // something due makes the canvas animate, and the "is it still?" guard
+      // below then fails with "the floor canvas redraws on its own" — true,
+      // but a cause that belongs to the previous check, not this one. check()
+      // records a failure and CONTINUES, so that is a live path, not a
+      // hypothetical. Same reasoning, and the same in-page clear, as the
+      // screenshot block further down.
+      // The full prime-clear-rebuild dance, with BOTH navigations guarded.
+      //  - page.goto is a bare Page.navigate and does NOT wait for the
+      //    document to commit, so the clear could land on the about:blank a
+      //    fresh tab starts on and throw SecurityError the moment it touched
+      //    localStorage — red, for a reason with nothing to do with the
+      //    floor. The previous version said exactly this and then guarded
+      //    only the SECOND document with __beforeClear, leaving the prime's
+      //    own clear behind a readyState check that about:blank satisfies.
+      //    A comment asserting a protection the code does not give is worse
+      //    than no comment; committed() is what closes it.
+      //  - and the primed document has ALREADY painted .floor-canvas, so
+      //    waiting for that selector was satisfied by the stale pre-clear
+      //    DOM, leaving the zoom sequence measuring a page that had read
+      //    loadProgress() before the clear. The guard would have been applied
+      //    to a document other than the one measured, which is worse than no
+      //    guard: it reads as protection.
+      await page.goto(`${origin}/index.html?prime=floor`)
+      await committed(page, origin, 'floor prime')
+      await page.evaluate('localStorage.clear(); window.__beforeClear = true')
+      await page.goto(`${origin}/index.html?floor=1#/`)
+      await page.waitFor('!window.__beforeClear', { label: 'floor fresh document' })
+      await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'floor canvas' })
+      // The zoom controls are the pointer-free half of the floor, and a stub
+      // with no layout can never drive the other half.
+      // Compare the CANVAS, not just the absence of a throw. `scale` lives in
+      // a closure and nothing in the DOM reflects it, so a zoom button that
+      // regressed to a no-op would leave a check named "the floor zooms"
+      // perfectly green. The drawn bitmap is what a learner actually sees.
+      const zoom = JSON.parse(await page.evaluate(`(async () => {
+        const canvas = document.querySelector('.floor-canvas')
+        const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+        const shot = () => canvas.toDataURL()
+        // BY ACCESSIBLE NAME, not by position. The controls row holds the
+        // legend as well as the three zoom buttons, so index 2 being "Fit"
+        // is an assumption about render order that nothing enforces - a
+        // legend that gains a button, or a reorder of the three zoom button
+        // calls, would leave fitChanged green against the wrong control.
+        //
+        // No backticks and no nested template literal in here: this whole
+        // function is itself inside one, and an unescaped backtick ends it.
+        // That is not hypothetical - it is how this very comment broke the
+        // check on the first attempt.
+        const byName = (name) =>
+          document.querySelector('.floor-controls button[aria-label="' + name + '"]')
+        const zoomIn = byName('Zoom in')
+        const zoomOut = byName('Zoom out')
+        const fit = byName('Fit all')
+        const buttons = [zoomIn, zoomOut, fit].filter(Boolean)
+        // Checked HERE, in the page, before anything is clicked. The
+        // assert(zoom.n >= 3) outside would never be reached: a missing
+        // control throws "Cannot read properties of undefined (reading
+        // 'click')" first, and the explanatory assertion is dead code behind
+        // it (CON-VER-005).
+        if (buttons.length < 3) {
+          return JSON.stringify({ n: buttons.length, still: true, zoomedChanged: false, fitChanged: false })
+        }
+        // Establish that the canvas is STILL first. Everything below reads
+        // "the bitmap changed" as evidence that the button did something —
+        // which is worth nothing if the canvas redraws on its own. floor.ts
+        // runs a rAF loop that animates while any concept is due, and this
+        // check inherits whatever the ledger check left in localStorage, so
+        // "it happens to be static today" is not a safe assumption to leave
+        // implicit. Asserting it makes a future animating fixture fail loudly
+        // here instead of quietly turning the three assertions below vacuous.
+        await frame()
+        const settled = shot()
+        await frame()
+        const before = shot()
+        const still = settled === before
+        zoomIn.click()
+        await frame()
+        const zoomed = shot()
+        fit.click()
+        await frame()
+        const fitted = shot()
+        for (const b of buttons) b.click()
+        await frame()
+        return JSON.stringify({ n: buttons.length, still, zoomedChanged: zoomed !== before, fitChanged: fitted !== zoomed })
+      })()`))
+      assert(zoom.n >= 3, `expected zoom in/out/fit by aria-label, found ${zoom.n}`)
+      assert(zoom.still, 'the floor canvas redraws on its own — "the bitmap changed" proves nothing here')
+      assert(zoom.zoomedChanged, 'zooming in redrew nothing — the control is a no-op')
+      assert(zoom.fitChanged, 'fit redrew nothing after a zoom')
+      const clicked = zoom.n
+      await uncaughtErrors(page, 'while working the floor controls')
+
+      // And at phone width, where the floor re-lays-out around a single hall.
+      await page.send('Emulation.setDeviceMetricsOverride', {
+        width: 390, height: 780, deviceScaleFactor: 2, mobile: true,
+      })
+      // Marker again: the CURRENT document already has a .floor-canvas, so
+      // waiting for that selector proves nothing about the new one. Either
+      // the measurement below is taken on the old document — and since the
+      // emulation override resizes the existing page, innerWidth <= 400
+      // still passes, making "survives a phone-width viewport" vacuous — or
+      // the new document commits mid-check and querySelector returns null,
+      // failing on getBoundingClientRect of null.
+      await page.evaluate('window.__beforeNarrow = true')
+      await page.goto(`${origin}/index.html?floor=2#/`)
+      await page.waitFor('!window.__beforeNarrow', { label: 'phone-width floor document' })
+      await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'narrow floor' })
+      // Assert the viewport actually IS narrow and the canvas was laid out
+      // for it. Checking only that no error was thrown would let this pass on
+      // a 1280px page and still be called "survives a phone-width viewport".
+      const narrow = JSON.parse(await page.evaluate(`JSON.stringify({
+        width: window.innerWidth,
+        canvas: Math.round(document.querySelector('.floor-canvas').getBoundingClientRect().width),
+      })`))
+      assert(narrow.width <= 400, `the viewport is ${narrow.width}px, not phone width`)
+      assert(
+        narrow.canvas > 0 && narrow.canvas <= narrow.width,
+        `the floor canvas is ${narrow.canvas}px inside a ${narrow.width}px viewport`,
+      )
+      await uncaughtErrors(page, 'on a phone-width floor')
+      return `${clicked} controls, then ${narrow.width}px wide`
+    } finally {
+      await page.close()
+    }
+  })
+
+  await check('the aurora tears itself down when its context is lost', async () => {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${origin}/index.html?gl=1#/halls`)
+      await page.waitFor('!!document.querySelector(".aurora-canvas")', { label: 'aurora canvas' })
+      // WEBGL_lose_context is how a real browser tells a page its GPU context
+      // is gone — a driver reset, memory pressure, a tab coming back. The
+      // shader listens for it and destroys itself, and nothing had ever fired
+      // it, so that whole teardown path was dead as far as any gate could see.
+      const gone = await page.evaluate(`(async () => {
+        const canvas = document.querySelector('.aurora-canvas')
+        const gl = canvas.getContext('webgl')
+        const ext = gl && gl.getExtension('WEBGL_lose_context')
+        if (!ext) return 'no WEBGL_lose_context'
+        ext.loseContext()
+        return 'lost'
+      })()`)
+      assert(gone === 'lost', `could not lose the context (${gone})`)
+      // A condition, not 300ms. Dispatching webglcontextlost and running
+      // destroy() can take longer than any number picked in advance, and the
+      // failure would read as "the aurora did not tear down" rather than as a
+      // wait that was too short.
+      await page.waitFor('!document.querySelector(".aurora-canvas")', {
+        timeoutMs: 5000,
+        label: 'the aurora removes itself',
+      })
+      await uncaughtErrors(page, 'during aurora teardown')
+      return 'context lost → canvas removed'
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ---------------------------------------------------- screenshots ------ */
 
   const SHOTS = [
@@ -698,7 +1214,7 @@ try {
         //  - and a marker set before the clear proves the document really was
         //    rebuilt, rather than leaving that to be assumed
         await page.goto(`${origin}/index.html?shot=${shot.name}&prime=1`)
-        await page.waitFor('document.readyState !== "loading"', { label: `${shot.name} prime` })
+        await committed(page, origin, `${shot.name} prime`)
         await page.evaluate('localStorage.clear(); window.__beforeClear = true')
         await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
         await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })

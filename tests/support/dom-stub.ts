@@ -41,10 +41,81 @@ class StubClassList {
   }
   replaceAll(value: string): void {
     this.set = new Set(value.split(/\s+/).filter(Boolean))
+    // sync() like every other mutator. This was the ONE that skipped it,
+    // invisible while className read from the token set and exposed the
+    // moment className became the attribute: `c.className = 'a'` then
+    // `c.classList.replaceAll('zz')` left className "a", `.zz` matching,
+    // `[class="zz"]` not matching and outerHTML saying class="a" — the same
+    // "one element answers three contradictory things" the removeAttribute
+    // comment above claims is now impossible. Both callers happened to be
+    // safe (the className setter writes the attribute itself, and
+    // removeAttribute has already deleted it), which is exactly why it
+    // would have come back silently.
+    this.sync()
   }
   private sync(): void {
+    // The DOM's own rule, which is narrower than either thing this has been
+    // before. DOMTokenList's update steps say: if the element has no class
+    // attribute AND the token set is empty, do nothing; otherwise write the
+    // serialised set.
+    //
+    // So `classList.remove('x')` on an element that never had a class does
+    // NOT create one — the false positive that made `[class]` match every
+    // element something had ever called remove() on. But an explicit
+    // `setAttribute('class', '')` DOES leave the attribute present, and
+    // `[class]` matches it, exactly as in a browser. An earlier fix deleted
+    // the attribute whenever the set was empty, which cured the first case
+    // by breaking the second — and contradicted this file's own rule, forty
+    // lines below, that a presence test matches an attribute written as ''.
+    if (!this.owner.attributes.has('class') && this.set.size === 0) return
     this.owner.attributes.set('class', this.value)
   }
+}
+
+/** `dataset.someKey` ⇄ `data-some-key`, the DOM's own mapping. */
+function kebab(key: string): string {
+  return key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+}
+
+/** The inverse, for enumerating `dataset` back out of the attributes map. */
+function camel(attr: string): string {
+  return attr.slice('data-'.length).replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
+/**
+ * Split a selector LIST on its top-level commas only.
+ *
+ * `sel.split(',')` cut `[title="a, b"]` in half, and both halves then failed
+ * the compound parse — so the whole selector quietly matched nothing. In a
+ * matcher whose stated contract is that it refuses loudly what it cannot do,
+ * that is the same failing-invisibly category as the single-quoted attribute
+ * value: the caller gets `false` and no indication the selector was never
+ * understood.
+ */
+function splitSelectorList(sel: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let quote: string | null = null
+  let start = 0
+  for (let i = 0; i < sel.length; i++) {
+    const c = sel[i]
+    // Quoting is tracked, not just brackets. A `]` INSIDE a value closed the
+    // bracket early — `[title="a],b"]` split at the comma and both halves
+    // then failed the compound parse, so the selector quietly matched
+    // nothing. That is the same failing-invisibly category as the comma this
+    // function was added for, one case further in.
+    if (quote) {
+      if (c === quote) quote = null
+    } else if (c === '"' || c === "'") quote = c
+    else if (c === '[') depth += 1
+    else if (c === ']') depth -= 1
+    else if (c === ',' && depth === 0) {
+      parts.push(sel.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(sel.slice(start))
+  return parts
 }
 
 export class StubNode {
@@ -96,7 +167,63 @@ export class StubElement extends StubNode {
       delete this[name]
     },
   }
-  dataset: Record<string, string> = {}
+  /**
+   * A live view over the `data-*` attributes, not a detached bag.
+   *
+   * It used to be a plain object with no link to `attributes`, so
+   * `el.dataset.uid = '3'` left `[data-uid="3"]` matching nothing — the exact
+   * silent-null failure that kept blueprint.ts's wiring untestable and that
+   * the attribute matcher was taught selectors to fix. src/ writes
+   * `el({'data-uid': …})` today, so nothing hit it; a refactor to `dataset`
+   * would have restored the vacuum with no test turning red, which is the
+   * worst way for a gap to come back.
+   */
+  dataset: Record<string, string> = new Proxy({} as Record<string, string>, {
+    // Symbols are passed through to the target instead of being kebab-cased.
+    // `${el.dataset}` and any other symbol-keyed access (Symbol.toPrimitive,
+    // Symbol.toStringTag, util.inspect) reach these traps too, and a bare
+    // key.replace() threw "key.replace is not a function" — an error naming
+    // nothing a reader could act on, from a stub whose job is to make test
+    // failures legible.
+    get: (t, key) => {
+      if (typeof key === 'symbol') return (t as Record<symbol, unknown>)[key]
+      const name = `data-${kebab(key)}`
+      if (this.attributes.has(name)) return this.attributes.get(name)
+      // Fall through to the target for anything that is not a data-*
+      // attribute, so the object still behaves like an object. Returning
+      // attributes.get() unconditionally meant `toString` and `valueOf`
+      // resolved to undefined, and `\`${el.dataset}\`` died with "Cannot
+      // convert object to primitive value" — where a browser says
+      // "[object DOMStringMap]". Unknown data keys still read undefined,
+      // because the target is empty.
+      return (t as Record<string, unknown>)[key]
+    },
+    set: (t, key, value) => {
+      if (typeof key === 'symbol') (t as Record<symbol, unknown>)[key] = value
+      else this.attributes.set(`data-${kebab(key)}`, String(value))
+      return true
+    },
+    deleteProperty: (t, key) => {
+      if (typeof key === 'symbol') delete (t as Record<symbol, unknown>)[key]
+      else this.attributes.delete(`data-${kebab(key)}`)
+      return true
+    },
+    has: (t, key) =>
+      typeof key === 'symbol' ? key in t : this.attributes.has(`data-${kebab(key)}`),
+    // ENUMERATION, so Object.keys(el.dataset), {...el.dataset} and for…in
+    // see the data-* attributes. Without these two traps they all returned
+    // nothing — which is the same silent vacuum the Proxy was added to
+    // close, just reached by a different access path. ownKeys alone is not
+    // enough: Object.keys filters on enumerability, so a descriptor has to
+    // come back for each key too.
+    ownKeys: () => [...this.attributes.keys()].filter((k) => k.startsWith('data-')).map(camel),
+    getOwnPropertyDescriptor: (_t, key) => {
+      if (typeof key === 'symbol') return undefined
+      const name = `data-${kebab(key)}`
+      if (!this.attributes.has(name)) return undefined
+      return { value: this.attributes.get(name), enumerable: true, configurable: true, writable: true }
+    },
+  })
   private listeners = new Map<string, ((ev: unknown) => void)[]>()
   /** Set directly by callers that assign innerHTML; not parsed. */
   rawHtml = ''
@@ -108,9 +235,30 @@ export class StubElement extends StubNode {
   }
 
   get className(): string {
-    return this.classList.value
+    // The ATTRIBUTE, raw — not the normalised token set. In the DOM,
+    // className and getAttribute('class') both return the attribute value
+    // verbatim, so `setAttribute('class', '  a  b ')` leaves both reading
+    // '  a  b '.
+    //
+    // classList.value does too in a browser, and this stub's does NOT — it
+    // returns the serialised token set, so the two disagree on irregular
+    // spacing. Said here rather than quietly implied, because the sentence
+    // used to claim all three agreed, which was the overclaiming this file
+    // argues against. Nothing in src/ reads classList.value (grepped), so
+    // it is left as it is instead of being changed under a test suite that
+    // could not notice either way. Returning the serialised set here made
+    // className and getAttribute('class') disagree for any value with
+    // irregular spacing, and matches() then answered `[class="a b"]` through
+    // whichever of them it happened to consult.
+    return this.attributes.get('class') ?? ''
   }
   set className(v: string) {
+    // Assigning className ALWAYS sets the attribute, including to '', which
+    // is why this writes directly rather than leaning on replaceAll's
+    // sync(): sync() declines to create an attribute for an empty token set,
+    // and that is right for classList.remove() but wrong for an explicit
+    // assignment. Order matters — replaceAll syncs first, then the raw value
+    // lands, so the attribute keeps the spacing the caller wrote.
     this.classList.replaceAll(v)
     this.attributes.set('class', v)
   }
@@ -157,6 +305,12 @@ export class StubElement extends StubNode {
   }
   removeAttribute(k: string): void {
     this.attributes.delete(k)
+    // …and the token set with it. Leaving classList populated made one
+    // element answer three contradictory things at once: `[class]` false
+    // (the map was consulted), `[class="foo"]` true and `.foo` true (the
+    // token set was), and the next classList.add() resurrected the removed
+    // name back into the attribute.
+    if (k === 'class') this.classList.replaceAll('')
   }
 
   append(...nodes: (StubNode | string)[]): void {
@@ -200,13 +354,76 @@ export class StubElement extends StubNode {
     return null
   }
   /** Supports `.class`, `#id`, `tag`, and comma-separated lists of those. */
+  /**
+   * A COMPOUND selector matcher: tag, #id, .class, [attr] and [attr="value"],
+   * in any combination, plus comma lists. Still no combinators — descendant
+   * and child selectors stay the browser suite's job.
+   *
+   * Attribute selectors were the missing piece for src/sessions/blueprint.ts,
+   * which finds its wire endpoints with `[data-uid="…"]`: without them those
+   * queries returned null, the loop around them did nothing, and an
+   * interaction that was merely UNSUPPORTED looked untestable.
+   *
+   * NOT classify. Its drop target is `[data-bucket="…"] .bucket-drop`, a
+   * DESCENDANT selector, which this matcher still refuses — so classify's
+   * drop path remains browser-only. An earlier version of this comment
+   * claimed otherwise, which would have had the next reader assume a
+   * coverage gap was closed when it was not (CON-DATA-001).
+   */
   matches(sel: string): boolean {
-    return sel.split(',').some((part) => {
+    return splitSelectorList(sel).some((part) => {
       const s = part.trim()
       if (!s) return false
-      if (s.startsWith('.')) return this.classList.contains(s.slice(1))
-      if (s.startsWith('#')) return this.id === s.slice(1)
-      return this.tagName.toLowerCase() === s.toLowerCase()
+      // Split a compound into its pieces: `button.foo[data-x="1"]#id`.
+      // The attribute alternative allows a quoted value to contain `]`, which
+    // `[^\]]+` could not — same hole as the selector-list split above, and
+    // the `pieces.join('') !== s` check below still fails closed on anything
+    // this grammar does not cover.
+    const pieces = s.match(/(^[a-zA-Z][\w-]*)|(\.[\w-]+)|(#[\w-]+)|(\[[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^'"\]]*))?\])/g)
+      if (!pieces || pieces.join('') !== s) return false
+      return pieces.every((piece) => {
+        if (piece.startsWith('.')) return this.classList.contains(piece.slice(1))
+        if (piece.startsWith('#')) return this.id === piece.slice(1)
+        if (piece.startsWith('[')) {
+          // Quoting: ", ' or none. The earlier form stripped only double
+          // quotes, so `[data-uid='u1']` captured `'u1'` WITH the quotes and
+          // silently never matched — a matcher whose stated contract is that
+          // it refuses what it cannot do, failing invisibly instead. Single
+          // quotes are valid CSS and the two forms must agree.
+          const m = /^\[([\w-]+)(?:(=)(?:"([^"]*)"|'([^']*)'|([^'"\]]*)))?\]$/.exec(piece)
+          // Only presence and exact `=`. An earlier version accepted
+          // ~= |= ^= $= *= and collapsed all five to `includes`, which FAILS
+          // OPEN: [href^="/a"] would have matched "/b/a". A matcher that
+          // approximates is worse than one that refuses, because the wrong
+          // match is a green test on a false premise.
+          if (!m) return false
+          // `class` is read off classList, which is the live value; the
+          // attributes map is kept in step by sync() and the className
+          // setter, so this is belt-and-braces rather than a fix for a stale
+          // entry. Two earlier comments here each gave a WRONG reason for it
+          // — that setAttribute diverts class and id away from the map, then
+          // that classList.add leaves the map stale — and neither is true
+          // (CON-DATA-001). `id` needs nothing special.
+          const name = m[1]
+          // Presence asks hasAttribute, because className is '' (not null) on
+          // an element that never had a class — so `[class]` would otherwise
+          // match EVERY element, where CSS matches only those carrying the
+          // attribute.
+          if (!m[2]) return this.hasAttribute(name)
+          // No special case for `class` any more: className IS the attribute
+          // now, so consulting one or the other cannot give two answers.
+          const actual = this.getAttribute(name)
+          // Presence matches an EMPTY value, the way CSS does: an attribute
+          // written as `data-x=""` is present. Note that properties set
+          // directly on a stub element — `el.hidden = true`, `dialog.open` —
+          // never reach the attributes map at all, so `[hidden]` and `[open]`
+          // match nothing here however they are written.
+          if (actual == null) return false
+          // Exactly one of the three value groups is set, by construction.
+          return actual === (m[3] ?? m[4] ?? m[5])
+        }
+        return this.tagName.toLowerCase() === piece.toLowerCase()
+      })
     })
   }
   /** Depth-first descendants, self excluded. */
