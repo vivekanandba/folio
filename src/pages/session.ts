@@ -3,6 +3,7 @@ import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { acquisitionCard, ceremony } from '../fx'
 import { saveSessionResult } from '../progress'
+import type { Hall } from '../milestones'
 import { href } from '../router'
 import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
 import { resolvePackPath } from './pack'
@@ -52,10 +53,15 @@ export async function renderSession(
   )
   shell.append(mount)
 
-  // Loaded up front, not at the moment of completion: the learner should not
-  // wait on fifteen fetches between finishing an exhibit and being told so.
-  // A failure here costs the plaques, never the progress.
-  const halls = await loadHalls().catch(() => [])
+  // Started here, never AWAITED here. loadHalls() fetches the catalog and then
+  // every pack's metadata; awaiting it would leave the exhibit blank until all
+  // of them settled, on a page that used to become interactive as soon as its
+  // one session JSON had arrived. A learner takes seconds to play, so by the
+  // time this matters it has landed — and if it has not, the hall-shaped
+  // plaques fire on the next save rather than being lost, because detect() is
+  // satisfied-minus-recorded and not a diff. Progress is never at risk either way.
+  let halls: Hall[] = []
+  void loadHalls().then((h) => { halls = h }).catch(() => {})
 
   let saved = false
   mountSession(mount, session, (score, maxScore) => {

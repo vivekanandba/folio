@@ -6,6 +6,7 @@ import { acquisitionCard, burst } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
 import { dailyDrill } from '../gauntlet/generators'
 import { loadProgress, recordConceptReview } from '../progress'
+import type { Milestone } from '../milestones'
 import { href } from '../router'
 import { mountFlashcards } from '../sessions/flashcard'
 import { mountSim } from '../sim/engine'
@@ -44,7 +45,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   }))
   // Plaques earned across the whole round, shown once at the end rather than
   // interrupting between cards.
-  const earnedThisRound: { title: string; note: string }[] = []
+  // Keyed on the stable id, not the inscription: two packs sharing a title
+  // would produce the same words for different halls and collapse to one.
+  const earnedThisRound: Milestone[] = []
 
   const store = loadProgress()
   const queue = buildToday(store.concepts, allConcepts) // already pack-interleaved
@@ -171,7 +174,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
           normalized,
           { halls },
         )) {
-          if (!earnedThisRound.some((e) => e.title === m.title)) earnedThisRound.push(m)
+          if (!earnedThisRound.some((e) => e.id === m.id)) earnedThisRound.push(m)
         }
         advance()
       }

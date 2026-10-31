@@ -10,9 +10,16 @@ import type { ProgressStoreV2 } from './types'
  * derived from something the learner actually did (CON-DATA-001). There is no
  * XP here, no points, nothing handed out for showing up.
  *
- * Detection is a PURE function of the store: no clock beyond what `srs.ts`
- * already reads, no DOM, no storage. That is what makes "fires exactly once"
- * and "cannot fire at all" both testable.
+ * Two separations make the rest of the feature work:
+ *
+ *  - `satisfied()` decides WHICH plaques a store qualifies for; `describe()`
+ *    knows what any plaque SAYS. They are apart because an earned plaque has
+ *    to keep its words after the thing it records has lapsed — a streak ends,
+ *    a concept slips out of `solid`, a hall gains a session — and a wall that
+ *    quietly empties itself is the opposite of a collection.
+ *  - Both are pure functions of their arguments: no DOM, no storage, no clock
+ *    beyond what `srs.ts` already reads. That is what makes "fires exactly
+ *    once" and "cannot fire at all" testable.
  */
 
 export interface Hall {
@@ -33,6 +40,44 @@ export interface Milestone {
   title: string
   /** The curator's line, shown under the title. */
   note: string
+}
+
+/** The one-offs. */
+const FIXED: Record<string, { title: string; note: string }> = {
+  'first-exhibit': {
+    title: 'First exhibit',
+    note: 'You finished something. The museum has a record of you now.',
+  },
+  'first-flawless': {
+    title: 'A flawless run',
+    note: 'Every answer right, start to finish.',
+  },
+  'every-hall': {
+    title: 'Every hall visited',
+    note: 'There is no room in this museum you have not walked into.',
+  },
+}
+
+/** Tiered plaques: [threshold, inscription, line]. */
+const TIERS: Record<'streak' | 'solid' | 'visits', [number, string, string][]> = {
+  streak: [
+    [3, 'Three nights running', 'The museum has started expecting you.'],
+    [7, 'A week of nights', 'Seven visits in a row. The lamps are staying warm.'],
+    [30, 'A month of nights', 'Thirty consecutive days. This is a habit now, not an intention.'],
+    [100, 'A hundred nights', 'One hundred days unbroken. Very few collections are kept this well.'],
+  ],
+  solid: [
+    [1, 'First lamp lit', 'A concept has reached solid. It will hold now between visits.'],
+    [10, 'Ten lamps lit', 'Ten concepts solid — a wing of the museum is properly furnished.'],
+    [25, 'Twenty-five lamps', 'Twenty-five concepts solid. The dark patches are getting rarer.'],
+    [50, 'Fifty lamps', 'Fifty concepts solid. The floor is bright from the door.'],
+  ],
+  visits: [
+    [10, 'Ten visits logged', 'Ten reviews recorded. The curator has begun keeping notes.'],
+    [50, 'Fifty visits logged', 'Fifty reviews. The forgetting curve has real data to argue with.'],
+    [100, 'A hundred visits', 'One hundred reviews recorded in this collection.'],
+    [250, 'Two hundred and fifty visits', 'A long acquaintance with the same rooms.'],
+  ],
 }
 
 /**
@@ -61,98 +106,90 @@ export const MILESTONE_IDS = [
 
 export type MilestoneId = (typeof MILESTONE_IDS)[number]
 
-/** Tiered plaques: [threshold, inscription, line]. */
-const STREAKS: [number, string, string][] = [
-  [3, 'Three nights running', 'The museum has started expecting you.'],
-  [7, 'A week of nights', 'Seven visits in a row. The lamps are staying warm.'],
-  [30, 'A month of nights', 'Thirty consecutive days. This is a habit now, not an intention.'],
-  [100, 'A hundred nights', 'One hundred days unbroken. Very few collections are kept this well.'],
-]
+/**
+ * What a plaque says, whether or not the store still qualifies for it.
+ *
+ * This is the whole of the permanence promise. An earned plaque is looked up
+ * HERE, not among the currently-satisfied ones: a streak that lapses, a
+ * concept that slips below solid, or a hall that gains a new session would
+ * otherwise erase a plaque the learner genuinely earned — and `detect()` would
+ * refuse to award it again, so it would be gone for good.
+ *
+ * Returns null for an id this version does not know, so a ledger written by a
+ * newer build degrades to leaving that plaque out rather than crashing.
+ */
+export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
+  const fixed = FIXED[id]
+  if (fixed) return { id, ...fixed }
 
-const SOLID: [number, string, string][] = [
-  [1, 'First lamp lit', 'A concept has reached solid. It will hold now between visits.'],
-  [10, 'Ten lamps lit', 'Ten concepts solid — a wing of the museum is properly furnished.'],
-  [25, 'Twenty-five lamps', 'Twenty-five concepts solid. The dark patches are getting rarer.'],
-  [50, 'Fifty lamps', 'Fifty concepts solid. The floor is bright from the door.'],
-]
+  if (id.startsWith('hall-complete:')) {
+    const packId = id.slice('hall-complete:'.length)
+    const hall = ctx.halls.find((h) => h.packId === packId)
+    return {
+      id,
+      // A hall that has since left the catalog still had its plaque earned.
+      title: `${hall?.title ?? packId} — complete`,
+      note: 'Every exhibit in this hall has been played at least once.',
+    }
+  }
 
-const VISITS: [number, string, string][] = [
-  [10, 'Ten visits logged', 'Ten reviews recorded. The curator has begun keeping notes.'],
-  [50, 'Fifty visits logged', 'Fifty reviews. The forgetting curve has real data to argue with.'],
-  [100, 'A hundred visits', 'One hundred reviews recorded in this collection.'],
-  [250, 'Two hundred and fifty visits', 'A long acquaintance with the same rooms.'],
-]
+  const [kind, raw] = id.split('-')
+  const tiers = TIERS[kind as keyof typeof TIERS]
+  if (!tiers) return null
+  const tier = tiers.find(([threshold]) => String(threshold) === raw)
+  return tier ? { id, title: tier[1], note: tier[2] } : null
+}
+
+/** `describe` for an id known to exist — keeps `satisfied` free of null checks. */
+function plaque(id: string, ctx: MilestoneCtx): Milestone {
+  const m = describe(id, ctx)
+  if (!m) throw new Error(`milestone ${id} has no inscription`)
+  return m
+}
 
 /** Every plaque this store currently qualifies for, earned or not yet recorded. */
 export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[] {
-  const out: Milestone[] = []
+  const ids: string[] = []
   const results = Object.values(store.sessions ?? {})
 
-  if (results.length > 0) {
-    out.push({
-      id: 'first-exhibit',
-      title: 'First exhibit',
-      note: 'You finished something. The museum has a record of you now.',
-    })
-  }
+  if (results.length > 0) ids.push('first-exhibit')
 
   // maxScore > 0 matters: an explainer scores 0 of 0, and `score === maxScore`
   // would make clicking through one a flawless run.
-  if (results.some((r) => r.maxScore > 0 && r.score === r.maxScore)) {
-    out.push({
-      id: 'first-flawless',
-      title: 'A flawless run',
-      note: 'Every answer right, start to finish.',
-    })
-  }
+  if (results.some((r) => r.maxScore > 0 && r.score === r.maxScore)) ids.push('first-flawless')
 
   for (const hall of ctx.halls) {
     // An empty hall would be vacuously complete — a plaque for a room with
     // nothing in it.
     if (!hall.sessionIds.length) continue
-    const done = hall.sessionIds.every((id) => store.sessions?.[`${hall.packId}::${id}`])
-    if (done) {
-      out.push({
-        id: `hall-complete:${hall.packId}`,
-        title: `${hall.title} — complete`,
-        note: 'Every exhibit in this hall has been played at least once.',
-      })
+    if (hall.sessionIds.every((id) => store.sessions?.[`${hall.packId}::${id}`])) {
+      ids.push(`hall-complete:${hall.packId}`)
     }
   }
 
-  if (ctx.halls.length > 0) {
-    const visitedAll = ctx.halls.every((hall) =>
+  if (
+    ctx.halls.length > 0 &&
+    ctx.halls.every((hall) =>
       hall.sessionIds.some((id) => store.sessions?.[`${hall.packId}::${id}`]),
     )
-    if (visitedAll) {
-      out.push({
-        id: 'every-hall',
-        title: 'Every hall visited',
-        note: 'There is no room in this museum you have not walked into.',
-      })
-    }
+  ) {
+    ids.push('every-hall')
   }
 
   const streak = computeStreak(store.daily ?? {})
-  for (const [days, title, note] of STREAKS) {
-    if (streak >= days) out.push({ id: `streak-${days}`, title, note })
-  }
+  for (const [days] of TIERS.streak) if (streak >= days) ids.push(`streak-${days}`)
 
   const solid = Object.values(store.concepts ?? {}).filter(
     (c) => c.reviewCount > 0 && masteryBand(c.mastery) === 'solid',
   ).length
-  for (const [count, title, note] of SOLID) {
-    if (solid >= count) out.push({ id: `solid-${count}`, title, note })
-  }
+  for (const [count] of TIERS.solid) if (solid >= count) ids.push(`solid-${count}`)
 
   // The attempt log is capped at 500 in progress.ts, so every tier here sits
   // below that — a threshold above the cap could never be crossed.
   const visits = (store.attempts ?? []).length
-  for (const [count, title, note] of VISITS) {
-    if (visits >= count) out.push({ id: `visits-${count}`, title, note })
-  }
+  for (const [count] of TIERS.visits) if (visits >= count) ids.push(`visits-${count}`)
 
-  return out
+  return ids.map((id) => plaque(id, ctx))
 }
 
 /**

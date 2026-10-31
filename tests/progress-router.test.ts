@@ -179,6 +179,57 @@ test('a plaque survives a reload, because it lives in the store', () => {
   )
 })
 
+test('a plaque stays on the wall after the thing it records has lapsed', () => {
+  // The whole permanence promise, and the one way it was quietly broken: the
+  // shelf used to read its inscriptions off the CURRENTLY-satisfied set, so a
+  // streak plaque disappeared the day the streak did — and detect() refuses to
+  // re-award what is already recorded, so it was gone for good.
+  reset()
+  const storage = globalThis.localStorage as unknown as Storage
+  const day = (back: number): string =>
+    new Date(Date.now() - back * 86400000).toISOString().slice(0, 10)
+
+  // Three days running, ending today: streak-3 is live and gets awarded.
+  storage.setItem('folio-progress-v2', JSON.stringify({
+    version: 2, sessions: {}, concepts: {}, attempts: [],
+    daily: { [day(0)]: 1, [day(1)]: 1, [day(2)]: 1 },
+  }))
+  const earned = progress.recordConceptReview('p1', 'c1', 1)
+  assert.ok(earned.some((m) => m.id === 'streak-3'), 'precondition: the streak plaque was earned')
+
+  // Now let it lapse — the same ledger, but the visits are old.
+  const lapsed = JSON.parse(progress.exportProgress()) as { daily: Record<string, number> }
+  lapsed.daily = { [day(4)]: 1, [day(5)]: 1, [day(6)]: 1 }
+  storage.setItem('folio-progress-v2', JSON.stringify(lapsed))
+
+  const wall = progress.earnedMilestones({ halls: [] })
+  assert.ok(
+    wall.some((row) => row.milestone.id === 'streak-3'),
+    'a plaque records what WAS earned; a broken streak cannot unearn it',
+  )
+  assert.equal(
+    wall.find((row) => row.milestone.id === 'streak-3')?.milestone.title,
+    'Three nights running',
+    'and it still reads correctly',
+  )
+})
+
+test('a hall that has left the catalog keeps its plaque, named as best it can', () => {
+  reset()
+  const halls = [{ packId: 'p1', title: 'Hall One', sessionIds: ['s1'] }]
+  progress.saveSessionResult(result() as never, [], { halls })
+  assert.ok(
+    progress.earnedMilestones({ halls }).some((r) => r.milestone.title === 'Hall One — complete'),
+  )
+  // The pack is gone from the catalog — retired, renamed, whatever. The plaque
+  // is not: it falls back to the id rather than vanishing off the wall.
+  const orphaned = progress.earnedMilestones({ halls: [] })
+  assert.ok(
+    orphaned.some((r) => r.milestone.id === 'hall-complete:p1'),
+    'an orphaned hall plaque must survive',
+  )
+})
+
 test('importing rubbish is refused and leaves the store intact', () => {
   reset()
   progress.saveSessionResult(result() as never, [])

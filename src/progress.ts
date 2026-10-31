@@ -7,7 +7,7 @@ import type {
   SessionKind,
   SessionResult,
 } from './types'
-import { detect, satisfied, type Milestone, type MilestoneCtx } from './milestones'
+import { describe, detect, type Milestone, type MilestoneCtx } from './milestones'
 import { freshState, normalize, schedule, toGrade, today } from './srs'
 
 const KEY_V2 = 'folio-progress-v2'
@@ -165,18 +165,27 @@ export function recordConceptReview(
   return earned
 }
 
-/** Every plaque on the wall, newest first — the Acquisitions shelf reads this. */
+/**
+ * Every plaque on the wall, newest first — the Acquisitions shelf reads this.
+ *
+ * Inscriptions come from describe(), NOT from satisfied(). Earlier this read
+ * the words off the currently-satisfied set, which quietly emptied the wall:
+ * a streak plaque vanished the day the streak lapsed, a `solid` plaque the
+ * first time a concept slipped, a hall plaque the moment the pack gained a
+ * session — and detect() refuses to re-award what is already recorded, so each
+ * was gone for good. A plaque records what WAS earned; nothing later can
+ * unearn it.
+ */
 export function earnedMilestones(ctx: MilestoneCtx): { milestone: Milestone; at: string }[] {
-  const store = loadProgress()
-  const at = store.milestones ?? {}
-  // satisfied() is the only place that knows a plaque's words, so the shelf is
-  // built by matching recorded ids against it rather than by storing copies of
-  // the copy — an inscription edited later should read correctly on old plaques.
-  const known = new Map(satisfied(store, ctx).map((m) => [m.id, m]))
-  return Object.entries(at)
-    .map(([id, when]) => ({ milestone: known.get(id), at: when }))
-    .filter((row): row is { milestone: Milestone; at: string } => !!row.milestone)
-    .sort((a, b) => b.at.localeCompare(a.at))
+  const recorded = Object.entries(loadProgress().milestones ?? {})
+  return recorded
+    .map(([id, at], order) => ({ milestone: describe(id, ctx), at, order }))
+    .filter((row): row is { milestone: Milestone; at: string; order: number } => !!row.milestone)
+    // Newest first. A whole batch earned in one save shares a timestamp, so
+    // ties fall back to reverse award order, which puts the weightier plaque
+    // (a longer streak, a higher tier) above the one that came with it.
+    .sort((a, b) => b.at.localeCompare(a.at) || b.order - a.order)
+    .map(({ milestone, at }) => ({ milestone, at }))
 }
 
 export function getSessionResult(packId: string, sessionId: string): SessionResult | undefined {

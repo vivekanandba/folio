@@ -253,7 +253,9 @@ export async function renderReport(root: HTMLElement): Promise<void> {
   const hallProgress = el('section', {}, [
     el('h2', {}, ['Hall progress']),
     ...metas.map((m) => {
-      const ids = m.sessions.map((f) => f.replace(/\.json$/, '').replace(/^\d+-/, ''))
+      // One copy of the key-derivation rule in this file: hall PROGRESS and
+      // hall PLAQUES must agree about what a session id is (CON-COV-003).
+      const ids = m.sessions.map(sessionIdOf)
       const { done, total } = packCompletion(m.id, ids)
       return bar(m.title, total ? done / total : 0, `${done}/${total} sessions`)
     }),
