@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, stage } from '../fx'
 import type { AuditSession } from '../types'
 import { PALETTE, radarChart } from '../visuals'
@@ -62,6 +63,7 @@ function mountAudit(
         }, [String(n)])
         btn.addEventListener('click', () => {
           scores.set(pillar.id, n)
+          cue('reveal')
           burst(btn, [color, '#f8fafc'])
           render()
         })

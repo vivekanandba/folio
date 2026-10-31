@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import {
   connectivityAvailability, edgeKey, evalRule, nodesOf, shortestHops,
@@ -232,9 +233,11 @@ function mountBlueprint(
     const passed = results.filter((r) => r.ok).length
     if (passed === session.rules.length) {
       done = true
+      cue('correct')
       burst(inspect)
       finish(passed)
     } else {
+      cue('wrong')
       shake(inspect)
     }
   })

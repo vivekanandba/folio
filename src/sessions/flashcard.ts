@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { stage } from '../fx'
 import type { Flashcard } from '../types'
 
@@ -42,6 +43,7 @@ export function mountFlashcards(
     const controls = el('div', { class: 'flashcard-controls' })
     const reveal = el('button', { class: 'primary', type: 'button' }, ['Reveal answer'])
     reveal.addEventListener('click', () => {
+      cue('reveal')
       flip.append(el('div', { class: 'flashcard-face back pop-in' }, [el('p', {}, [card.back])]))
       controls.replaceChildren(
         el('p', { class: 'muted small' }, ['How well did you recall it?']),
@@ -51,6 +53,7 @@ export function mountFlashcards(
           GRADES.map((g) => {
             const b = el('button', { class: `grade-btn ${g.cls}`, type: 'button' }, [g.label])
             b.addEventListener('click', () => {
+              cue(g.value >= 0.75 ? 'correct' : 'wrong')
               grades.push(g.value)
               index += 1
               render()

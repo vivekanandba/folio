@@ -459,6 +459,33 @@ try {
     }
   })
 
+  await check('the museum can be silenced, and stays silenced', async () => {
+    const page = await browser.newPage()
+    try {
+      await page.goto(`${origin}/index.html#/`)
+      await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control' })
+      const pressed = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-pressed')`)
+      assert((await pressed()) === 'true', 'a fresh visitor should arrive with the museum audible')
+
+      await page.evaluate(`document.querySelector('.topbar-sound').click()`)
+      assert((await pressed()) === 'false', 'clicking the control did not mute')
+      const stored = await page.evaluate(`localStorage.getItem('folio-feedback')`)
+      assert(stored === 'off', `the mute did not reach storage (got ${stored})`)
+
+      // A reload is the whole point of persisting it: a preference that does
+      // not survive the next visit is not a preference.
+      await page.goto(`${origin}/index.html#/`)
+      await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control again' })
+      assert((await pressed()) === 'false', 'the mute did not survive a reload')
+
+      await page.evaluate(`document.querySelector('.topbar-sound').click()`)
+      assert((await pressed()) === 'true', 'the control did not unmute')
+      return 'mute → reload → unmute'
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ---------------------------------------------------- screenshots ------ */
 
   const SHOTS = [

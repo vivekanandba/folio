@@ -1,4 +1,5 @@
 import { el } from '../dom'
+import { cue } from '../feedback'
 import { burst, shake, stage } from '../fx'
 import { richBlock } from '../widgets'
 import type { Drill } from './generators'
@@ -47,6 +48,7 @@ export function mountDrill(
 
     const relErr = Math.abs(guess - drill.answer) / Math.max(Math.abs(drill.answer), 1e-9)
     const score = relErr <= drill.tolerance ? 1 : relErr <= drill.tolerance * 2.5 ? 0.4 : 0
+    cue(score === 1 ? 'correct' : 'wrong')
     if (score === 1) burst(lock)
     else if (score === 0) shake(lock)
 

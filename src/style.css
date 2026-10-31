@@ -2138,6 +2138,27 @@ input[type='range'] {
   border-radius: 5px;
   padding: 0.05rem 0.35rem;
 }
+
+/* The museum's voice, and the switch that silences it. One control for sound
+   and haptics together: someone reaching for it wants quiet, not a mixer. */
+.topbar-sound {
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  width: 2.1rem; height: 2.1rem;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+.topbar-sound:hover { border-color: var(--accent); color: var(--ink); }
+.topbar-sound:active { transform: scale(0.94); }
+/* Muted reads as dimmed and outlined, so the state is legible without colour
+   alone carrying it (the icon changes too). */
+.topbar-sound.is-muted { color: var(--line); border-style: dashed; }
 .theme-toggle {
   font: inherit;
   font-size: 1.05rem;

@@ -1,5 +1,6 @@
 import { loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
+import { resetRun } from '../feedback'
 import { ceremony } from '../fx'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
@@ -23,6 +24,9 @@ export async function renderSession(
     ) ?? `${sessionId}.json`
 
   const session = await loadSession(packPath, file)
+
+  // Each exhibit starts the ladder again — a run belongs to a session.
+  resetRun()
 
   const shell = el('div', { class: 'session-shell immersive' })
   const mount = el('div', { class: 'session-mount' })

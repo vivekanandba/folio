@@ -1,5 +1,6 @@
 import { loadCatalog, loadPackMeta } from '../content'
 import { el, prettyId } from '../dom'
+import { cue, resetRun } from '../feedback'
 import { deriveFlashcards } from '../flashcards'
 import { burst } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
@@ -19,6 +20,8 @@ function header(): HTMLElement {
 }
 
 export async function renderReview(root: HTMLElement): Promise<void> {
+  // The daily round is its own run; it does not inherit one from a session.
+  resetRun()
   root.classList.add('main-wide')
   root.replaceChildren(el('p', { class: 'muted' }, ['Building your review…']))
 
@@ -77,6 +80,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
       ]),
     )
+    cue('complete', { perfect: false })
     burst(stamp)
   }
 
