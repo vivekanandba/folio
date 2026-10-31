@@ -24,13 +24,31 @@
 
 ## PR 2 — milestones, celebrated and kept
 
-- [ ] 8. `tests/milestones.test.ts` written first and watched fail
-- [ ] 9. `src/milestones.ts` — pure `detect(before, after, ctx)`
-- [ ] 10. Optional `milestones` field on the store; `progress.ts` returns what
+- [x] 8. `tests/milestones.test.ts` written first and watched fail
+- [x] 9. `src/milestones.ts` — pure `detect(store, ctx)`. NOT the before/after
+       diff the plan named: a diff loses any milestone crossed during a save
+       that lacked hall information, and a learner who was using folio before
+       plaques existed has genuinely earned theirs. Satisfied-minus-recorded
+       is simpler and cannot lose a moment
+- [x] 10. Optional `milestones` field on the store; `progress.ts` returns what
        was newly earned (no version bump, old backups still import)
-- [ ] 11. The moment: brass plaque in `pages/session.ts` + `pages/review.ts`
-- [ ] 12. The permanence: Acquisitions shelf in `pages/report.ts`
-- [ ] 13. Mutation-check; gates; ship
+- [x] 11. The moment: brass plaque in `pages/session.ts` + `pages/review.ts`
+- [x] 12. The permanence: Acquisitions shelf in `pages/report.ts`
+- [x] 13. Mutation-check; gates; ship
+- [x] 13b. Six adversarial review rounds (CON-PROC-009), 25 findings fixed
+
+### Carried forward from round 6 — known, small, not blocking
+
+- [ ] 13c. `session.ts` can render TWO plaque cards for one finish (the
+       synchronous ones, then the hall-shaped ones after `loadHalls()`), with
+       two `cue('milestone')` calls ~2.3s apart. It fires on the best finish
+       there is — the last exhibit of a hall. Merge the second into the first
+       card if one is already on screen.
+- [ ] 13d. `feedback.ts`'s queue exempts `correct`/`wrong`/`reveal` from
+       waiting AND from being waited for, so a `reveal` landing just before a
+       queued `milestone` still has its haptic truncated — the failure the
+       queue exists to prevent, in the one direction its tests do not cover.
+       No page produces that ordering today.
 
 ## PR 3 — the curator's voice, and the polish
 

@@ -7,6 +7,7 @@ import type {
   SessionKind,
   SessionResult,
 } from './types'
+import { describe, detect, type Milestone, type MilestoneCtx } from './milestones'
 import { freshState, normalize, schedule, toGrade, today } from './srs'
 
 const KEY_V2 = 'folio-progress-v2'
@@ -113,24 +114,108 @@ function applyReview(
   store.lastPackId = packId
 }
 
-/** Persist a completed session AND fold it into each linked concept's SRS state. */
-export function saveSessionResult(result: SessionResult, conceptIds: string[] = []): void {
+/**
+ * Award whatever this save has just earned, stamp it into the store, and hand
+ * it back for the page to celebrate. Called with the store already updated and
+ * before it is persisted, so the plaques and the progress land together — a
+ * milestone recorded without the progress that earned it would be a lie, and
+ * the reverse would silently lose the moment.
+ */
+function award(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[] {
+  const earned = detect(store, ctx)
+  if (!earned.length) return []
+  const at = new Date().toISOString()
+  store.milestones = { ...(store.milestones ?? {}) }
+  for (const m of earned) store.milestones[m.id] = at
+  return earned
+}
+
+/** No halls given means hall-shaped plaques simply are not assessed this time. */
+const NO_HALLS: MilestoneCtx = { halls: [] }
+
+/**
+ * Award whatever the store ALREADY qualifies for but has not been given, with
+ * no new progress attached. The session page uses this for the hall-shaped
+ * plaques, which it cannot judge until the catalog has loaded: progress is
+ * saved the instant the learner finishes, and the plaques that need wider
+ * knowledge follow a beat later rather than being missed on the very save
+ * that earned them.
+ */
+export function awardMilestones(ctx: MilestoneCtx): Milestone[] {
+  const store = loadProgress()
+  const earned = award(store, ctx)
+  if (earned.length) persist(store)
+  return earned
+}
+
+/**
+ * Persist a completed session AND fold it into each linked concept's SRS
+ * state. Returns the plaques this earned, newest first.
+ */
+export function saveSessionResult(
+  result: SessionResult,
+  conceptIds: string[] = [],
+  ctx: MilestoneCtx = NO_HALLS,
+): Milestone[] {
   const store = loadProgress()
   store.sessions[`${result.packId}::${result.sessionId}`] = result
   const n = normalize(result.score, result.maxScore)
   applyReview(store, result.packId, conceptIds, n, 'session', result.sessionId, result.kind)
+  const earned = award(store, ctx)
   persist(store)
+  return earned
 }
 
 /** Record a flashcard review round for one concept. */
+/**
+ * Record a flashcard review round for one concept.
+ *
+ * `ctx` may be null to record the progress and award NOTHING — which the
+ * daily review needs, because it shows its plaques once at the end. Awarding
+ * mid-round would RECORD them, and detect() never offers a recorded plaque
+ * again, so a learner who closed the tab before the summary would have spent
+ * the moment without ever seeing it.
+ */
 export function recordConceptReview(
   packId: string,
   conceptId: string,
   normalized: number,
-): void {
+  ctx: MilestoneCtx | null = NO_HALLS,
+): Milestone[] {
   const store = loadProgress()
   applyReview(store, packId, [conceptId], normalized, 'flashcard', conceptId)
+  const earned = ctx ? award(store, ctx) : []
   persist(store)
+  return earned
+}
+
+/**
+ * Every plaque on the wall, newest first — the Acquisitions shelf reads this.
+ *
+ * Inscriptions come from describe(), NOT from satisfied(). Earlier this read
+ * the words off the currently-satisfied set, which quietly emptied the wall:
+ * a streak plaque vanished the day the streak lapsed, a `solid` plaque the
+ * first time a concept slipped, a hall plaque the moment the pack gained a
+ * session — and detect() refuses to re-award what is already recorded, so each
+ * was gone for good. A plaque records what WAS earned; nothing later can
+ * unearn it.
+ */
+export function earnedMilestones(ctx: MilestoneCtx): { milestone: Milestone; at: string }[] {
+  const recorded = Object.entries(loadProgress().milestones ?? {})
+  return recorded
+    // The map comes back from importProgress unvalidated. A string is not a
+    // date: `"<script>alert(1)"` would render as `Recorded <script>ale` and
+    // sort arbitrarily against the real timestamps, scrambling the shelf's
+    // stated order. Check the shape the comment claims to check
+    // (CON-VER-005 — a guard that misdescribes itself is worse than none).
+    .filter(([, at]) => typeof at === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(at))
+    .map(([id, at], order) => ({ milestone: describe(id, ctx), at, order }))
+    .filter((row): row is { milestone: Milestone; at: string; order: number } => !!row.milestone)
+    // Newest first. A whole batch earned in one save shares a timestamp, so
+    // ties fall back to reverse award order, which puts the weightier plaque
+    // (a longer streak, a higher tier) above the one that came with it.
+    .sort((a, b) => b.at.localeCompare(a.at) || b.order - a.order)
+    .map(({ milestone, at }) => ({ milestone, at }))
 }
 
 export function getSessionResult(packId: string, sessionId: string): SessionResult | undefined {
@@ -202,6 +287,13 @@ export function importProgress(json: string): { ok: boolean; error?: string } {
   if (!Array.isArray(d.attempts)) return { ok: false, error: 'Backup is missing the attempt log.' }
   if (!d.daily || typeof d.daily !== 'object' || Array.isArray(d.daily)) {
     return { ok: false, error: 'Backup is missing the daily log.' }
+  }
+  // Optional, but if present it must be a map. A string would spread to
+  // {0:'a',1:'b'} inside award() and be persisted in that shape; an array
+  // would be silently rewritten as an object. The other four fields are
+  // checked, and ledger content is not trusted anywhere else in this file.
+  if (d.milestones !== undefined && (typeof d.milestones !== 'object' || d.milestones === null || Array.isArray(d.milestones))) {
+    return { ok: false, error: 'Backup has a malformed plaque record.' }
   }
   persist(d as ProgressStoreV2)
   return { ok: true }

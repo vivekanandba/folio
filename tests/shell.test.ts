@@ -158,7 +158,10 @@ test('the report and review pages render differently once there is history', asy
     { packId: 'math-xii-2026', sessionId: 'math-xii-quiz', kind: 'quiz', score: 5, maxScore: 10, completedAt: new Date().toISOString() } as never,
     ['determinants'],
   )
-  progress.recordConceptReview('math-xii-2026', ['determinants'], 'session' as never, 'math-xii-quiz', 'quiz' as never, 5, 10)
+  // (packId, conceptId, normalized). This was another seven-argument call
+  // against a signature that has not existed for a while; the extras were
+  // ignored, so it passed while exercising something the app never does.
+  progress.recordConceptReview('math-xii-2026', 'determinants', 0.5)
 
   const seeded = root()
   await report.renderReport(seeded)

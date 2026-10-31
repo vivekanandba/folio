@@ -364,6 +364,60 @@ try {
     })
   }
 
+  await check('finishing an exhibit puts a plaque on the wall', async () => {
+    const page = await browser.newPage()
+    try {
+      // A first-time visitor, so "First exhibit" is genuinely unearned. This
+      // is the whole feature end to end: play a real session to completion in
+      // a real browser, and the museum should notice.
+      await page.goto(`${origin}/index.html?plaques=1`)
+      await page.waitFor('document.readyState !== "loading"', { label: 'app booted' })
+      await page.evaluate('localStorage.clear()')
+      // A quiz, because it completes by clicking alone — classify needs a drag
+      // the driver cannot do, and a check that cannot finish proves nothing.
+      await page.goto(`${origin}/index.html?plaques=1&go=1#/pack/math-xii-2026/session/math-xii-quiz`)
+      await page.waitFor('!!document.querySelector(".stage")', { label: 'session stage' })
+
+      // Click whatever the kind offers until it completes, bounded so a change
+      // in the session's shape fails loudly rather than spinning.
+      for (let i = 0; i < 40; i++) {
+        const done = await page.evaluate('!!document.querySelector(".saved-note")')
+        if (done) break
+        await page.evaluate(`(() => {
+          // Answer, then Next/Finish — in that order, so a question is never
+          // skipped past by clicking the button that appears after it.
+          const t = document.querySelector('.choice-btn:not([disabled])') ??
+                    document.querySelector('.primary')
+          if (t) t.click()
+        })()`)
+      }
+      await page.waitFor('!!document.querySelector(".saved-note")', { label: 'session completed' })
+      // The plaque is appended after the catalog resolves, which on a cold
+      // profile is a dozen fetches behind the completion callback. Reading it
+      // straight after .saved-note raced the feature under test and would go
+      // red for timing, not for a regression (CON-VER-008).
+      await page.waitFor('!!document.querySelector(".acquisition")', { label: 'plaque on the wall' })
+
+      const plaque = await page.evaluate(`(() => {
+        const a = document.querySelector('.acquisition')
+        return a ? a.textContent : ''
+      })()`)
+      assert(plaque, 'finishing the first exhibit put no plaque on the wall')
+
+      // And it is KEPT — the shelf is what makes it a collection rather than
+      // a flash of confetti.
+      await page.goto(`${origin}/index.html?plaques=1&shelf=1#/report`)
+      await page.waitFor('!!document.querySelector(".acquisition-shelf")', { label: 'acquisitions shelf' })
+      const shelved = await page.evaluate(
+        `document.querySelectorAll('.acquisition-shelf .acquisition').length`,
+      )
+      assert(shelved > 0, 'the plaque was celebrated and then forgotten')
+      return `${plaque.replace(/\s+/g, ' ').trim().slice(0, 40)}… · ${shelved} on the shelf`
+    } finally {
+      await page.close()
+    }
+  })
+
   /* ------------------------------------- the parts a stub cannot run ------ */
 
   // shader.ts (WebGL), tilt.ts (pointer) and sim/engine.ts (animation loop)

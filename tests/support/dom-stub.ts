@@ -53,6 +53,21 @@ export class StubNode {
   get textContent(): string {
     return this.childNodes.map((c) => c.textContent).join('')
   }
+  /**
+   * Whether this node is still attached to the document. Real code asks:
+   * fx.ts checks it before firing a burst at a stamp that may have been
+   * replaced, and the session page checks it before singing to a learner who
+   * has navigated away. Returning `undefined` made every such guard look
+   * false, so those paths were never exercised here.
+   */
+  get isConnected(): boolean {
+    let node: StubNode | null = this
+    while (node) {
+      if (node === stubDocument.body || node === stubDocument.documentElement) return true
+      node = node.parentNode
+    }
+    return false
+  }
 }
 
 export class StubText extends StubNode {

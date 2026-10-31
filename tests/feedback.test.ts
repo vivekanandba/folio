@@ -120,7 +120,10 @@ test('a flawless finish is voiced differently from an ordinary one', () => {
   fresh()
   cue('complete', { perfect: false })
   const ordinary = freqs()
-  g.__resetAudio()
+  // fresh() again, not just resetAudio: a second chord asked for while the
+  // first is still sounding QUEUES behind it, which is the point of the
+  // pacing. Clearing the room is how you compare two of them.
+  fresh()
   cue('complete', { perfect: true })
   const flawless = freqs()
 
@@ -225,11 +228,12 @@ test('a hostile platform is silent, not broken', () => {
   }
 })
 
-test('haptics ride the same cues, and differ by meaning', () => {
+test('haptics ride the same cues, and differ by meaning', async () => {
   fresh()
   cue('correct')
   cue('wrong')
-  cue('milestone')
+  cue('milestone') // queues behind the miss — see the pacing test below
+  assert.ok(await until(() => g.__vibrateLog.length === 3), 'all three should land')
   const [correct, wrong, milestone] = g.__vibrateLog
   assert.equal(typeof correct, 'number', 'a correct answer is a single short tap')
   assert.ok(Array.isArray(wrong), 'a miss is a pattern, not a tap')
@@ -643,6 +647,58 @@ test('the finishing chord waits for the answer bell to ring out', async () => {
     `the chord overlaps the bell (bell ends ${bell.stopAt}, chord starts ${Math.min(...chordStarts)})`,
   )
   assert.equal(g.__vibrateLog.length, 2, 'the completion pattern follows the tap rather than cancelling it')
+})
+
+test('a plaque waits for the finishing chord, and does not cut its haptic short', async () => {
+  fresh()
+  // The sequence a one-shot session produces: the answer is marked, the
+  // session completes, and a milestone falls out of the save — all in the
+  // same tick. Without a queue the plaque speaks FIRST and the chord's
+  // vibrate() then cancels the plaque's pattern mid-way, which is the exact
+  // failure the pacing exists to prevent.
+  cue('correct')
+  cue('complete', { perfect: true })
+  cue('milestone')
+
+  assert.equal(g.__vibrateLog.length, 1, 'only the answer tap has gone out so far')
+  assert.ok(await until(() => g.__vibrateLog.length === 3), 'all three should eventually land')
+  assert.deepEqual(
+    g.__vibrateLog.map((v) => (Array.isArray(v) ? v.length : 'tap')),
+    ['tap', 5, 7],
+    'answer tap, then the completion pattern, then the plaque — in that order',
+  )
+
+  // And in the audio, the plaque starts after the chord has finished.
+  const chordEnd = Math.max(...g.__audioLog.slice(1, 5).map((n) => n.stopAt))
+  const plaqueStart = Math.min(...g.__audioLog.slice(5).map((n) => n.startAt))
+  assert.ok(
+    plaqueStart >= chordEnd - 0.1,
+    `the plaque overlaps the chord (chord ends ${chordEnd}, plaque starts ${plaqueStart})`,
+  )
+})
+
+test('a short cue in the middle cannot pull the queue backwards', async () => {
+  fresh()
+  // cue() is a general API, so the invariant has to hold for orders the pages
+  // do not happen to produce today: a brief reveal landing while the chord is
+  // still sounding must not reset the room's free time and let the next
+  // queued cue start over the top of it.
+  cue('complete', { perfect: false })
+  cue('reveal')
+  cue('milestone')
+  assert.ok(await until(() => g.__audioLog.length >= 8), 'everything should eventually land')
+
+  // By POSITION, not by pitch: the plaque's shimmer and the ordinary chord
+  // share a 392Hz note, so filtering on frequency puts one of the plaque's own
+  // notes into the chord and the comparison measures nothing.
+  // Emission order is complete (3 notes), reveal (1), milestone (4).
+  assert.equal(g.__audioLog.length, 8, 'three cues, eight notes')
+  const chordEnd = Math.max(...g.__audioLog.slice(0, 3).map((n) => n.stopAt))
+  const shimmerStart = Math.min(...g.__audioLog.slice(4).map((n) => n.startAt))
+  assert.ok(
+    shimmerStart >= chordEnd - 0.1,
+    `the plaque started over the chord (chord ends ${chordEnd}, plaque at ${shimmerStart})`,
+  )
 })
 
 test('a chord still waiting when the learner mutes never arrives', async () => {
