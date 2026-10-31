@@ -208,6 +208,32 @@ const server = await serve(PREVIEW, PORT)
  * the injection stops being applied. "Could not determine" is not "none"
  * (CON-DATA-001, CON-VER-005).
  */
+/**
+ * Wait until the page really is the app's document, with storage reachable.
+ *
+ * `document.readyState !== "loading"` does NOT prove that, and every use of
+ * it as a commit guard in this file was wrong. page.goto is a bare
+ * Page.navigate, and a fresh tab starts on about:blank — which, probed
+ * against this repo's own CDP client, reports readyState "complete", origin
+ * "null", and throws SecurityError the moment anything touches localStorage.
+ * So the guard was satisfied before the navigation landed, and the very next
+ * statement in three different checks was a localStorage read or write.
+ *
+ * Asking whether storage is REACHABLE, rather than inferring it from a
+ * readiness signal that does not imply it, is the whole point: this waits for
+ * the thing the caller is about to depend on (CON-VER-006).
+ */
+async function committed(page, origin, label) {
+  await page.waitFor(
+    `(() => {
+      if (location.origin !== ${JSON.stringify(origin)}) return false
+      if (document.readyState === 'loading') return false
+      try { localStorage.length; return true } catch { return false }
+    })()`,
+    { label },
+  )
+}
+
 async function uncaughtErrors(page, where) {
   const n = await page.evaluate(
     'Array.isArray(window.__e2eErrors) ? window.__e2eErrors.length : -1',
@@ -391,7 +417,7 @@ try {
       // is the whole feature end to end: play a real session to completion in
       // a real browser, and the museum should notice.
       await page.goto(`${origin}/index.html?plaques=1`)
-      await page.waitFor('document.readyState !== "loading"', { label: 'app booted' })
+      await committed(page, origin, 'app booted')
       await page.evaluate('localStorage.clear()')
       // A quiz, because it completes by clicking alone — classify needs a drag
       // the driver cannot do, and a check that cannot finish proves nothing.
@@ -621,7 +647,7 @@ try {
       // the ledger — the only way progress leaves this device — had never
       // been exercised end to end.
       await page.goto(`${origin}/index.html?ledger=1`)
-      await page.waitFor('document.readyState !== "loading"', { label: 'app booted' })
+      await committed(page, origin, 'app booted')
       await page.evaluate(`localStorage.setItem('folio-progress-v2', JSON.stringify({
         version: 2,
         sessions: { 'p1::s1': { packId: 'p1', sessionId: 's1', kind: 'quiz', score: 4, maxScore: 5, completedAt: '2026-09-01T00:00:00.000Z' } },
@@ -767,13 +793,16 @@ try {
       // records a failure and CONTINUES, so that is a live path, not a
       // hypothetical. Same reasoning, and the same in-page clear, as the
       // screenshot block further down.
-      // The full prime-clear-rebuild dance, not two thirds of it. The
-      // version this replaces had the right idea and none of the guards the
-      // screenshot block spells out further down:
+      // The full prime-clear-rebuild dance, with BOTH navigations guarded.
       //  - page.goto is a bare Page.navigate and does NOT wait for the
       //    document to commit, so the clear could land on the about:blank a
       //    fresh tab starts on and throw SecurityError the moment it touched
-      //    localStorage — red, for a reason with nothing to do with the floor
+      //    localStorage — red, for a reason with nothing to do with the
+      //    floor. The previous version said exactly this and then guarded
+      //    only the SECOND document with __beforeClear, leaving the prime's
+      //    own clear behind a readyState check that about:blank satisfies.
+      //    A comment asserting a protection the code does not give is worse
+      //    than no comment; committed() is what closes it.
       //  - and the primed document has ALREADY painted .floor-canvas, so
       //    waiting for that selector was satisfied by the stale pre-clear
       //    DOM, leaving the zoom sequence measuring a page that had read
@@ -781,7 +810,7 @@ try {
       //    to a document other than the one measured, which is worse than no
       //    guard: it reads as protection.
       await page.goto(`${origin}/index.html?prime=floor`)
-      await page.waitFor('document.readyState !== "loading"', { label: 'floor prime' })
+      await committed(page, origin, 'floor prime')
       await page.evaluate('localStorage.clear(); window.__beforeClear = true')
       await page.goto(`${origin}/index.html?floor=1#/`)
       await page.waitFor('!window.__beforeClear', { label: 'floor fresh document' })
@@ -1024,7 +1053,7 @@ try {
         //  - and a marker set before the clear proves the document really was
         //    rebuilt, rather than leaving that to be assumed
         await page.goto(`${origin}/index.html?shot=${shot.name}&prime=1`)
-        await page.waitFor('document.readyState !== "loading"', { label: `${shot.name} prime` })
+        await committed(page, origin, `${shot.name} prime`)
         await page.evaluate('localStorage.clear(); window.__beforeClear = true')
         await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
         await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })

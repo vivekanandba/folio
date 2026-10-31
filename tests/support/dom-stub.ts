@@ -43,16 +43,54 @@ class StubClassList {
     this.set = new Set(value.split(/\s+/).filter(Boolean))
   }
   private sync(): void {
-    // DELETE when empty, never write ''. Writing an empty string made
-    // hasAttribute('class') true for an element that never carried a class,
-    // as soon as anything called classList.remove() or toggle(x, false) on
-    // it — so `[class]` matched it. That is the same false positive the
-    // hasAttribute branch in matches() exists to prevent, reached from the
-    // other side: there the value was '' and the attribute absent, here the
-    // attribute was present because the value was ''.
-    if (this.set.size === 0) this.owner.attributes.delete('class')
-    else this.owner.attributes.set('class', this.value)
+    // The DOM's own rule, which is narrower than either thing this has been
+    // before. DOMTokenList's update steps say: if the element has no class
+    // attribute AND the token set is empty, do nothing; otherwise write the
+    // serialised set.
+    //
+    // So `classList.remove('x')` on an element that never had a class does
+    // NOT create one — the false positive that made `[class]` match every
+    // element something had ever called remove() on. But an explicit
+    // `setAttribute('class', '')` DOES leave the attribute present, and
+    // `[class]` matches it, exactly as in a browser. An earlier fix deleted
+    // the attribute whenever the set was empty, which cured the first case
+    // by breaking the second — and contradicted this file's own rule, forty
+    // lines below, that a presence test matches an attribute written as ''.
+    if (!this.owner.attributes.has('class') && this.set.size === 0) return
+    this.owner.attributes.set('class', this.value)
   }
+}
+
+/** `dataset.someKey` ⇄ `data-some-key`, the DOM's own mapping. */
+function kebab(key: string): string {
+  return key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+}
+
+/**
+ * Split a selector LIST on its top-level commas only.
+ *
+ * `sel.split(',')` cut `[title="a, b"]` in half, and both halves then failed
+ * the compound parse — so the whole selector quietly matched nothing. In a
+ * matcher whose stated contract is that it refuses loudly what it cannot do,
+ * that is the same failing-invisibly category as the single-quoted attribute
+ * value: the caller gets `false` and no indication the selector was never
+ * understood.
+ */
+function splitSelectorList(sel: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let start = 0
+  for (let i = 0; i < sel.length; i++) {
+    const c = sel[i]
+    if (c === '[') depth += 1
+    else if (c === ']') depth -= 1
+    else if (c === ',' && depth === 0) {
+      parts.push(sel.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(sel.slice(start))
+  return parts
 }
 
 export class StubNode {
@@ -104,7 +142,29 @@ export class StubElement extends StubNode {
       delete this[name]
     },
   }
-  dataset: Record<string, string> = {}
+  /**
+   * A live view over the `data-*` attributes, not a detached bag.
+   *
+   * It used to be a plain object with no link to `attributes`, so
+   * `el.dataset.uid = '3'` left `[data-uid="3"]` matching nothing — the exact
+   * silent-null failure that kept blueprint.ts's wiring untestable and that
+   * the attribute matcher was taught selectors to fix. src/ writes
+   * `el({'data-uid': …})` today, so nothing hit it; a refactor to `dataset`
+   * would have restored the vacuum with no test turning red, which is the
+   * worst way for a gap to come back.
+   */
+  dataset: Record<string, string> = new Proxy({} as Record<string, string>, {
+    get: (_t, key: string) => this.attributes.get(`data-${kebab(key)}`),
+    set: (_t, key: string, value: string) => {
+      this.attributes.set(`data-${kebab(key)}`, String(value))
+      return true
+    },
+    deleteProperty: (_t, key: string) => {
+      this.attributes.delete(`data-${kebab(key)}`)
+      return true
+    },
+    has: (_t, key: string) => this.attributes.has(`data-${kebab(key)}`),
+  })
   private listeners = new Map<string, ((ev: unknown) => void)[]>()
   /** Set directly by callers that assign innerHTML; not parsed. */
   rawHtml = ''
@@ -116,28 +176,18 @@ export class StubElement extends StubNode {
   }
 
   get className(): string {
-    return this.classList.value
+    // The ATTRIBUTE, raw — not the normalised token set. In the DOM,
+    // className, getAttribute('class') and classList.value all return the
+    // attribute value verbatim, so `setAttribute('class', '  a  b ')` leaves
+    // all three reading '  a  b '. Returning the serialised set here made
+    // className and getAttribute('class') disagree for any value with
+    // irregular spacing, and matches() then answered `[class="a b"]` through
+    // whichever of them it happened to consult.
+    return this.attributes.get('class') ?? ''
   }
   set className(v: string) {
     this.classList.replaceAll(v)
-    // Route through the SAME rule sync() uses, rather than writing the raw
-    // string. Two bugs lived in the previous one-liner, and both were only
-    // half-fixed by teaching sync() to delete an empty class:
-    //
-    //  - `el.className = ''` (and setAttribute('class', ''), which lands
-    //    here) left `class` present with an empty value, so `[class]`
-    //    matched an element carrying no classes — the identical false
-    //    positive, by the identical mechanism, reached from the other side.
-    //  - the setter stored the raw string while the getter returns the
-    //    classList-NORMALISED value, so `setAttribute('class', '  a  b ')`
-    //    made getAttribute('class') and className disagree, and
-    //    `[class="a b"]` matched through one of them but not the other.
-    //
-    // Nothing in src/ hits either path today, which is exactly why it would
-    // have sat here until something did.
-    const normalised = this.classList.value
-    if (normalised === '') this.attributes.delete('class')
-    else this.attributes.set('class', normalised)
+    this.attributes.set('class', v)
   }
   get id(): string {
     return this.attributes.get('id') ?? ''
@@ -182,6 +232,12 @@ export class StubElement extends StubNode {
   }
   removeAttribute(k: string): void {
     this.attributes.delete(k)
+    // …and the token set with it. Leaving classList populated made one
+    // element answer three contradictory things at once: `[class]` false
+    // (the map was consulted), `[class="foo"]` true and `.foo` true (the
+    // token set was), and the next classList.add() resurrected the removed
+    // name back into the attribute.
+    if (k === 'class') this.classList.replaceAll('')
   }
 
   append(...nodes: (StubNode | string)[]): void {
@@ -242,7 +298,7 @@ export class StubElement extends StubNode {
    * coverage gap was closed when it was not (CON-DATA-001).
    */
   matches(sel: string): boolean {
-    return sel.split(',').some((part) => {
+    return splitSelectorList(sel).some((part) => {
       const s = part.trim()
       if (!s) return false
       // Split a compound into its pieces: `button.foo[data-x="1"]#id`.
@@ -277,7 +333,9 @@ export class StubElement extends StubNode {
           // match EVERY element, where CSS matches only those carrying the
           // attribute.
           if (!m[2]) return this.hasAttribute(name)
-          const actual = name === 'class' ? this.className : this.getAttribute(name)
+          // No special case for `class` any more: className IS the attribute
+          // now, so consulting one or the other cannot give two answers.
+          const actual = this.getAttribute(name)
           // Presence matches an EMPTY value, the way CSS does: an attribute
           // written as `data-x=""` is present. Note that properties set
           // directly on a stub element — `el.hidden = true`, `dialog.open` —
