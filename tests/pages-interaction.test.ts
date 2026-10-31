@@ -206,13 +206,26 @@ test('the palette searches, navigates by keyboard, and closes', async () => {
   input.dispatchEvent({ type: 'keydown', key: 'Enter', preventDefault: () => {}, target: input })
   await tick(20)
 
-  handle.open()
-  const again = document.querySelector('.cmdk') as unknown as (El & { open: boolean }) | null
-  again!.querySelector('.cmdk-input')?.dispatchEvent({
+  // The tail of this test kept BOTH patterns the other three call sites
+  // dropped: an unawaited open() and a first-dialog lookup. It reopens the
+  // palette, so `again` must be THIS test's dialog — and the block ended in
+  // `assert.ok(true)`, so if it ever resolved to an earlier, already-closed
+  // one, nothing would have gone red.
+  await handle.open()
+  const reopened = document.querySelectorAll('.cmdk')
+  const again = reopened[reopened.length - 1] as unknown as (El & { open: boolean })
+  assert.equal(again.open, true, 'reopening the palette opens the one this test holds')
+
+  again.querySelector('.cmdk-input')?.dispatchEvent({
     type: 'keydown', key: 'Escape', preventDefault: () => {}, target: again,
   })
   await tick()
-  assert.ok(true, 'driving the palette by keyboard must not throw')
+  // Something observable, instead of assert.ok(true). palette.ts has no
+  // Escape handler and the stub's <dialog> implements none either, so the
+  // dialog legitimately stays open — what this asserts is that driving it
+  // by keyboard leaves it in a usable state rather than throwing or
+  // tearing itself down.
+  assert.ok(again.querySelector('.cmdk-input'), 'the palette survives being driven by keyboard')
 })
 
 test('the palette handles a query that matches nothing', async () => {

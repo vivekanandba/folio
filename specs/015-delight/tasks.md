@@ -195,8 +195,14 @@
        export/import, `floor.ts` zoom + narrow layout, `shader.ts` teardown via
        `WEBGL_lose_context`
 - [x] 22. Ratchet the floor ONCE, from the measured minimum across runs —
-       never from a lucky run. Six measurements (five local, one CI) spanned
-       97.87–97.92%; the floor is 97.5, up from 94.8.
+       never from a lucky run. The floor is 97.5, up from 94.8. The figure
+       it was set from lives in one place, `package.json`'s
+       `comment:coverage-combined`, which also names the command to
+       re-measure with. This entry used to quote "97.87–97.92% across six
+       measurements" while that record said the lowest ever observed was
+       97.85 — two records of one measurement disagreeing, leaving a reader
+       unable to tell whether the margin was 0.35pp or 0.37pp, or which copy
+       was stale. The number is gone from here rather than re-typed.
 - [x] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
 - [ ] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
        the chart point click (82.94% lines / 56.60% branches today). Split

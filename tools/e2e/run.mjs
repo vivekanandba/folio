@@ -427,6 +427,9 @@ try {
             '.bp-part, .fork-door, .hotspot-bar, .sim-btn, .primary')
           let n = 0
           for (const el of targets) { if (n >= 3) break; el.click(); n++ }
+          // Stamp the stage as it was AT THE CLICK, so the wait below can
+          // tell "the page has answered" from "nothing has happened yet".
+          window.__stageAtClick = document.querySelector('.stage')?.textContent.length ?? 0
           return n
         })()`)
 
@@ -437,11 +440,42 @@ try {
         // listed, which is the right place to find out.
         if (!clicked) throw new Error(`no interactive control found for ${kind} — the selector does not know this kind`)
 
+        // Give a DEFERRED answer time to arrive before measuring.
+        //
+        // decision re-renders through window.setTimeout(render, 180), so the
+        // round trip straight after the click lands before anything has
+        // happened — and the page is closed before the render fires. Adding
+        // .fork-door to the selector above made `clicked` non-zero without
+        // making this assertion observe anything: a decision re-render that
+        // blanked the stage, or threw, still passed, and the run output kept
+        // printing the same "531→531" signature that was the evidence the
+        // check was vacuous in the first place. Fixing the click count and
+        // calling that the fix was treating the symptom.
+        //
+        // Not every kind re-renders, so a change is not required — but the
+        // deferred ones must be given their window, and uncaughtErrors must
+        // run after it rather than before.
+        await page.waitFor(
+          `(() => {
+            const n = document.querySelector('.stage')?.textContent.length ?? 0
+            return n !== window.__stageAtClick || window.__stageSettled === true
+          })()`,
+          { timeoutMs: 400, intervalMs: 25, label: `${kind} answered` },
+        ).catch(() => {})
+        // 400ms then stop waiting: a kind that legitimately does not change
+        // its stage would otherwise spend a timeout each run. What matters
+        // is that the deferred render has had more than its 180ms, which
+        // this guarantees either way.
+        await page.evaluate('new Promise((r) => setTimeout(r, 250))')
+
         // Interacting must not blank the page — the failure mode that matters.
         const after = await page.evaluate('document.querySelector(".stage")?.textContent.length ?? 0')
         if (!after) throw new Error(`the stage went blank after ${clicked} interaction(s)`)
         await uncaughtErrors(page, `during ${kind} interaction`)
-        return `${clicked} interaction(s), stage ${before}→${after} chars`
+        // "presses", not "interactions": decision's own re-entry gate means a
+        // second press inside its 180ms window is deliberately ignored, so
+        // the count is what was PRESSED, not what took effect.
+        return `${clicked} press(es), stage ${before}→${after} chars`
       } finally {
         await page.close()
       }

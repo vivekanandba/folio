@@ -180,6 +180,15 @@ test('a decision door pressed twice counts once', async () => {
   // shift twice, so the ending card read back a path the learner never took
   // even when the score was right.
   //
+  // The `ended` guard beside it is UNVERIFIED, and recorded that way rather
+  // than counted as tested (CON-VER-007). Removing it alone leaves every
+  // test green, because the click gate already stops the second press ever
+  // reaching a second render; only removing both turns this red. In a real
+  // browser it is unreachable by construction — after the ending render the
+  // doors are detached, so no click is delivered to them — so it is
+  // defence-in-depth against some future path that renders an ending twice,
+  // not a guard anyone has watched fail.
+  //
   // The list's CHILDREN, not `.viz-path-list li`. That is a descendant
   // selector, which this stub refuses by design — so the query returned 0
   // and `0 <= presses` was true however badly the code behaved. Written
