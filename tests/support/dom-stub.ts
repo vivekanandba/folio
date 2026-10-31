@@ -315,6 +315,8 @@ export class StubElement extends StubNode {
 }
 
 class StubDocument extends StubElement {
+  /** Settable, so a test can be a backgrounded tab. */
+  hidden = false
   documentElement = new StubElement('html')
   body = new StubElement('body')
   head = new StubElement('head')
@@ -570,6 +572,13 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
       stubDocument.body.replaceChildren()
       stubDocument.head.replaceChildren()
       stubDocument.activeElement = null
+      // Frames too. The budget is module-level, so without this every file
+      // that calls reset() still inherits whatever earlier tests spent — and
+      // a test that gets no frame passes while appearing to drive an
+      // animation. __resetFrames only helped the one file that knew to call
+      // it (CON-VER-008: order-dependence is a defect in the suite).
+      const reset = (globalThis as Record<string, unknown>).__resetFrames
+      if (typeof reset === 'function') (reset as () => void)()
     },
   }
 }

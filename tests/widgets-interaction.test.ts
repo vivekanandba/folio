@@ -243,6 +243,19 @@ test('a figure that cannot mount SAYS so, not just shows so', () => {
   // rather than left for a reader to wonder why they are missing.
 })
 
+test('mountWidget reports whether it mounted, so no one invites a touch of nothing', () => {
+  // renderRichInto prepends "Interactive — please touch" for the touchable
+  // kinds. It used to do that whether or not the figure mounted, so a `sim`
+  // fence naming an unknown model got an invitation above "(interactive
+  // figure unavailable)". The decision now follows the return value — which
+  // is also the only part of it this venue can reach, since the stub does not
+  // parse innerHTML and so cannot run renderRichInto's slot loop.
+  const bad = document.createElement('div') as unknown as HTMLElement
+  assert.equal(widgets.mountWidget(bad, { type: 'sim', model: 'no-such-model' }), false)
+  const good = document.createElement('div') as unknown as HTMLElement
+  assert.equal(widgets.mountWidget(good, { type: 'gauge', value: 0.4, label: 'L', caption: 'c' }), true)
+})
+
 test('a figure that mounts is marked mounted, not failed', () => {
   const host = document.createElement('div') as unknown as HTMLElement
   widgets.mountWidget(host, { type: 'gauge', value: 0.5, label: 'Test', caption: 'c' })

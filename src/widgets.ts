@@ -41,8 +41,12 @@ export function renderRichInto(host: HTMLElement, md: string): void {
     }
     try {
       const spec = JSON.parse(raw)
-      mountWidget(slot, spec)
-      if (TOUCHABLE.has(spec?.type)) {
+      // Only invite touch if there is something to touch. mountWidget
+      // swallows its own failure, so without this a `sim` fence naming an
+      // unknown model would print "Interactive — please touch" above
+      // "(interactive figure unavailable)".
+      const mounted = mountWidget(slot, spec)
+      if (TOUCHABLE.has(spec?.type) && mounted) {
         slot.prepend(el('div', { class: 'touch-chip', 'aria-hidden': 'true' }, ['Interactive — please touch']))
       }
     } catch {
@@ -63,14 +67,21 @@ export function richBlock(md: string, className = 'rich-block'): HTMLElement {
   return host
 }
 
-/** Mount an interactive figure into `host` from a JSON spec. Defensive: bad specs degrade gracefully. */
-export function mountWidget(host: HTMLElement, spec: Spec): void {
+/**
+ * Mount an interactive figure into `host` from a JSON spec. Defensive: bad
+ * specs degrade gracefully. Returns whether it mounted, so a caller can tell
+ * the two apart without reading a class back off the DOM — the chip inviting
+ * a learner to touch the figure depends on it.
+ */
+export function mountWidget(host: HTMLElement, spec: Spec): boolean {
   try {
     host.replaceChildren(build(spec))
     host.classList.add('widget-mounted')
+    return true
   } catch {
     host.classList.add('widget-failed')
     host.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
+    return false
   }
 }
 

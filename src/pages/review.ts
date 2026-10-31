@@ -85,6 +85,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
     // Everything this screen wants said, gathered and spoken ONCE. The live
     // region holds one message at a time.
     const spoken: string[] = [`Review complete. ${reviewed} concept${reviewed === 1 ? '' : 's'} reviewed.`]
+    if (reviewed > 0) spoken.push('Gauntlet cleared.')
     const score = el('p', { class: 'score-hero' }, [String(reviewed)])
     const card = el('div', { class: 'result-card pop-in review-summary' }, [
       el('h2', {}, ['Review complete']),
@@ -123,7 +124,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // reached every session and not the daily round. `perfect` stays false:
       // these grades are self-reported, so this is attendance rather than
       // mastery, and the label says exactly that.
-      ceremony(card, { perfect: false, label: 'Gauntlet cleared' })
+      // announce: false — this page composes one message below and speaks it
+      // once; a second live region here would race it.
+      ceremony(card, { perfect: false, label: 'Gauntlet cleared', announce: false })
     }
     // The CTA goes on AFTER the ceremony. ceremony() appends its stamp to the
     // end of the card, so building the card with the link already in it put

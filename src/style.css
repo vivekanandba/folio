@@ -985,7 +985,10 @@ input[type='range'] {
 .choice-btn.tone-warm:hover:not(:disabled) { border-color: #f4a26b; }
 .choice-btn.tone-cool:hover:not(:disabled) { border-color: #8ab4f8; }
 
+/* tabular-nums: the score COUNTS UP, and proportional digits change width as
+   it climbs, shoving the " / 15" suffix sideways on every frame. */
 .score-hero {
+  font-variant-numeric: tabular-nums;
   font-family: var(--font);
   font-size: 2rem;
   font-weight: 700;

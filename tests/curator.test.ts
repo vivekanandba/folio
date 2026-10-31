@@ -153,6 +153,23 @@ test('a counter whose node has left the page gives up', async () => {
   )
 })
 
+test('a hidden page gets the number, not an animation it may never finish', async () => {
+  freshFrames()
+  // A page the browser freezes or discards stops getting frames wherever it
+  // happens to be — and the first frame of a count-up is ~0. Landing on the
+  // real value is the only safe place to stop.
+  const doc = document as unknown as { hidden: boolean }
+  const node = el()
+  doc.hidden = true
+  try {
+    countUp(node, 14, 50_000)
+    await frames()
+    assert.equal(text(node), '14', 'a hidden page is given the figure outright')
+  } finally {
+    doc.hidden = false
+  }
+})
+
 test('a counter does not erase the number before its first frame', async () => {
   freshFrames()
   // What this can actually check, said plainly: countUp must write nothing

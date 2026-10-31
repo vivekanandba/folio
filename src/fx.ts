@@ -126,6 +126,14 @@ export function countUp(node: HTMLElement, to: number, durationMs = 650): void {
     // Bail if the page moved on — a counter ticking into a detached node is
     // work nobody sees.
     if (!node.isConnected) return
+    // A page the browser freezes or discards stops getting frames wherever it
+    // happens to be. Landing on the real value is the only safe place to
+    // stop, so a hidden page skips the animation rather than risking being
+    // abandoned showing 0.
+    if (document.hidden) {
+      node.textContent = String(to)
+      return
+    }
     const t = Math.min(1, (now - start) / durationMs)
     // Ease out: fast at first, settling onto the number rather than stopping.
     const eased = 1 - (1 - t) ** 3
@@ -200,10 +208,17 @@ export function acquisitionCard(items: { title: string; note: string }[]): HTMLE
  */
 export function ceremony(
   stageEl: HTMLElement,
-  opts: { perfect: boolean; label?: string },
+  opts: { perfect: boolean; label?: string; announce?: boolean },
 ): void {
   stageEl.classList.add('stage-bloom')
-  const stamp = el('div', { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}`, role: 'status' }, [
+  // role="status" by default, because for a session this stamp IS the
+  // announcement. A caller that composes its own message passes announce:
+  // false — two live regions in one pass means the shared one is overwritten
+  // and the learner hears whichever won the race.
+  const announce = opts.announce ?? true
+  const attrs: Record<string, string> = { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}` }
+  if (announce) attrs.role = 'status'
+  const stamp = el('div', attrs, [
     opts.label ?? (opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited'),
   ])
   const inner = stageEl.querySelector('.stage-inner') ?? stageEl

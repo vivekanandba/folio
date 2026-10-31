@@ -629,6 +629,12 @@ try {
         await page.send('Emulation.setTimezoneOverride', { timezoneId: 'UTC' })
         await page.send('Page.addScriptToEvaluateOnNewDocument', {
           source: `(() => {
+            // Safe for captures that RECORD NOTHING, which these four are.
+            // progress.ts derives attempt ids from new Date().toISOString(),
+            // so a shot that played a session under this pin would give every
+            // event the same id and collapse them — and it would read as a
+            // progress bug rather than a harness one.
+            //
             // 1780736400000 === 2026-06-06T09:00:00Z, a Saturday morning.
             // Checked, not asserted: the first draft of this line claimed a
             // Saturday morning and held a Tuesday EVENING, so the baseline
@@ -738,7 +744,25 @@ try {
           // in a fingerprint is drift by construction.
           aurora: !!document.querySelector('.aurora-canvas'),
           motion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-          fonts: document.fonts ? document.fonts.status : 'loaded',
+          // "Did the family ARRIVE", not "is this exact face ready".
+          //
+          // The status property reads 'loaded' whenever nothing is PENDING —
+          // including when the Google Fonts import never resolved at all,
+          // because then no face was registered and there is nothing to wait
+          // for. So a runner without egress would capture everything on a
+          // fallback face and be told the visit was clean (CON-VER-005).
+          //
+          // check('1rem ...') is the opposite mistake: it asks for one
+          // specific weight-400 face, and measurement showed it false on the
+          // halls capture while two Source Serif faces were loaded and in
+          // use. A gate that red-flags a correct capture teaches people to
+          // ignore it.
+          //
+          // One loaded face per family is the condition that is false exactly
+          // when the webfont did not arrive. fonts.ready above covers the
+          // pending case. (No backticks here: this block is a template literal.)
+          serif: !document.fonts || [...document.fonts].some((f) => f.family.indexOf('Source Serif') >= 0 && f.status === 'loaded'),
+          sans: !document.fonts || [...document.fonts].some((f) => f.family.indexOf('DM Sans') >= 0 && f.status === 'loaded'),
           scrollY: Math.round(window.scrollY),
         })`))
         const wrong = [
@@ -746,7 +770,8 @@ try {
           state.resume ? 'a resume card is on screen' : '',
           state.aurora ? 'a live aurora canvas is on screen' : '',
           state.motion ? '' : 'reduced-motion emulation did not take',
-          state.fonts === 'loaded' ? '' : `fonts are ${state.fonts}`,
+          state.serif ? '' : 'Source Serif 4 is not available — captured on a fallback face',
+          state.sans ? '' : 'DM Sans is not available — captured on a fallback face',
           state.scrollY ? `the page is scrolled to ${state.scrollY}px` : '',
         ].filter(Boolean)
         // Named causes, not a bare "it differs". An intermittent screenshot
