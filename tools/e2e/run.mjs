@@ -812,8 +812,19 @@ try {
       // 150ms and also monkeypatched location.reload to hold the navigation,
       // which does nothing at all: Location members are [LegacyUnforgeable].
       // It passed by outrunning the very reload it claimed to be holding.
-      // Poll for the write AND the error list in ONE expression, so the
-      // verdict is taken from a single snapshot of a single document.
+      // Poll for the write AND the error list in ONE expression, AND require
+      // the snapshot to come from the pre-reload document.
+      //
+      // The single expression alone narrows the race without closing it,
+      // which an earlier version of this comment claimed it did. report.ts
+      // schedules location.reload() 600ms after a successful import, and
+      // waitFor does not start polling until the dispatchEvent round trip
+      // returns. If the first poll lands after the reload, `written` reads
+      // true out of localStorage — which survives it — while __e2eErrors is
+      // the FRESH document's empty array, so an exception thrown by the
+      // import handler is reported as a pass. The marker is the only lever:
+      // location.reload is [LegacyUnforgeable] and cannot be stubbed.
+      await page.evaluate('window.__preImport = true')
       //
       // Reading them in two round trips raced report.ts's own reload: the
       // import schedules location.reload() 600ms after it writes, and
@@ -837,6 +848,13 @@ try {
         // swallows the cause (CON-VER-005). Verified by throwing inside the
         // import handler: this form names the exception instead.
         `(() => {
+          // The reload would wipe this, so its absence means the document
+          // under the microscope is no longer the one that did the import —
+          // and anything it threw went with it. Reported as its own
+          // condition rather than silently passing.
+          if (!window.__preImport) {
+            return JSON.stringify({ reloaded: true, written: true, refused: null, errorCount: null, errors: null })
+          }
           const errors = Array.isArray(window.__e2eErrors) ? window.__e2eErrors : null
           const written = (localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')
           // A REFUSAL is neither a write nor a throw. importProgress()
@@ -885,6 +903,10 @@ try {
       // handler is async and awaits file.text(), so asking straight after
       // dispatchEvent could only ever observe the export half.
       const ledger = JSON.parse(verdict)
+      assert(
+        !ledger.reloaded,
+        'the page reloaded before the import could be judged — anything it threw was lost with the document',
+      )
       assert(
         ledger.errorCount !== null,
         'the error collector was not installed (while exporting and importing the ledger)',

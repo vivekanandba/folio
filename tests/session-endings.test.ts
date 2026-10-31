@@ -147,30 +147,50 @@ test('a decision door pressed twice counts once', async () => {
   // twice in the attempt log and in daily[today].
   const mod = getModule('decision')!
   const session = firstOfKind('decision') as { nodes: { id: string; ending?: unknown }[]; startId?: string }
-  const host = root()
-  const scores: [number, number][] = []
-  mod.mount(host, session as never, (sc, m) => scores.push([sc, m]))
 
-  let presses = 0
-  for (let step = 0; step < 24 && !scores.length; step++) {
-    const door = node(host).querySelector('.fork-door')
-    if (!door) break
-    // TWICE, with no wait between — the whole point. The second press lands
-    // inside the 180ms window, against a door the renderer has not replaced.
-    door.click()
-    door.click()
-    presses += 1
-    await until(
-      () => scores.length > 0 || node(host).querySelector('.fork-door') !== door,
-      'the decision to re-render after a door was taken',
-    )
+  /**
+   * Walk the same tree, always taking the first door, pressing each door
+   * `times`. Returns what the run produced.
+   *
+   * Two walks, compared against each other, rather than a count derived from
+   * the content. The trail only grows for choices that carry a `note`
+   * (decision.ts pushes conditionally), so an assertion of the form
+   * `steps <= presses` is tight only while most of the walked choices happen
+   * to be noted — it holds today and is one content edit away from passing
+   * with the gate removed. A single-press walk is the exact expected value,
+   * whatever the content says, and it is the property in plain terms:
+   * pressing twice must leave the same trail as pressing once.
+   */
+  const walk = async (times: number): Promise<{ scores: number; steps: number }> => {
+    const host = root()
+    const scores: [number, number][] = []
+    mod.mount(host, session as never, (sc, m) => scores.push([sc, m]))
+    for (let step = 0; step < 24 && !scores.length; step++) {
+      const door = node(host).querySelector('.fork-door')
+      if (!door) break
+      // No wait between the presses — the whole point. A second press lands
+      // inside the 180ms window, against a door the renderer has not yet
+      // replaced.
+      for (let i = 0; i < times; i++) door.click()
+      await until(
+        () => scores.length > 0 || node(host).querySelector('.fork-door') !== door,
+        'the decision to re-render after a door was taken',
+      )
+    }
+    // Give any deferred render every chance to fire again before measuring.
+    await new Promise((r) => setTimeout(r, 300))
+    const list = node(host).querySelector('.viz-path-list') as unknown as
+      { childNodes: unknown[] } | null
+    return { scores: scores.length, steps: list ? list.childNodes.length : 0 }
   }
 
-  assert.equal(scores.length, 1, 'a double-pressed door completes the session exactly once')
+  const once = await walk(1)
+  const twice = await walk(2)
 
-  // And give the deferred render every chance to fire a second time.
-  await new Promise((r) => setTimeout(r, 300))
-  assert.equal(scores.length, 1, 'and no late render reports it again')
+  assert.equal(once.scores, 1, 'the single-press walk completes once (the control)')
+  assert.ok(once.steps > 0, 'and leaves a path on the ending card')
+
+  assert.equal(twice.scores, 1, 'a double-pressed door completes the session exactly once')
 
   // The TRAIL, not just the score. There are two guards here and either one
   // alone keeps onComplete to a single call, so the assertions above cannot
@@ -189,19 +209,16 @@ test('a decision door pressed twice counts once', async () => {
   // defence-in-depth against some future path that renders an ending twice,
   // not a guard anyone has watched fail.
   //
-  // The list's CHILDREN, not `.viz-path-list li`. That is a descendant
-  // selector, which this stub refuses by design — so the query returned 0
-  // and `0 <= presses` was true however badly the code behaved. Written
-  // that way first, and caught only by mutating the gate and finding the
-  // assertion still green, which is the whole argument for mutating a new
-  // assertion before trusting it (CON-PROC-005).
-  const list = node(host).querySelector('.viz-path-list') as unknown as
-    { childNodes: unknown[] } | null
-  const steps = list ? list.childNodes.length : 0
-  assert.ok(steps > 0, 'the ending card shows the path that was taken')
-  assert.ok(
-    steps <= presses,
-    `the path records ${steps} steps for ${presses} door presses — a door was counted twice`,
+  // walk() reads the list's CHILDREN, not `.viz-path-list li`. That is a
+  // descendant selector, which this stub refuses by design — so the query
+  // returned 0 and the first version of this assertion was `0 <= presses`,
+  // true however badly the code behaved. Caught only by mutating the gate
+  // and finding the assertion still green, which is the whole argument for
+  // mutating a new assertion before trusting it (CON-PROC-005).
+  assert.equal(
+    twice.steps,
+    once.steps,
+    `pressing twice recorded ${twice.steps} steps where pressing once recorded ${once.steps} — a door was counted twice`,
   )
 })
 
@@ -282,12 +299,20 @@ test('the transport runs, steps and resets the machine', () => {
   const afterStep = readouts()
   assert.notEqual(afterStep, beforeStep, 'stepping advances the machine')
 
-  // Reset goes BACK — so it is judged against the stepped state, not against
-  // beforeStep. Asserting it differs from beforeStep was wrong in the
-  // obvious way: reset restores the initial state, which is where
-  // beforeStep already was, so a correct Reset failed. Caught by running it.
+  // Reset goes BACK TO THE START — asserted as equality, not as "differs
+  // from the stepped state".
+  //
+  // Two wrong versions preceded this one. The first compared Reset against
+  // beforeStep with notEqual, which failed against a CORRECT reset. The fix
+  // for that flipped the comparison to afterStep — which cannot fail for the
+  // behaviour the assertion is named after: ANY change passes, including a
+  // Reset that advances the machine instead of resetting it. Verified by
+  // mutation: swapping `state = model.init(params)` for `tick(SIM_DT)` left
+  // the suite green. The strong form is available and true — readouts go
+  // "—|—|—|—" → "72|1.0|3.0|0" → "—|—|—|—" — so there was never a reason to
+  // settle for the weak one.
   btn(/Reset/).click()
-  assert.notEqual(readouts(), afterStep, 'and resetting undoes the step')
+  assert.equal(readouts(), beforeStep, 'resetting restores the initial state')
   handle!.destroy()
 })
 
