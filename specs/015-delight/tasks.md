@@ -18,6 +18,9 @@
        or not the kind rendered one — so `fx.ts` stays purely visual
 - [x] 6. Topbar mute control in `main.ts` + `style.css`
 - [x] 7. Mutation-check each new assertion; gates; ship
+- [x] 7b. Five adversarial review rounds (CON-PROC-009), 27 findings fixed;
+       the screenshot capture made order-, date- and race-independent after
+       the gate caught an intermittent 8.6%/9.5% drift that was not visual
 
 ## PR 2 — milestones, celebrated and kept
 

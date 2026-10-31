@@ -82,6 +82,13 @@ test('a round where every concept was skipped is not celebrated', async () => {
     'and should report that nothing was reviewed',
   )
   assert.deepEqual(g.__audioLog, [], 'a round that reviewed nothing must not play the completion chord')
+  // The stamp is the loudest claim on the card. Suppressing only the chord
+  // would leave the page saying "Gauntlet cleared" over "0 concepts reviewed".
+  assert.equal(
+    node.querySelector('.exhibit-stamp'),
+    null,
+    'a round that cleared nothing must not be stamped "Gauntlet cleared"',
+  )
 
   storage().clear()
 })

@@ -504,7 +504,16 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
     }
     class StubAudioContext {
       state = 'running'
-      currentTime = 0
+      /**
+       * A REAL clock, not a frozen 0. With currentTime stuck at zero every
+       * note looks like it starts at the same instant, so a test could not
+       * tell "the chord waits for the bell" from "both fired together" — the
+       * very thing the pacing logic exists to prevent.
+       */
+      private born = Date.now()
+      get currentTime(): number {
+        return (Date.now() - this.born) / 1000
+      }
       destination = new StubAudioNode()
       createOscillator(): StubOscillator { return new StubOscillator() }
       createGain(): StubGain { return new StubGain() }

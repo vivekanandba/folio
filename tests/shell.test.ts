@@ -124,10 +124,16 @@ test('a drill answer that is CLOSE does not cost the learner their run', async (
   }
   // Off by 1.5× the tolerance: wrong, but the right order of magnitude.
   const close = drill.answer * (1 + drill.tolerance * 1.5)
-  const slider = node.querySelector('.estimate-slider')!
-  slider.value = String(Math.min(drill.max, Math.max(drill.min, close)))
-  slider.dispatchEvent?.({ type: 'input' })
-  for (const b of node.querySelectorAll('.primary')) b.click?.()
+  const slider = node.querySelector('.estimate-slider')
+  assert.ok(slider, 'the drill should render a slider to answer with')
+  slider!.value = String(Math.min(drill.max, Math.max(drill.min, close)))
+  slider!.dispatchEvent?.({ type: 'input' })
+  // Assert the control was FOUND before clicking it. An empty list with an
+  // optional call submits nothing and leaves the run at its pre-state, so the
+  // assertion below would still pass while proving nothing (CON-VER-005).
+  const submit = node.querySelectorAll('.primary')
+  assert.equal(submit.length, 1, 'exactly one Lock-it-in button to submit with')
+  submit[0].click?.()
 
   assert.equal(currentRun(), 2, 'a close answer is neither a hit nor a miss — the run is untouched')
   resetRun()

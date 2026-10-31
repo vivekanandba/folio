@@ -46,14 +46,48 @@ export function noteForRun(run: number): number {
 
 let run = 0
 
+/**
+ * When the last answer cue went out. A one-shot session kind calls
+ * cue('correct') and then synchronously completes, so the bell and the
+ * finishing chord would land in the SAME tick: two oscillators at the same
+ * pitch starting together nearly double the master trim — loudest on a
+ * flawless finish, the one case this most wants to sound good — and a second
+ * navigator.vibrate() CANCELS the running pattern, so the answer's tap never
+ * reaches the learner at all. The chord waits for the bell to ring out.
+ */
+let lastAnswerAt = 0
+
+/** The length of the answer bell, which is what the chord has to clear. */
+const ANSWER_TAIL_MS = 440
+
+/** A chord waiting its turn. At most one is ever outstanding. */
+let pendingCue = 0
+
+/**
+ * Drop a chord that has not spoken yet. A learner who has left the exhibit —
+ * or muted — must not be sung to by the session they just left, and a test
+ * that leaves one armed hands it to whichever test happens to wait next.
+ */
+function cancelPending(): void {
+  if (!pendingCue) return
+  window.clearTimeout(pendingCue)
+  pendingCue = 0
+}
+
 /** Consecutive right answers in the current session. */
 export function currentRun(): number {
   return run
 }
 
-/** Start a fresh run — called when a session mounts, and after every miss. */
+/**
+ * Start a fresh run — called when a session mounts, and after every miss.
+ * The pacing state goes with it: a new session's first chord has no previous
+ * answer to wait for.
+ */
 export function resetRun(): void {
   run = 0
+  lastAnswerAt = 0
+  cancelPending()
 }
 
 /**
@@ -109,8 +143,13 @@ export function setFeedbackEnabled(on: boolean): void {
   } catch {
     storageAuthoritative = false
   }
-  // Muting releases the audio device rather than leaving it open and idle.
-  if (!on) closeAudio()
+  // Muting releases the audio device rather than leaving it open and idle,
+  // and drops any chord still waiting its turn. emit() re-checks the
+  // preference too, but a cue that can never sound should not stay armed.
+  if (!on) {
+    cancelPending()
+    closeAudio()
+  }
 }
 
 /**
@@ -122,6 +161,12 @@ export function setFeedbackEnabled(on: boolean): void {
  * somebody has switched off) holds for a cross-tab mute as well as a local one.
  */
 export function adoptStoredPreference(): void {
+  // The event itself is evidence that the store took a write, so stop
+  // distrusting it. Without this, one failed write (quota) would pin this tab
+  // to its own stale choice forever — it would keep rendering
+  // aria-pressed="false" after another tab un-muted, which is the same
+  // "control disagrees with storage" defect in the opposite direction.
+  storageAuthoritative = true
   if (!feedbackEnabled()) closeAudio()
 }
 
@@ -199,7 +244,29 @@ export function cue(name: CueName, opts: CueOptions = {}): void {
   const degree = run
   if (name === 'correct') run += 1
   else if (name === 'wrong') run = 0
+  if (name === 'correct' || name === 'wrong') lastAnswerAt = Date.now()
 
+  // A finish that arrives on the heels of the answer that caused it waits for
+  // that answer to finish speaking. Quiz and calculator put a "Finish" button
+  // in between and are already clear of this; the one-shot kinds are not.
+  if (name === 'complete') {
+    const since = Date.now() - lastAnswerAt
+    if (lastAnswerAt && since < ANSWER_TAIL_MS) {
+      cancelPending()
+      pendingCue = window.setTimeout(() => {
+        pendingCue = 0
+        emit(name, degree, opts)
+      }, ANSWER_TAIL_MS - since)
+      return
+    }
+  }
+  emit(name, degree, opts)
+}
+
+/** Actually speak. Separate from cue() because a deferred chord lands here. */
+function emit(name: CueName, degree: number, opts: CueOptions): void {
+  // Re-checked rather than inherited: the learner may have reached for the
+  // mute while the chord was waiting its turn.
   if (!feedbackEnabled()) return
   play(notesFor(name, degree, opts))
   vibrate(HAPTICS[name])

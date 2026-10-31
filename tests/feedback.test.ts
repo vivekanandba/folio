@@ -343,6 +343,10 @@ test('an audio device that misbehaves is still only silence', async () => {
     setFeedbackEnabled(false) // releases whatever context is cached
     g.AudioContext = impl
     setFeedbackEnabled(true)
+    // Fresh device, fresh pacing: without this a `complete` here would be
+    // DEFERRED behind the previous case's answer bell and land after the
+    // assertion rather than before it.
+    resetRun()
   }
   try {
     // 1. The constructor itself refuses — no device, or no permission.
@@ -590,6 +594,78 @@ test('a mute made in another tab releases this tab\'s audio device too', () => {
     assert.equal(closed, 1, 'an unmute elsewhere must not close anything')
   } finally {
     g.AudioContext = realAudio
+    fresh()
+  }
+})
+
+test('the finishing chord waits for the answer bell to ring out', async () => {
+  fresh()
+  // Every one-shot kind (hotspot, estimate, detective, classify, sequence,
+  // blueprint) marks the answer and completes in the SAME tick. Landing both
+  // cues together puts two oscillators on the same pitch at t=0 — roughly
+  // double the master trim, worst on a flawless finish — and a second
+  // vibrate() cancels the first pattern, so the answer tap is never felt.
+  cue('correct')
+  cue('complete', { perfect: true })
+
+  assert.equal(g.__audioLog.length, 1, 'only the answer bell should have gone out so far')
+  assert.deepEqual(g.__vibrateLog, [8], 'and only the answer tap')
+
+  await new Promise((r) => setTimeout(r, 600))
+  assert.ok(g.__audioLog.length > 1, 'the chord should arrive once the bell has finished')
+  const bell = g.__audioLog[0]
+  const chordStarts = g.__audioLog.slice(1).map((n) => n.startAt)
+  assert.ok(
+    Math.min(...chordStarts) >= bell.stopAt - 0.05,
+    `the chord overlaps the bell (bell ends ${bell.stopAt}, chord starts ${Math.min(...chordStarts)})`,
+  )
+  assert.equal(g.__vibrateLog.length, 2, 'the completion pattern follows the tap rather than cancelling it')
+})
+
+test('a chord still waiting when the learner mutes never arrives', async () => {
+  fresh()
+  cue('correct')
+  cue('complete', { perfect: false })
+  setFeedbackEnabled(false)
+  const heardSoFar = g.__audioLog.length
+  await new Promise((r) => setTimeout(r, 600))
+  assert.equal(g.__audioLog.length, heardSoFar, 'a deferred chord must re-check the mute, not inherit it')
+  setFeedbackEnabled(true)
+})
+
+test('a storage event clears a tab\'s distrust of its own store', () => {
+  fresh()
+  const realStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  try {
+    // One failed write (quota) makes this tab stop believing storage...
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: () => 'on',
+        setItem: () => { throw new Error('QuotaExceededError') },
+        removeItem: () => {},
+      },
+      configurable: true,
+      writable: true,
+    })
+    setFeedbackEnabled(false)
+    assert.equal(feedbackEnabled(), false, 'precondition: the local choice is winning')
+
+    // ...but another tab writing proves the store works again. Without the
+    // re-probe this tab stays muted forever, rendering aria-pressed="false"
+    // while storage says the museum is audible — round 3's defect, mirrored.
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: {
+        getItem: () => 'on',
+        setItem: () => {},
+        removeItem: () => {},
+      },
+      configurable: true,
+      writable: true,
+    })
+    adoptStoredPreference()
+    assert.equal(feedbackEnabled(), true, 'a storage event is evidence the store is writable again')
+  } finally {
+    if (realStorage) Object.defineProperty(globalThis, 'localStorage', realStorage)
     fresh()
   }
 })

@@ -574,12 +574,24 @@ try {
         //
         // Only localStorage is cleared. Wiping cache_storage here would also
         // tear out the service worker the checks above just installed.
-        await page.send('Storage.clearDataForOrigin', {
-          origin,
-          storageTypes: 'local_storage',
-        })
-        await page.goto(`${origin}/index.html${shot.hash}`)
+        //
+        // And it is cleared IN THE PAGE, not over CDP. Storage.clearDataForOrigin
+        // races the navigation that follows it: when the clear landed late the
+        // shot was captured with the progress the session-play checks had
+        // recorded, and halls/concept drifted 8.6%/9.5% while floor and
+        // pack-math passed — an intermittent failure that looks exactly like a
+        // visual regression and is not one (CON-VER-008). localStorage.clear()
+        // in page context is synchronous, and the assertion below turns any
+        // future race into a sentence instead of a mystery.
+        await page.goto(`${origin}/index.html?shot=${shot.name}`)
+        await page.evaluate('localStorage.clear()')
+        await page.goto(`${origin}/index.html?shot=${shot.name}${shot.hash}`)
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
+        const leftovers = await page.evaluate('localStorage.length')
+        assert(
+          leftovers === 0,
+          `the capture is not a first-time visitor — ${leftovers} key(s) survived the clear`,
+        )
         // Settle entry animations so the capture is comparable run to run.
         await page.evaluate(`new Promise(r => setTimeout(r, 600))`)
         const png = await page.screenshot()

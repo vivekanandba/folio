@@ -69,7 +69,12 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   const showSummary = () => {
     // Not `mastered`: finishing the round is attendance, not mastery — the
     // grades were self-reported. The ordinary chord below says the same thing.
-    const stamp = el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
+    // And a round where every concept was skipped cleared no gauntlet at all,
+    // so it gets no stamp either — the stamp is the loudest claim on the card,
+    // and suppressing only the chord would leave the two disagreeing.
+    const stamp = reviewed > 0
+      ? el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
+      : el('div', { class: 'muted small' }, ['Nothing was due that had material to review.'])
     root.replaceChildren(
       header(),
       el('div', { class: 'result-card pop-in review-summary' }, [
