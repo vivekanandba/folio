@@ -52,20 +52,39 @@ export function resetRun(): void {
   run = 0
 }
 
-/** Is the learner listening? On unless they have said otherwise. */
-export function feedbackEnabled(): boolean {
+/**
+ * The choice this session has made, used only when storage cannot answer.
+ * Without it, a profile with site data blocked (Safari private browsing) reads
+ * the preference back as the default and the mute control does nothing at all
+ * — which strands exactly the person who is in a quiet room.
+ */
+let sessionChoice: boolean | null = null
+
+/** `null` when storage holds no answer, or cannot be read at all. */
+function storedChoice(): boolean | null {
   try {
-    return localStorage.getItem(KEY) !== 'off'
+    const raw = localStorage.getItem(KEY)
+    return raw === null ? null : raw !== 'off'
   } catch {
-    return true // private mode / storage disabled — default to the richer app
+    return null
   }
 }
 
+/**
+ * Is the learner listening? Storage wins when it has an answer — so a change
+ * made in another tab is honoured — and this session's own choice is the
+ * fallback. On unless someone has said otherwise.
+ */
+export function feedbackEnabled(): boolean {
+  return storedChoice() ?? sessionChoice ?? true
+}
+
 export function setFeedbackEnabled(on: boolean): void {
+  sessionChoice = on
   try {
     localStorage.setItem(KEY, on ? 'on' : 'off')
   } catch {
-    /* the preference is best-effort; the session still honours it in memory */
+    /* unwritable storage costs persistence, never the mute itself */
   }
   // Muting releases the audio device rather than leaving it open and idle.
   if (!on) closeAudio()

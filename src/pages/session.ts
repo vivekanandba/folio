@@ -1,6 +1,6 @@
 import { loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
-import { resetRun } from '../feedback'
+import { cue, resetRun } from '../feedback'
 import { ceremony } from '../fx'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
@@ -67,9 +67,13 @@ export async function renderSession(
       },
       session.conceptIds,
     )
+    // The chord is unconditional: finishing an exhibit is worth hearing even
+    // if the kind that rendered it has no .stage for the bloom to land on.
+    const perfect = maxScore > 0 && score === maxScore
+    cue('complete', { perfect })
     // The room celebrates: bloom + bursts + a brass stamp on the exhibit.
     const stageEl = shell.querySelector<HTMLElement>('.stage')
-    if (stageEl) ceremony(stageEl, { perfect: maxScore > 0 && score === maxScore })
+    if (stageEl) ceremony(stageEl, { perfect })
     shell.append(
       el('div', { class: 'saved-note plaque-card' }, [
         el('span', { class: 'plaque' }, ['Progress saved']),

@@ -2157,8 +2157,11 @@ input[type='range'] {
 .topbar-sound:hover { border-color: var(--accent); color: var(--ink); }
 .topbar-sound:active { transform: scale(0.94); }
 /* Muted reads as dimmed and outlined, so the state is legible without colour
-   alone carrying it (the icon changes too). */
-.topbar-sound.is-muted { color: var(--line); border-style: dashed; }
+   alone carrying it (the icon changes too). --muted, not --line: --line is
+   exempted by tools/contrast.py as a decorative hairline (1.25:1), and a
+   glyph drawn in it vanishes wherever the speaker renders as text rather
+   than as a colour emoji. */
+.topbar-sound.is-muted { color: var(--muted); border-style: dashed; }
 .theme-toggle {
   font: inherit;
   font-size: 1.05rem;

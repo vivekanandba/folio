@@ -56,6 +56,19 @@ function context(): AudioContext | null {
 }
 
 /**
+ * Neither `resume()` nor `close()` may escape. They are promises, so a bare
+ * `try/catch` is not enough: Chrome REJECTS `resume()` with NotAllowedError
+ * when the page has no user activation, and `close()` with InvalidStateError
+ * on a context that is already closed. An unhandled rejection is a console
+ * error the learner did nothing to earn, and it reaches any page that treats
+ * `unhandledrejection` as a failure. Both call sites already sit inside a
+ * try/catch, so this only has to deal with the asynchronous half.
+ */
+function settle(result: unknown): void {
+  void Promise.resolve(result).catch(() => {})
+}
+
+/**
  * Release the audio device. Called when the learner mutes — holding an open
  * context for a feature someone has switched off is rude to the rest of the
  * system, and it means the next unmute re-checks the platform from scratch.
@@ -64,7 +77,7 @@ export function closeAudio(): void {
   const open = ctx
   ctx = null
   try {
-    void open?.close()
+    settle(open?.close())
   } catch {
     /* already closed, or closing is unsupported — nothing to recover */
   }
@@ -76,8 +89,9 @@ export function play(notes: Note[]): void {
   if (!audio) return
   try {
     // A context that autoplay policy parked in 'suspended' resumes on the
-    // gesture that produced this cue; the promise is deliberately unawaited.
-    if (audio.state === 'suspended') void audio.resume()
+    // gesture that produced this cue. Unawaited on purpose — but never
+    // unhandled: without activation this rejects rather than throwing.
+    if (audio.state === 'suspended') settle(audio.resume())
     const now = audio.currentTime
     for (const note of notes) {
       const osc = audio.createOscillator()

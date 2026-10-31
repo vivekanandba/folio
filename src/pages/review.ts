@@ -67,7 +67,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
-    const stamp = el('div', { class: 'exhibit-stamp mastered', role: 'status' }, ['Gauntlet cleared'])
+    // Not `mastered`: finishing the round is attendance, not mastery — the
+    // grades were self-reported. The ordinary chord below says the same thing.
+    const stamp = el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
     root.replaceChildren(
       header(),
       el('div', { class: 'result-card pop-in review-summary' }, [

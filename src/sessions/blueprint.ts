@@ -237,7 +237,10 @@ function mountBlueprint(
       burst(inspect)
       finish(passed)
     } else {
-      cue('wrong')
+      // Inspect is formative here — it is pressed repeatedly WHILE wiring, not
+      // once to commit. Sounding a miss each time would reprimand someone for
+      // thinking out loud, and wipe a run they never spent. The shake is
+      // feedback enough until the topology actually passes.
       shake(inspect)
     }
   })

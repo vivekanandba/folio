@@ -474,13 +474,24 @@ try {
 
       // A reload is the whole point of persisting it: a preference that does
       // not survive the next visit is not a preference.
-      await page.goto(`${origin}/index.html#/`)
+      //
+      // It has to be a REAL reload. Navigating to a URL identical down to the
+      // fragment is a same-document navigation — the document survives, and
+      // this assertion would pass against a preference held in a module
+      // variable that never reached storage. So: a different URL, and a marker
+      // that proves the document was rebuilt before anything is concluded.
+      await page.evaluate(`window.__sameDocument = true`)
+      await page.goto(`${origin}/index.html?reload=1#/`)
       await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control again' })
+      const survived = await page.evaluate(`!!window.__sameDocument`)
+      assert(!survived, 'the page was never actually reloaded — this check would prove nothing')
       assert((await pressed()) === 'false', 'the mute did not survive a reload')
 
       await page.evaluate(`document.querySelector('.topbar-sound').click()`)
       assert((await pressed()) === 'true', 'the control did not unmute')
-      return 'mute → reload → unmute'
+      const back = await page.evaluate(`localStorage.getItem('folio-feedback')`)
+      assert(back === 'on', `unmuting did not reach storage (got ${back})`)
+      return 'mute → real reload → unmute'
     } finally {
       await page.close()
     }
@@ -510,6 +521,22 @@ try {
         // the reduced-motion path under test.
         await page.send('Emulation.setEmulatedMedia', {
           features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+        })
+        // Capture a FIRST-TIME visitor, every time. Every page in this run
+        // shares one profile, and the session-kind checks above PLAY sessions
+        // — which writes real progress. The committed baselines had therefore
+        // been encoding whatever those checks happened to record: a resume
+        // card, a streak of 1, lamps that had come due. That makes the gate
+        // depend on check ORDER and on the date, which is a suite defect, not
+        // a visual one (CON-VER-008). Captured from a clean store, these four
+        // shots answer one question only: does the museum still look like
+        // itself to someone arriving for the first time?
+        //
+        // Only localStorage is cleared. Wiping cache_storage here would also
+        // tear out the service worker the checks above just installed.
+        await page.send('Storage.clearDataForOrigin', {
+          origin,
+          storageTypes: 'local_storage',
         })
         await page.goto(`${origin}/index.html${shot.hash}`)
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })

@@ -172,6 +172,19 @@ test('a hostile platform is silent, not broken', () => {
   try {
     assert.equal(feedbackEnabled(), true, 'unreadable storage falls back to the richer app')
     assert.doesNotThrow(() => setFeedbackEnabled(false), 'an unwritable preference is not an error')
+
+    // The point of the mute is the mute, not the persistence. Someone in a
+    // quiet room on a profile that blocks site data must still be able to
+    // silence the museum for this visit — storage only decides whether the
+    // choice outlives the tab.
+    assert.equal(feedbackEnabled(), false, 'the mute must hold even when it cannot be stored')
+    g.__resetAudio()
+    g.__resetVibrate()
+    cue('correct')
+    assert.deepEqual(g.__audioLog, [], 'muted without storage: no tone was requested')
+    assert.deepEqual(g.__vibrateLog, [], 'muted without storage: no vibration was requested')
+
+    setFeedbackEnabled(true)
     assert.doesNotThrow(() => cue('correct'), 'a throwing vibrate() must not reach the session')
   } finally {
     if (realStorage) Object.defineProperty(globalThis, 'localStorage', realStorage)
@@ -255,6 +268,25 @@ test('an audio device that misbehaves is still only silence', () => {
 
     // 3. ...and a context that refuses to close does not break muting.
     assert.doesNotThrow(() => setFeedbackEnabled(false), 'a context that will not close must not break the mute')
+
+    // 4. A context that REJECTS rather than throws. Chrome does exactly this:
+    //    resume() rejects with NotAllowedError without user activation, and
+    //    close() rejects on an already-closed context. node:test fails the
+    //    whole file on an unhandled rejection, so this assertion is the
+    //    absence of one — a bare `void promise` turns this file red.
+    install(class {
+      state = 'suspended'
+      currentTime = 0
+      destination = {}
+      resume(): Promise<void> { return Promise.reject(new Error('NotAllowedError')) }
+      close(): Promise<void> { return Promise.reject(new Error('InvalidStateError')) }
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown {
+        return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} }
+      }
+    })
+    cue('correct')
+    setFeedbackEnabled(false)
   } finally {
     g.AudioContext = realAudio
     fresh()

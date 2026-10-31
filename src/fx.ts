@@ -1,6 +1,5 @@
 import { prefersReducedMotion } from './a11y'
 import { el } from './dom'
-import { cue } from './feedback'
 import { mountAurora } from './shader'
 
 /** Per-kind aurora palettes, transcribed from the .stage-{kind} CSS glow gradients. */
@@ -130,7 +129,6 @@ export function stage(
  * (it's information) — only the motion is dropped.
  */
 export function ceremony(stageEl: HTMLElement, opts: { perfect: boolean }): void {
-  cue('complete', { perfect: opts.perfect })
   stageEl.classList.add('stage-bloom')
   const stamp = el('div', { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}`, role: 'status' }, [
     opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited',
