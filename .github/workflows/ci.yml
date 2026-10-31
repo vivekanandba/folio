@@ -145,13 +145,39 @@ jobs:
           # if-no-files-found: warn kept it green while it did. Widening the
           # glob from *.lcov did not help; the dot was the problem.
           #
-          # The e2e log is not the primary route anyway: coverage:all cats it
-          # on failure, so a red run explains itself in the job log. This is
-          # the artifact copy, for reading afterwards.
-          path: .coverage/*
+          # *.lcov, NOT * — the glob has to be able to fail.
+          #
+          # `.coverage/*` can no longer match nothing whenever the directory
+          # exists: coverage:all starts `mkdir -p .coverage && { npm run
+          # coverage:unit >.coverage/unit.log ...`, and the shell creates
+          # unit.log the instant it opens that redirect. So a run where the
+          # lcov writes silently stopped producing a file would upload two
+          # LOG files, go green, and leave if-no-files-found: error reading
+          # as a guarantee it no longer gave (CON-VER-005). Narrowing it back
+          # to the artifact that matters restores the meaning the strictness
+          # claims. The logs go up separately, below, where their absence is
+          # genuinely not an error.
+          path: .coverage/*.lcov
+          # include-hidden-files, because `.coverage` starts with a dot and
+          # upload-artifact@v4 skips hidden paths by DEFAULT. This step
+          # uploaded nothing for weeks — the job log says "No files were
+          # found with the provided path" — and if-no-files-found: warn kept
+          # it green while it did. The dot was the problem, not the glob.
           include-hidden-files: true
           # error, not warn. `warn` is what kept this step green for weeks
           # while it uploaded nothing — fixing the no-op and leaving the thing
           # that hid it would invite the next one (CON-PROC-003). The sibling
           # upload at the e2e job already uses error.
           if-no-files-found: error
+      - name: Upload coverage logs
+        # Separate, and deliberately NOT strict: coverage:all cats a failing
+        # run's log into the job output already, so this is the convenience
+        # copy. Holding it to `error` would be the same mistake in reverse —
+        # a red step for something that is not a failure.
+        if: always() && steps.lcov.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-logs
+          path: .coverage/*.log
+          include-hidden-files: true
+          if-no-files-found: warn

@@ -5,7 +5,7 @@ import { buildIndex, query, type SearchDoc } from './search'
  * Command palette over the search index. Uses a native <dialog> for free focus-trapping,
  * Esc-to-close, and an inert background. Returns an `open()` to wire to a button/shortcut.
  */
-export function initPalette(): { open: () => void } {
+export function initPalette(): { open: () => Promise<void> } {
   const dialog = document.createElement('dialog')
   dialog.className = 'cmdk'
 

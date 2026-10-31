@@ -43,7 +43,15 @@ class StubClassList {
     this.set = new Set(value.split(/\s+/).filter(Boolean))
   }
   private sync(): void {
-    this.owner.attributes.set('class', this.value)
+    // DELETE when empty, never write ''. Writing an empty string made
+    // hasAttribute('class') true for an element that never carried a class,
+    // as soon as anything called classList.remove() or toggle(x, false) on
+    // it — so `[class]` matched it. That is the same false positive the
+    // hasAttribute branch in matches() exists to prevent, reached from the
+    // other side: there the value was '' and the attribute absent, here the
+    // attribute was present because the value was ''.
+    if (this.set.size === 0) this.owner.attributes.delete('class')
+    else this.owner.attributes.set('class', this.value)
   }
 }
 
@@ -227,7 +235,12 @@ export class StubElement extends StubNode {
         if (piece.startsWith('.')) return this.classList.contains(piece.slice(1))
         if (piece.startsWith('#')) return this.id === piece.slice(1)
         if (piece.startsWith('[')) {
-          const m = /^\[([\w-]+)(?:(=)"?([^"\]]*)"?)?\]$/.exec(piece)
+          // Quoting: ", ' or none. The earlier form stripped only double
+          // quotes, so `[data-uid='u1']` captured `'u1'` WITH the quotes and
+          // silently never matched — a matcher whose stated contract is that
+          // it refuses what it cannot do, failing invisibly instead. Single
+          // quotes are valid CSS and the two forms must agree.
+          const m = /^\[([\w-]+)(?:(=)(?:"([^"]*)"|'([^']*)'|([^'"\]]*)))?\]$/.exec(piece)
           // Only presence and exact `=`. An earlier version accepted
           // ~= |= ^= $= *= and collapsed all five to `includes`, which FAILS
           // OPEN: [href^="/a"] would have matched "/b/a". A matcher that
@@ -254,7 +267,8 @@ export class StubElement extends StubNode {
           // never reach the attributes map at all, so `[hidden]` and `[open]`
           // match nothing here however they are written.
           if (actual == null) return false
-          return actual === m[3]
+          // Exactly one of the three value groups is set, by construction.
+          return actual === (m[3] ?? m[4] ?? m[5])
         }
         return this.tagName.toLowerCase() === piece.toLowerCase()
       })

@@ -287,7 +287,13 @@ test('the hall filter chips hide and show categories', async () => {
 
 test('the palette answers Home, End and a click on its backdrop', async () => {
   const handle = initPalette()
-  handle.open()
+  // AWAIT the open. open() is async — it awaits buildIndex() before the
+  // first refresh() — and until that resolves the list renders a single
+  // `.cmdk-empty`, not `.cmdk-item`. The fixed `tick(20)` below was the only
+  // thing standing in for that, so an index build slower than 20ms on a
+  // loaded box would fail `rows().length > 1` on timing, in a merge gate, in
+  // the very PR that was removing this pattern from the e2e (CON-VER-008).
+  await handle.open()
   // The LAST .cmdk, not the first. initPalette() appends a fresh <dialog> to
   // document.body on every call and never removes it, so by this point in the
   // file there are three — and `querySelector` returns the one an EARLIER

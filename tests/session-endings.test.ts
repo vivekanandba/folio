@@ -68,9 +68,28 @@ type El = {
   dispatchEvent: (e: Record<string, unknown>) => boolean
 }
 const node = (host: HTMLElement): El => host as unknown as El
-/** decision defers its re-render by 180ms through window.setTimeout, and the
- *  stub's timers are real — so a walk has to actually wait for them. */
-const tick = (ms = 220) => new Promise((r) => setTimeout(r, ms))
+/**
+ * Wait for a CONDITION, not for a duration.
+ *
+ * decision.ts re-renders through `window.setTimeout(render, 180)`, and the
+ * walk below used a flat `tick(220)` — a 40ms margin against the event loop.
+ * Lose that race on a loaded box (the fleet notes describe this one reaching
+ * load 10 under three Playwright jobs) and the OLD `.fork-door` is still
+ * attached, so the walk clicks it again and queues a second deferred render.
+ * `render()` calls `onComplete` unconditionally on every ending render —
+ * decision has no "already ended" guard, unlike lab — so the second one
+ * pushes a second score and `scores.length === 1` fails, blaming the
+ * renderer for a timing loss. That is a suite defect, not a flaky renderer
+ * (CON-VER-008).
+ */
+async function until(ok: () => boolean, what: string, timeoutMs = 4000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (ok()) return
+    await new Promise((r) => setTimeout(r, 10))
+  }
+  assert.fail(`timed out after ${timeoutMs}ms waiting for ${what}`)
+}
 
 /* ------------------------------------------------------------- decision --- */
 
@@ -88,7 +107,13 @@ test('a decision walked to an ending renders the result and reports the score', 
     const door = node(host).querySelector('.fork-door')
     if (!door) break
     door.click()
-    await tick()
+    // The click is answered by a deferred re-render, so wait for the screen
+    // to actually turn over: either this door is gone (a new fork drawn) or
+    // the walk has ended.
+    await until(
+      () => scores.length > 0 || node(host).querySelector('.fork-door') !== door,
+      'the decision to re-render after a door was taken',
+    )
   }
 
   assert.equal(scores.length, 1, 'walking to an ending completes the session exactly once')
@@ -118,7 +143,11 @@ test('a decision tree pointing nowhere says so rather than rendering blank', asy
     () => {},
   )
   node(host).querySelector('.fork-door')!.click()
-  await tick()
+  // The same deferred re-render, so the same condition-not-duration wait.
+  await until(
+    () => /Broken decision tree/.test(node(host).textContent),
+    'the broken-link message to render',
+  )
   assert.match(node(host).textContent, /Broken decision tree/, 'a dead link is reported, not swallowed')
 })
 

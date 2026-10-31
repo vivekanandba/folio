@@ -701,8 +701,24 @@ try {
         `(() => {
           const errors = Array.isArray(window.__e2eErrors) ? window.__e2eErrors : null
           const written = (localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')
-          if (!written && !(errors && errors.length)) return ''
-          return JSON.stringify({ written, errors: errors && errors.slice(0, 3) })
+          // A REFUSAL is neither a write nor a throw. importProgress()
+          // returning { ok: false } puts "Import refused: <reason>" in the
+          // note and returns quietly, so a fixture that stops validating —
+          // a schema tweak, a version bump — produced no write, no error,
+          // and a 5s timeout reporting "the imported ledger reaches storage",
+          // which names the symptom while the reason sat on screen the whole
+          // time (CON-VER-005).
+          const refusal = /Import refused: .*/.exec(document.body.textContent || '')
+          if (!written && !refusal && !(errors && errors.length)) return ''
+          return JSON.stringify({
+            written,
+            // Bounded. body.textContent runs every element's text together
+            // with no separators, so an unbounded match drags the rest of the
+            // page into the failure message and buries the reason it exists
+            // to surface.
+            refused: refusal ? refusal[0].slice(0, 120) : null,
+            errors: errors && errors.slice(0, 3),
+          })
         })()`,
         // 5000ms like its neighbours. The import must await file.text() and
         // then write, polled over a cross-process CDP round trip, on a box
@@ -727,6 +743,9 @@ try {
         ledger.errors.length === 0,
         `${ledger.errors.length} uncaught error(s) while exporting and importing the ledger: ${JSON.stringify(ledger.errors)}`,
       )
+      // The refusal, in its own words, before the generic "never reached
+      // storage" — the reason beats the symptom.
+      assert(!ledger.refused, `the ledger refused the import: ${ledger.refused}`)
       assert(ledger.written, 'the imported ledger never reached storage')
       return 'export → parse → import'
     } finally {
@@ -737,6 +756,19 @@ try {
   await check('the floor zooms, fits, and survives a phone-width viewport', async () => {
     const page = await browser.newPage()
     try {
+      // Clear the profile FIRST. Every page in this run shares one origin,
+      // and the checks above write real progress — the session-play checks
+      // deliberately, the ledger check by importing a store. floor.ts keeps
+      // its rAF loop running for as long as any concept is due (it pulses
+      // the due lamps off Math.sin(now / 450)), so inheriting a store with
+      // something due makes the canvas animate, and the "is it still?" guard
+      // below then fails with "the floor canvas redraws on its own" — true,
+      // but a cause that belongs to the previous check, not this one. check()
+      // records a failure and CONTINUES, so that is a live path, not a
+      // hypothetical. Same reasoning, and the same in-page clear, as the
+      // screenshot block further down.
+      await page.goto(`${origin}/index.html?prime=floor#/`)
+      await page.evaluate('localStorage.clear()')
       await page.goto(`${origin}/index.html?floor=1#/`)
       await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'floor canvas' })
       // The zoom controls are the pointer-free half of the floor, and a stub
@@ -749,7 +781,30 @@ try {
         const canvas = document.querySelector('.floor-canvas')
         const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
         const shot = () => canvas.toDataURL()
-        const buttons = [...document.querySelectorAll('.floor-controls button')]
+        // BY ACCESSIBLE NAME, not by position. The controls row holds the
+        // legend as well as the three zoom buttons, so index 2 being "Fit"
+        // is an assumption about render order that nothing enforces - a
+        // legend that gains a button, or a reorder of the three zoom button
+        // calls, would leave fitChanged green against the wrong control.
+        //
+        // No backticks and no nested template literal in here: this whole
+        // function is itself inside one, and an unescaped backtick ends it.
+        // That is not hypothetical - it is how this very comment broke the
+        // check on the first attempt.
+        const byName = (name) =>
+          document.querySelector('.floor-controls button[aria-label="' + name + '"]')
+        const zoomIn = byName('Zoom in')
+        const zoomOut = byName('Zoom out')
+        const fit = byName('Fit all')
+        const buttons = [zoomIn, zoomOut, fit].filter(Boolean)
+        // Checked HERE, in the page, before anything is clicked. The
+        // assert(zoom.n >= 3) outside would never be reached: a missing
+        // control throws "Cannot read properties of undefined (reading
+        // 'click')" first, and the explanatory assertion is dead code behind
+        // it (CON-VER-005).
+        if (buttons.length < 3) {
+          return JSON.stringify({ n: buttons.length, still: true, zoomedChanged: false, fitChanged: false })
+        }
         // Establish that the canvas is STILL first. Everything below reads
         // "the bitmap changed" as evidence that the button did something —
         // which is worth nothing if the canvas redraws on its own. floor.ts
@@ -763,17 +818,17 @@ try {
         await frame()
         const before = shot()
         const still = settled === before
-        buttons[0].click() // zoom in
+        zoomIn.click()
         await frame()
         const zoomed = shot()
-        buttons[2].click() // fit
+        fit.click()
         await frame()
         const fitted = shot()
         for (const b of buttons) b.click()
         await frame()
         return JSON.stringify({ n: buttons.length, still, zoomedChanged: zoomed !== before, fitChanged: fitted !== zoomed })
       })()`))
-      assert(zoom.n >= 3, `expected zoom in/out/fit, found ${zoom.n} control(s)`)
+      assert(zoom.n >= 3, `expected zoom in/out/fit by aria-label, found ${zoom.n}`)
       assert(zoom.still, 'the floor canvas redraws on its own — "the bitmap changed" proves nothing here')
       assert(zoom.zoomedChanged, 'zooming in redrew nothing — the control is a no-op')
       assert(zoom.fitChanged, 'fit redrew nothing after a zoom')
