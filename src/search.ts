@@ -16,7 +16,19 @@ let indexPromise: Promise<SearchDoc[]> | null = null
 
 /** Build (once) a flat search index across every pack, concept, and session. */
 export function buildIndex(): Promise<SearchDoc[]> {
-  if (!indexPromise) indexPromise = build()
+  if (!indexPromise) {
+    // Memoise the SUCCESS, never the failure. A rejected promise cached here
+    // is permanent: one transient catalog fetch — a flaky connection on the
+    // first Ctrl-K of a session — would leave every later open awaiting the
+    // same dead promise, so the palette opened on a blank list forever, with
+    // no message and no way back short of a reload. Dropping the handle lets
+    // the next open try again, which is what a reader of "build (once)"
+    // would reasonably assume it already did.
+    indexPromise = build().catch((err: unknown) => {
+      indexPromise = null
+      throw err
+    })
+  }
   return indexPromise
 }
 

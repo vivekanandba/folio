@@ -678,7 +678,16 @@ try {
         attempts: [{ id: 'a', packId: 'p1', conceptIds: [], source: 'session', ref: 's1', normalized: 0.8, grade: 4, at: '2026-09-01T00:00:00.000Z' }],
         daily: { '2026-09-01': 1 },
       }))`)
+      // Marker, like every other cross-document goto in this file. Waiting on
+      // `input[type=file]` is a condition the PREVIOUS document could in
+      // principle satisfy; it holds today only because the page this
+      // navigates away from happens to have no file input (report.ts has the
+      // only one in src/). "Correct by what the other page happens not to
+      // contain" is exactly the assumption the __beforeClear markers were
+      // added to stop relying on.
+      await page.evaluate('window.__beforeReport = true')
       await page.goto(`${origin}/index.html?ledger=1&go=1#/report`)
+      await page.waitFor('!window.__beforeReport', { label: 'report document' })
       await page.waitFor(
         'document.querySelectorAll("input[type=file]").length > 0',
         { label: 'ledger section' },

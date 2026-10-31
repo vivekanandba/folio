@@ -210,8 +210,13 @@ test('the palette searches, navigates by keyboard, and closes', async () => {
 
 test('the palette handles a query that matches nothing', async () => {
   const handle = initPalette()
-  handle.open()
-  const dialog = document.querySelector('.cmdk') as unknown as El
+  // Awaited, and the LAST dialog — the same two corrections the backdrop
+  // test below documents at length. This one was not vacuous (the empty
+  // path still ran, through the earlier palette's closure) but it was
+  // driving a dialog it had not opened, which is the bug next door.
+  await handle.open()
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as El
   const input = dialog.querySelector('.cmdk-input')!
   input.value = 'zzzzqqqxx-no-such-thing'
   input.dispatchEvent({ type: 'input', target: input })

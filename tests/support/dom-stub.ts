@@ -95,10 +95,19 @@ function camel(attr: string): string {
 function splitSelectorList(sel: string): string[] {
   const parts: string[] = []
   let depth = 0
+  let quote: string | null = null
   let start = 0
   for (let i = 0; i < sel.length; i++) {
     const c = sel[i]
-    if (c === '[') depth += 1
+    // Quoting is tracked, not just brackets. A `]` INSIDE a value closed the
+    // bracket early — `[title="a],b"]` split at the comma and both halves
+    // then failed the compound parse, so the selector quietly matched
+    // nothing. That is the same failing-invisibly category as the comma this
+    // function was added for, one case further in.
+    if (quote) {
+      if (c === quote) quote = null
+    } else if (c === '"' || c === "'") quote = c
+    else if (c === '[') depth += 1
     else if (c === ']') depth -= 1
     else if (c === ',' && depth === 0) {
       parts.push(sel.slice(start, i))
@@ -358,7 +367,11 @@ export class StubElement extends StubNode {
       const s = part.trim()
       if (!s) return false
       // Split a compound into its pieces: `button.foo[data-x="1"]#id`.
-      const pieces = s.match(/(^[a-zA-Z][\w-]*)|(\.[\w-]+)|(#[\w-]+)|(\[[^\]]+\])/g)
+      // The attribute alternative allows a quoted value to contain `]`, which
+    // `[^\]]+` could not — same hole as the selector-list split above, and
+    // the `pieces.join('') !== s` check below still fails closed on anything
+    // this grammar does not cover.
+    const pieces = s.match(/(^[a-zA-Z][\w-]*)|(\.[\w-]+)|(#[\w-]+)|(\[[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^'"\]]*))?\])/g)
       if (!pieces || pieces.join('') !== s) return false
       return pieces.every((piece) => {
         if (piece.startsWith('.')) return this.classList.contains(piece.slice(1))

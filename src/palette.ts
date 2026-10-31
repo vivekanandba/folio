@@ -129,7 +129,22 @@ export function initPalette(): { open: () => Promise<void> } {
     dialog.showModal()
     input.value = ''
     list.replaceChildren()
-    if (!docs.length) docs = await buildIndex()
+    if (!docs.length) {
+      try {
+        docs = await buildIndex()
+      } catch {
+        // Say so, rather than showing an empty list that looks like "no
+        // matches for a query you have not typed yet". The index can be
+        // rebuilt — buildIndex no longer caches the failure — so this is
+        // worth retrying rather than reporting as fatal.
+        const li = document.createElement('li')
+        li.className = 'cmdk-empty'
+        li.textContent = 'The index could not be loaded. Close and open again to retry.'
+        list.replaceChildren(li)
+        input.focus()
+        return
+      }
+    }
     refresh()
     input.focus()
   }

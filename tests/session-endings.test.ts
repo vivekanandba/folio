@@ -254,11 +254,28 @@ interface BlueprintSpec {
   rules: { rule: string; a?: string; b?: string; from?: string; to?: string; label: string }[]
 }
 
-/** The edge set `wireUp()` below produces: one wire per `connected` rule. */
+/**
+ * The edge set `wireUp()` below produces: one wire per DISTINCT `connected`
+ * pair.
+ *
+ * Deduplicated, because wiring is a TOGGLE. A board that authors the same
+ * pair in two rules (two different labels for one required link is a
+ * reasonable thing to write) would be clicked twice and end up with the wire
+ * OFF — and satisfiableBlueprint, which models the result as a Set, would
+ * have vouched for a board the test then fails on. The helper's model and
+ * what the walk actually does have to be the same thing.
+ */
 function connectedEdges(spec: BlueprintSpec): [string, string][] {
-  return spec.rules
-    .filter((r) => r.rule === 'connected' && r.a != null && r.b != null)
-    .map((r) => [r.a!, r.b!] as [string, string])
+  const seen = new Set<string>()
+  const edges: [string, string][] = []
+  for (const r of spec.rules) {
+    if (r.rule !== 'connected' || r.a == null || r.b == null) continue
+    const key = [r.a, r.b].sort().join('\u0000')
+    if (seen.has(key)) continue
+    seen.add(key)
+    edges.push([r.a, r.b])
+  }
+  return edges
 }
 
 /**
@@ -277,7 +294,10 @@ function connectedEdges(spec: BlueprintSpec): [string, string][] {
  * session", pointing at the renderer rather than at the fixture. Which is
  * the exact failure this helper exists to prevent.
  */
-function satisfiableBlueprint(also: (s: BlueprintSpec) => boolean = () => true): BlueprintSpec {
+function satisfiableBlueprint(
+  also: (s: BlueprintSpec) => boolean = () => true,
+  alsoDescription = '',
+): BlueprintSpec {
   const found = sessionsOfKind('blueprint').find((d) => {
     const spec = d as unknown as BlueprintSpec
     if (spec.parts.some((p) => (p.max ?? 1) > 1)) return false
@@ -314,7 +334,14 @@ function satisfiableBlueprint(also: (s: BlueprintSpec) => boolean = () => true):
     }
     return spec.rules.every((r) => r.rule !== 'pathExists' || (!!r.from && !!r.to && reaches(r.from, r.to)))
   })
-  assert.ok(found, 'no shipped blueprint is satisfiable by one of each part')
+  // Name the WHOLE requirement. The message used to say only "satisfiable
+  // by one of each part" while callers could add further demands, so a
+  // failure caused by the extra predicate pointed at satisfiability, which
+  // was not the cause (CON-VER-005).
+  assert.ok(
+    found,
+    `no shipped blueprint is satisfiable by one of each part${alsoDescription ? ` and ${alsoDescription}` : ''}`,
+  )
   return found as unknown as BlueprintSpec
 }
 
@@ -338,7 +365,7 @@ test('a blueprint wired to its spec inspects to a pass, and completes', async ()
 
   const labels = (): El[] => node(host).querySelectorAll('.bp-node-label')
   const byName = (name: string): El | undefined =>
-    labels().find((b) => b.textContent.trim().startsWith(name))
+    labels().find((b) => b.textContent.trim() === name)
 
   // Place every part the board offers, so each rule has endpoints to join.
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
@@ -356,12 +383,17 @@ test('a blueprint wired to its spec inspects to a pass, and completes', async ()
   // survivesKill, minCount, maxCount) resolved through `byName('')`, and
   // `startsWith('')` matches the FIRST label unconditionally — so those rules
   // silently wired an arbitrary node to itself.
+  //
+  // Driven by connectedEdges(), the SAME deduplicated model
+  // satisfiableBlueprint() uses to decide the board is satisfiable. Walking
+  // session.rules directly here meant the helper vouched for one edge set
+  // while the walk built another: wiring is a toggle, so a pair authored in
+  // two rules was clicked twice and ended up disconnected, failing a board
+  // the helper had just approved.
   const wireUp = (): void => {
-    for (const rule of session.rules) {
-      if (rule.rule !== 'connected') continue
-      if (rule.a == null || rule.b == null) continue
-      const a = byName(session.parts.find((p) => p.id === rule.a)!.label)
-      const b = byName(session.parts.find((p) => p.id === rule.b)!.label)
+    for (const [aId, bId] of connectedEdges(session)) {
+      const a = byName(session.parts.find((p) => p.id === aId)!.label)
+      const b = byName(session.parts.find((p) => p.id === bId)!.label)
       if (!a || !b) continue
       a.click()
       b.click()
@@ -417,7 +449,12 @@ test('a wire can be cut, and a component armed and let go', () => {
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
 
   const labels = () => node(host).querySelectorAll('.bp-node-label')
-  const byName = (n: string) => labels().find((b) => b.textContent.trim().startsWith(n))
+  // EXACT label, not startsWith: two parts where one label prefixes another
+  // ("Cache" / "Cache replica") would resolve to the SAME node, wiring the
+  // wrong pair and failing on "a board that meets every rule completes" —
+  // blaming blueprint.ts for a fixture collision. No shipped board collides
+  // today, which is the only reason a prefix match has worked.
+  const byName = (n: string) => labels().find((b) => b.textContent.trim() === n)
   const joined = session.rules.find((r) => r.rule === 'connected' && r.a && r.b)!
   byName(session.parts.find((p) => p.id === joined.a)!.label)!.click()
   byName(session.parts.find((p) => p.id === joined.b)!.label)!.click()
@@ -448,7 +485,10 @@ test('inspecting a board that breaks a rule reports it, and does NOT finish', ()
   // `pathExists` rule came back broken too, so deleting `noDirect` from
   // evalRule entirely would have left this test green. Both of its
   // assertions were satisfied by the rules it was not testing.
-  const session = satisfiableBlueprint((s) => s.rules.some((r) => r.rule === 'noDirect' && !!r.a && !!r.b))
+  const session = satisfiableBlueprint(
+    (s) => s.rules.some((r) => r.rule === 'noDirect' && !!r.a && !!r.b),
+    'forbids at least one direct connection',
+  )
   const forbiddenIndex = session.rules.findIndex((r) => r.rule === 'noDirect' && r.a && r.b)
   assert.ok(forbiddenIndex >= 0, 'this board forbids at least one direct connection')
   const forbidden = session.rules[forbiddenIndex]
@@ -459,7 +499,12 @@ test('inspecting a board that breaks a rule reports it, and does NOT finish', ()
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
 
   const labels = () => node(host).querySelectorAll('.bp-node-label')
-  const byName = (n: string) => labels().find((b) => b.textContent.trim().startsWith(n))
+  // EXACT label, not startsWith: two parts where one label prefixes another
+  // ("Cache" / "Cache replica") would resolve to the SAME node, wiring the
+  // wrong pair and failing on "a board that meets every rule completes" —
+  // blaming blueprint.ts for a fixture collision. No shipped board collides
+  // today, which is the only reason a prefix match has worked.
+  const byName = (n: string) => labels().find((b) => b.textContent.trim() === n)
   const labelOf = (id: string) => session.parts.find((p) => p.id === id)!.label
   const wire = (aId: string, bId: string): void => {
     byName(labelOf(aId))!.click()
@@ -541,8 +586,18 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   const wanted = (d: Record<string, unknown>) => {
     const start = startNode(d)
     if (!start?.choices?.some((c) => c.preview)) return false
-    if (!(d as { meter?: unknown }).meter) return false
-    return start.choices.some((c) => c.effect != null && c.effect !== 0)
+    const meter = (d as { meter?: { min: number; max: number; start: number } }).meter
+    if (!meter) return false
+    // "Moves the CLAMPED value", not "has a non-zero effect". showPreview
+    // clamps the projection to [min, max], so a decision authored with its
+    // meter already at a bound — or within |effect| of one — projects to the
+    // same percentage it rests at, and `notEqual(whileWeighing, atRest)`
+    // would fail against a perfectly correct renderer. Select for the thing
+    // the assertion actually requires.
+    const clamp = (v: number) => Math.max(meter.min, Math.min(meter.max, v))
+    return start.choices.some(
+      (c) => c.effect != null && clamp(meter.start + c.effect) !== clamp(meter.start),
+    )
   }
   const session = sessionsOfKind('decision').find(wanted) as {
     nodes: { id: string; choices?: { preview?: string; effect?: number | null }[] }[]
@@ -591,8 +646,12 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   // A door that MOVES the meter — `effect`, not `preview`. They need not be
   // the same door, and a door with no effect leaves the ghost where it is.
   const choices = startNode(session as never)!.choices as { effect?: number | null }[]
-  const moving = choices.findIndex((c) => c.effect != null && c.effect !== 0)
-  assert.ok(moving >= 0, 'the chosen fork has a door that costs something')
+  const meter = session.meter as { min: number; max: number; start: number }
+  const clampTo = (v: number) => Math.max(meter.min, Math.min(meter.max, v))
+  const moving = choices.findIndex(
+    (c) => c.effect != null && clampTo(meter.start + c.effect) !== clampTo(meter.start),
+  )
+  assert.ok(moving >= 0, 'the chosen fork has a door that moves the meter off its resting value')
 
   const atRest = ghost().style.width
   doors[moving].dispatchEvent({ type: 'mouseenter' })
