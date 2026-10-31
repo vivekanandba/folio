@@ -1,8 +1,8 @@
-import { loadCatalog, loadPackMeta } from '../content'
+import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
 import { el, prettyId } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { deriveFlashcards } from '../flashcards'
-import { burst } from '../fx'
+import { acquisitionCard, burst } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
 import { dailyDrill } from '../gauntlet/generators'
 import { loadProgress, recordConceptReview } from '../progress'
@@ -36,6 +36,15 @@ export async function renderReview(root: HTMLElement): Promise<void> {
     packInfo.set(meta.id, { path: ref.path, sessionFiles: meta.sessions })
     for (const conceptId of meta.concepts) allConcepts.push({ packId: meta.id, conceptId })
   }
+  // This page already has every pack's metadata, so the halls are free here.
+  const halls = metas.map(({ meta }) => ({
+    packId: meta.id,
+    title: meta.title,
+    sessionIds: meta.sessions.map(sessionIdOf),
+  }))
+  // Plaques earned across the whole round, shown once at the end rather than
+  // interrupting between cards.
+  const earnedThisRound: { title: string; note: string }[] = []
 
   const store = loadProgress()
   const queue = buildToday(store.concepts, allConcepts) // already pack-interleaved
@@ -99,6 +108,11 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       cue('complete', { perfect: false })
       burst(stamp)
     }
+    const plaques = acquisitionCard(earnedThisRound)
+    if (plaques) {
+      cue('milestone')
+      root.append(plaques)
+    }
   }
 
   const runNext = async () => {
@@ -151,7 +165,14 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // into the SRS grade: objective performance tempers self-assessment.
       const finishConcept = (flashAvg: number, drillScore: number | null): void => {
         const normalized = drillScore == null ? flashAvg : flashAvg * 0.6 + drillScore * 0.4
-        recordConceptReview(item.ref.packId, item.ref.conceptId, normalized)
+        for (const m of recordConceptReview(
+          item.ref.packId,
+          item.ref.conceptId,
+          normalized,
+          { halls },
+        )) {
+          if (!earnedThisRound.some((e) => e.title === m.title)) earnedThisRound.push(m)
+        }
         advance()
       }
 

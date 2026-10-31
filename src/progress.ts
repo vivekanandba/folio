@@ -7,6 +7,7 @@ import type {
   SessionKind,
   SessionResult,
 } from './types'
+import { detect, satisfied, type Milestone, type MilestoneCtx } from './milestones'
 import { freshState, normalize, schedule, toGrade, today } from './srs'
 
 const KEY_V2 = 'folio-progress-v2'
@@ -113,13 +114,41 @@ function applyReview(
   store.lastPackId = packId
 }
 
-/** Persist a completed session AND fold it into each linked concept's SRS state. */
-export function saveSessionResult(result: SessionResult, conceptIds: string[] = []): void {
+/**
+ * Award whatever this save has just earned, stamp it into the store, and hand
+ * it back for the page to celebrate. Called with the store already updated and
+ * before it is persisted, so the plaques and the progress land together — a
+ * milestone recorded without the progress that earned it would be a lie, and
+ * the reverse would silently lose the moment.
+ */
+function award(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[] {
+  const earned = detect(store, ctx)
+  if (!earned.length) return []
+  const at = new Date().toISOString()
+  store.milestones = { ...(store.milestones ?? {}) }
+  for (const m of earned) store.milestones[m.id] = at
+  return earned
+}
+
+/** No halls given means hall-shaped plaques simply are not assessed this time. */
+const NO_HALLS: MilestoneCtx = { halls: [] }
+
+/**
+ * Persist a completed session AND fold it into each linked concept's SRS
+ * state. Returns the plaques this earned, newest first.
+ */
+export function saveSessionResult(
+  result: SessionResult,
+  conceptIds: string[] = [],
+  ctx: MilestoneCtx = NO_HALLS,
+): Milestone[] {
   const store = loadProgress()
   store.sessions[`${result.packId}::${result.sessionId}`] = result
   const n = normalize(result.score, result.maxScore)
   applyReview(store, result.packId, conceptIds, n, 'session', result.sessionId, result.kind)
+  const earned = award(store, ctx)
   persist(store)
+  return earned
 }
 
 /** Record a flashcard review round for one concept. */
@@ -127,10 +156,27 @@ export function recordConceptReview(
   packId: string,
   conceptId: string,
   normalized: number,
-): void {
+  ctx: MilestoneCtx = NO_HALLS,
+): Milestone[] {
   const store = loadProgress()
   applyReview(store, packId, [conceptId], normalized, 'flashcard', conceptId)
+  const earned = award(store, ctx)
   persist(store)
+  return earned
+}
+
+/** Every plaque on the wall, newest first — the Acquisitions shelf reads this. */
+export function earnedMilestones(ctx: MilestoneCtx): { milestone: Milestone; at: string }[] {
+  const store = loadProgress()
+  const at = store.milestones ?? {}
+  // satisfied() is the only place that knows a plaque's words, so the shelf is
+  // built by matching recorded ids against it rather than by storing copies of
+  // the copy — an inscription edited later should read correctly on old plaques.
+  const known = new Map(satisfied(store, ctx).map((m) => [m.id, m]))
+  return Object.entries(at)
+    .map(([id, when]) => ({ milestone: known.get(id), at: when }))
+    .filter((row): row is { milestone: Milestone; at: string } => !!row.milestone)
+    .sort((a, b) => b.at.localeCompare(a.at))
 }
 
 export function getSessionResult(packId: string, sessionId: string): SessionResult | undefined {

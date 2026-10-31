@@ -73,6 +73,7 @@ PAIRS: list[tuple[str, str, float, str]] = [
     # non-text UI
     ("line", "bg", 1.2, "hairline vs wall (decorative)"),
     ("brass", "surface-2", 4.5, "plaque on raised panel"),
+    ("brass-bright", "surface-2", 4.5, "acquisition plaque title on raised panel"),
     ("muted", "ok-bg", 4.5, "muted on ok tint"),
 ]
 

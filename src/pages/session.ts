@@ -1,7 +1,7 @@
-import { loadPackMeta, loadSession } from '../content'
+import { loadHalls, loadPackMeta, loadSession } from '../content'
 import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
-import { ceremony } from '../fx'
+import { acquisitionCard, ceremony } from '../fx'
 import { saveSessionResult } from '../progress'
 import { href } from '../router'
 import { kindBlurb, kindIcon, kindLabel, mountSession } from '../sessions'
@@ -52,11 +52,16 @@ export async function renderSession(
   )
   shell.append(mount)
 
+  // Loaded up front, not at the moment of completion: the learner should not
+  // wait on fifteen fetches between finishing an exhibit and being told so.
+  // A failure here costs the plaques, never the progress.
+  const halls = await loadHalls().catch(() => [])
+
   let saved = false
   mountSession(mount, session, (score, maxScore) => {
     if (saved) return
     saved = true
-    saveSessionResult(
+    const earned = saveSessionResult(
       {
         packId,
         sessionId: session.id,
@@ -66,6 +71,7 @@ export async function renderSession(
         completedAt: new Date().toISOString(),
       },
       session.conceptIds,
+      { halls },
     )
     // The chord is unconditional: finishing an exhibit is worth hearing even
     // if the kind that rendered it has no .stage for the bloom to land on.
@@ -74,6 +80,13 @@ export async function renderSession(
     // The room celebrates: bloom + bursts + a brass stamp on the exhibit.
     const stageEl = shell.querySelector<HTMLElement>('.stage')
     if (stageEl) ceremony(stageEl, { perfect })
+    // The plaque goes up after the room has finished celebrating the exhibit,
+    // so the two moments read as a sequence rather than a pile-up.
+    const plaques = acquisitionCard(earned)
+    if (plaques) {
+      cue('milestone')
+      shell.append(plaques)
+    }
     shell.append(
       el('div', { class: 'saved-note plaque-card' }, [
         el('span', { class: 'plaque' }, ['Progress saved']),

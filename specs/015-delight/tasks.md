@@ -24,13 +24,17 @@
 
 ## PR 2 — milestones, celebrated and kept
 
-- [ ] 8. `tests/milestones.test.ts` written first and watched fail
-- [ ] 9. `src/milestones.ts` — pure `detect(before, after, ctx)`
-- [ ] 10. Optional `milestones` field on the store; `progress.ts` returns what
+- [x] 8. `tests/milestones.test.ts` written first and watched fail
+- [x] 9. `src/milestones.ts` — pure `detect(store, ctx)`. NOT the before/after
+       diff the plan named: a diff loses any milestone crossed during a save
+       that lacked hall information, and a learner who was using folio before
+       plaques existed has genuinely earned theirs. Satisfied-minus-recorded
+       is simpler and cannot lose a moment
+- [x] 10. Optional `milestones` field on the store; `progress.ts` returns what
        was newly earned (no version bump, old backups still import)
-- [ ] 11. The moment: brass plaque in `pages/session.ts` + `pages/review.ts`
-- [ ] 12. The permanence: Acquisitions shelf in `pages/report.ts`
-- [ ] 13. Mutation-check; gates; ship
+- [x] 11. The moment: brass plaque in `pages/session.ts` + `pages/review.ts`
+- [x] 12. The permanence: Acquisitions shelf in `pages/report.ts`
+- [x] 13. Mutation-check; gates; ship
 
 ## PR 3 — the curator's voice, and the polish
 

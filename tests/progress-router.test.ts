@@ -98,7 +98,10 @@ test('marking a concept learned is idempotent about its timestamp', () => {
 
 test('a concept review records SRS state', () => {
   reset()
-  progress.recordConceptReview('p1', ['c1'], 'session' as never, 's1', 'quiz' as never, 1, 1)
+  // (packId, conceptId, normalized) — this used to be called with seven
+  // arguments from an older signature and still passed, because the extras
+  // were simply ignored. It was asserting against a call the app never makes.
+  progress.recordConceptReview('p1', 'c1', 1)
   const st = progress.getConceptState('p1', 'c1')
   assert.ok(st, 'concept state should exist after a review')
 })
@@ -116,6 +119,64 @@ test('export → import round-trips the whole store', () => {
   assert.equal(res.ok, true, `import should succeed: ${res.error ?? ''}`)
   assert.equal(progress.getSessionResult('p1', 's1')?.score, 4, 'session survived the round-trip')
   assert.ok(progress.getConceptState('p1', 'c2')?.learnedAt, 'concept survived the round-trip')
+})
+
+test('a backup exported before milestones existed still imports', () => {
+  // The milestones map was added WITHOUT bumping the store version, precisely
+  // so this keeps working: importProgress refuses anything whose version is
+  // not 2, and every ledger a learner already exported says 2.
+  reset()
+  const preFeature = JSON.stringify({
+    version: 2,
+    sessions: { 'p1::s1': { packId: 'p1', sessionId: 's1', kind: 'quiz', score: 4, maxScore: 5, completedAt: '2026-09-01T00:00:00.000Z' } },
+    concepts: {},
+    attempts: [],
+    daily: { '2026-09-01': 1 },
+  })
+  const res = progress.importProgress(preFeature)
+  assert.equal(res.ok, true, `a pre-milestone backup must import: ${res.error ?? ''}`)
+  assert.equal(progress.getSessionResult('p1', 's1')?.score, 4)
+  assert.deepEqual(
+    progress.earnedMilestones({ halls: [] }),
+    [],
+    'and starts with an empty wall rather than a crash',
+  )
+})
+
+test('a plaque is awarded once, recorded, and never awarded again', () => {
+  reset()
+  const halls = [{ packId: 'p1', title: 'Hall One', sessionIds: ['s1'] }]
+  const first = progress.saveSessionResult(result() as never, ['c1'], { halls })
+  assert.ok(first.length > 0, 'finishing the only session in a hall should earn something')
+  assert.ok(first.some((m) => m.id === 'first-exhibit'), 'including the first exhibit')
+  assert.ok(first.some((m) => m.id === 'hall-complete:p1'), 'and the hall being complete')
+
+  const again = progress.saveSessionResult(result({ sessionId: 's2' }) as never, ['c1'], { halls })
+  assert.ok(
+    !again.some((m) => m.id === 'first-exhibit'),
+    'the first exhibit cannot be first a second time',
+  )
+
+  // And it is on the wall, with a date, readable later.
+  const wall = progress.earnedMilestones({ halls })
+  assert.ok(wall.some((row) => row.milestone.id === 'first-exhibit'), 'the plaque is kept')
+  assert.match(wall[0].at, /^\d{4}-\d{2}-\d{2}T/, 'and carries when it was earned')
+})
+
+test('a plaque survives a reload, because it lives in the store', () => {
+  reset()
+  const halls = [{ packId: 'p1', title: 'Hall One', sessionIds: ['s1'] }]
+  progress.saveSessionResult(result() as never, ['c1'], { halls })
+  const exported = progress.exportProgress()
+  assert.match(exported, /"milestones"/, 'the ledger carries the wall')
+
+  reset()
+  assert.deepEqual(progress.earnedMilestones({ halls }), [], 'cleared')
+  progress.importProgress(exported)
+  assert.ok(
+    progress.earnedMilestones({ halls }).some((r) => r.milestone.id === 'first-exhibit'),
+    'and comes back with the ledger',
+  )
 })
 
 test('importing rubbish is refused and leaves the store intact', () => {

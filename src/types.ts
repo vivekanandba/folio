@@ -420,4 +420,11 @@ export interface ProgressStoreV2 {
   attempts: Attempt[]
   daily: Record<string, number> // yyyy-mm-dd -> reviews done that day
   lastPackId?: string
+  /**
+   * Earned plaques: milestone id -> ISO datetime it was awarded. OPTIONAL and
+   * without a version bump on purpose — importProgress() refuses anything
+   * whose version is not 2, so a backup exported before milestones existed
+   * must still be a valid v2 store. An absent map simply means none yet.
+   */
+  milestones?: Record<string, string>
 }

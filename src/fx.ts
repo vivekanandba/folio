@@ -124,6 +124,38 @@ export function stage(
 }
 
 /**
+ * A plaque going up on the wall. Purely visual — the caller does the sounding,
+ * because fx.ts is the museum's eyes and feedback.ts is its voice.
+ *
+ * Under reduced motion the plaque still renders; only the arrival is dropped.
+ * The words ARE the reward, and a learner who has asked for less movement has
+ * not asked for less recognition.
+ */
+export function acquisitionCard(items: { title: string; note: string }[]): HTMLElement | null {
+  if (!items.length) return null
+  const wrap = el('div', { class: 'acquisitions', role: 'status' }, [
+    el('p', { class: 'eyebrow' }, [
+      items.length === 1 ? 'The curator adds a plaque' : `The curator adds ${items.length} plaques`,
+    ]),
+    ...items.map((m, i) =>
+      el('div', {
+        class: `acquisition${prefersReducedMotion() ? '' : ' plaque-in'}`,
+        // Staggered so several arriving at once read as a sequence rather
+        // than a pile.
+        style: prefersReducedMotion() ? '' : `animation-delay:${i * 140}ms`,
+      }, [
+        el('span', { class: 'acquisition-mark', 'aria-hidden': 'true' }, ['✦']),
+        el('div', {}, [
+          el('h3', {}, [m.title]),
+          el('p', { class: 'muted small' }, [m.note]),
+        ]),
+      ]),
+    ),
+  ])
+  return wrap
+}
+
+/**
  * Completion ceremony: the room's light blooms, bursts cascade, and a brass
  * stamp lands on the exhibit. Under reduced motion the stamp still renders
  * (it's information) — only the motion is dropped.

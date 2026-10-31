@@ -1,3 +1,4 @@
+import type { Hall } from './milestones'
 import type { Catalog, ContentIndex, FolioPackMeta, Session } from './types'
 
 const base = import.meta.env.BASE_URL
@@ -28,6 +29,28 @@ function cachedFetch<T>(url: string, parse: (r: Response) => Promise<T>, err: st
 }
 
 const asJson = <T>(r: Response) => r.json() as Promise<T>
+
+/** Session id as progress.ts keys it: no leading number, no .json. */
+export function sessionIdOf(file: string): string {
+  return file.replace(/\.json$/, '').replace(/^\d+-/, '')
+}
+
+/**
+ * Every hall and what it contains — what the milestone rules need to judge
+ * "this hall is complete" and "every hall visited". Cheap after the first
+ * call: the catalog and each pack's folio.json are memoised above and cached
+ * by the service worker, so a learner finishing a session pays for this once
+ * per visit, not once per exhibit.
+ */
+export async function loadHalls(): Promise<Hall[]> {
+  const catalog = await loadCatalog()
+  const metas = await Promise.all(catalog.packs.map((ref) => loadPackMeta(ref.path)))
+  return metas.map((meta) => ({
+    packId: meta.id,
+    title: meta.title,
+    sessionIds: meta.sessions.map(sessionIdOf),
+  }))
+}
 const asText = (r: Response) => r.text()
 
 export function loadCatalog(): Promise<Catalog> {

@@ -1,6 +1,6 @@
-import { loadCatalog, loadPackMeta } from '../content'
+import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
 import { el, prettyId } from '../dom'
-import { exportProgress, importProgress, loadProgress, packCompletion } from '../progress'
+import { earnedMilestones, exportProgress, importProgress, loadProgress, packCompletion } from '../progress'
 import { href } from '../router'
 import { computeStreak, masteryBand, retentionRate, today } from '../srs'
 import type { Attempt, FolioPackMeta } from '../types'
@@ -215,8 +215,42 @@ export async function renderReport(root: HTMLElement): Promise<void> {
     el('p', { class: 'muted small' }, [`Today: ${store.daily[today()] ?? 0} reviews.`]),
   ])
 
+  // ---- acquisitions --------------------------------------------------------
+  // The permanence half of the feature. A reward that exists only in the
+  // instant it is given is decoration; a wall you can walk back to is a
+  // collection. Nothing here is awarded by this page — it only reads what the
+  // sessions and reviews already recorded.
+  const halls = metas.map((m) => ({
+    packId: m.id,
+    title: m.title,
+    sessionIds: m.sessions.map(sessionIdOf),
+  }))
+  const plaques = earnedMilestones({ halls })
+  const acquisitions = el('section', {}, [
+    el('h2', {}, ['Acquisitions']),
+    plaques.length
+      ? el('p', { class: 'muted small' }, [
+          `${plaques.length} plaque${plaques.length === 1 ? '' : 's'} on the wall, most recent first.`,
+        ])
+      : el('p', { class: 'muted small' }, [
+          'Nothing on the wall yet. Finish an exhibit, or come back tomorrow and keep a streak going.',
+        ]),
+    el('div', { class: 'acquisition-shelf' },
+      plaques.map(({ milestone, at }) =>
+        el('div', { class: 'acquisition' }, [
+          el('span', { class: 'acquisition-mark', 'aria-hidden': 'true' }, ['✦']),
+          el('div', {}, [
+            el('h3', {}, [milestone.title]),
+            el('p', { class: 'muted small' }, [milestone.note]),
+            el('p', { class: 'muted small acquisition-date' }, [at.slice(0, 10)]),
+          ]),
+        ]),
+      ),
+    ),
+  ])
+
   // ---- halls --------------------------------------------------------------
-  const halls = el('section', {}, [
+  const hallProgress = el('section', {}, [
     el('h2', {}, ['Hall progress']),
     ...metas.map((m) => {
       const ids = m.sessions.map((f) => f.replace(/\.json$/, '').replace(/^\d+-/, ''))
@@ -225,5 +259,5 @@ export async function renderReport(root: HTMLElement): Promise<void> {
     }),
   ])
 
-  root.replaceChildren(crumb, head, stats, curve, lamps, visits, halls, ledgerSection())
+  root.replaceChildren(crumb, head, stats, acquisitions, curve, lamps, visits, hallProgress, ledgerSection())
 }

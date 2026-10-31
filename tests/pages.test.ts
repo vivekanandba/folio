@@ -131,6 +131,60 @@ test('the report and review pages render', async () => {
   rendered(v as never, 'review')
 })
 
+test('the Acquisitions shelf shows the plaques that were actually earned', async () => {
+  const storage = globalThis.localStorage as unknown as Storage
+  storage.clear()
+
+  // A store with history but nothing yet earned — reachable by reviewing
+  // flashcards without finishing a session. The shelf explains itself rather
+  // than rendering a bare heading. (With NO history at all the report returns
+  // early on its own "nothing to tally" branch, before any section.)
+  storage.setItem(
+    'folio-progress-v2',
+    JSON.stringify({
+      version: 2,
+      sessions: {},
+      concepts: {},
+      attempts: [{ id: 'a', packId: 'math-xii-2026', conceptIds: [], source: 'flashcard', ref: 'x', normalized: 1, grade: 5, at: new Date().toISOString() }],
+      daily: {},
+    }),
+  )
+  const empty = root()
+  await pages.report.renderReport(empty)
+  const emptyText = (empty as unknown as { textContent: string }).textContent
+  assert.match(emptyText, /Acquisitions/, 'the shelf is present once there is history')
+  assert.match(emptyText, /Nothing on the wall yet/, 'and says so when it is empty')
+
+  // Earn one for real, through the same path the app uses.
+  const progress = await import('../src/progress.ts')
+  progress.saveSessionResult(
+    {
+      packId: 'math-xii-2026',
+      sessionId: 'triad-classify',
+      kind: 'classify',
+      score: 3,
+      maxScore: 3,
+      completedAt: new Date().toISOString(),
+    } as never,
+    ['matrices'],
+    { halls: [{ packId: 'math-xii-2026', title: 'Class XII Mathematics', sessionIds: ['triad-classify'] }] },
+  )
+
+  const filled = root()
+  await pages.report.renderReport(filled)
+  const node = filled as unknown as {
+    textContent: string
+    querySelectorAll: (s: string) => unknown[]
+  }
+  assert.ok(node.querySelectorAll('.acquisition').length > 0, 'a plaque should be on the wall')
+  assert.match(node.textContent, /First exhibit/, 'with its inscription')
+  assert.ok(
+    !/Nothing on the wall yet/.test(node.textContent),
+    'and the empty-state copy is gone',
+  )
+  storage.clear()
+})
+
 test('an unknown pack rejects with a message a human can act on', async () => {
   // The contract is deliberate: pages throw, and main.ts catches to render the
   // "Something broke" panel with err.message. So the message IS user-facing —
