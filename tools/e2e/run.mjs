@@ -392,6 +392,11 @@ try {
         })()`)
       }
       await page.waitFor('!!document.querySelector(".saved-note")', { label: 'session completed' })
+      // The plaque is appended after the catalog resolves, which on a cold
+      // profile is a dozen fetches behind the completion callback. Reading it
+      // straight after .saved-note raced the feature under test and would go
+      // red for timing, not for a regression (CON-VER-008).
+      await page.waitFor('!!document.querySelector(".acquisition")', { label: 'plaque on the wall' })
 
       const plaque = await page.evaluate(`(() => {
         const a = document.querySelector('.acquisition')

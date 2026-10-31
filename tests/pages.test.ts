@@ -131,6 +131,51 @@ test('the report and review pages render', async () => {
   rendered(v as never, 'review')
 })
 
+test('a learner who has left the exhibit is not sung to, and keeps the plaque', async () => {
+  // The plaque is appended after the catalog resolves. If the learner has
+  // navigated away by then, the card would go onto a shell nobody can see and
+  // the shimmer would play over whatever page they are now on. Skipping the
+  // AWARD too (not just the display) is the load-bearing half: awardMilestones
+  // records what it hands out, so granting into an empty room would spend the
+  // plaque — detect() never offers a recorded one again.
+  const storage = globalThis.localStorage as unknown as Storage
+  storage.clear()
+  const progress = await import('../src/progress.ts')
+
+  // root() is detached from the document, which is exactly the "has left"
+  // condition the guard reads.
+  const el = root()
+  await pages.session.renderSession(el, 'math-xii-2026', 'math-xii-quiz')
+  type Btn = { click: () => void; getAttribute: (a: string) => string | null }
+  const node = el as unknown as { querySelectorAll: (s: string) => Btn[] }
+  for (let i = 0; i < 60; i++) {
+    // Answer first, then Next/Finish. Answered choices keep their class but
+    // gain `disabled`, so taking the first .choice-btn blindly clicks a dead
+    // button forever and the quiz never ends.
+    const choice = node.querySelectorAll('.choice-btn').find((b) => !b.getAttribute('disabled'))
+    const next = choice ?? node.querySelectorAll('.primary')[0]
+    if (!next) break
+    next.click()
+  }
+  await new Promise((r) => setTimeout(r, 60))
+
+  const halls = [{ packId: 'math-xii-2026', title: 'Class XII Mathematics', sessionIds: ['math-xii-quiz'] }]
+  assert.ok(
+    progress.getSessionResult('math-xii-2026', 'math-xii-quiz'),
+    'the session itself is saved regardless — progress never waits on the catalog',
+  )
+  assert.deepEqual(
+    (el as unknown as { querySelectorAll: (s: string) => unknown[] }).querySelectorAll('.acquisition'),
+    [],
+    'no plaque is appended to a page the learner has left',
+  )
+  assert.ok(
+    progress.awardMilestones({ halls }).some((m) => m.id === 'hall-complete:math-xii-2026'),
+    'and the hall plaque is still there to be earned, not silently spent',
+  )
+  storage.clear()
+})
+
 test('the Acquisitions shelf shows the plaques that were actually earned', async () => {
   const storage = globalThis.localStorage as unknown as Storage
   storage.clear()

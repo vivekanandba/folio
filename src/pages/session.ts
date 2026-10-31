@@ -91,6 +91,18 @@ export async function renderSession(
     // session is on it. cue() queues the shimmer behind the finishing chord,
     // so the two moments read as a sequence rather than a pile-up.
     void hallsReady.then((halls) => {
+      // Only if the learner is still here. Otherwise the shimmer would play
+      // over whatever page they navigated to and the card would be appended
+      // to a shell nobody can see — and feedback.ts's own rule is that a
+      // learner who has left an exhibit is not sung to by it. cancelPending()
+      // cannot help: it drops cues already queued, and this would be a fresh
+      // one made after the navigation.
+      //
+      // Skipping the award, not just the display, is deliberate:
+      // awardMilestones() RECORDS what it hands out, so granting plaques to an
+      // empty room would spend them — detect() never offers a recorded plaque
+      // again. Left ungranted, they are earned on the next save instead.
+      if (!shell.isConnected) return
       const plaques = acquisitionCard([...earned, ...awardMilestones({ halls })])
       if (!plaques) return
       cue('milestone')

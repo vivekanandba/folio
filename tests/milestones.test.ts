@@ -153,6 +153,9 @@ test('a crafted ledger key is ignored, not rendered and not thrown', () => {
   for (const id of [
     'constructor', 'toString', '__proto__', 'constructor-x', 'hasOwnProperty-3',
     'streak-3-anything', 'solid-1-x', 'visits-10-10',
+    // A nameless hall plaque would read " — complete"; an arbitrary suffix
+    // would put learner-supplied text straight into a heading.
+    'hall-complete:', 'hall-complete:../x', 'hall-complete:a b',
   ]) {
     assert.equal(describe(id, ctx), null, `${id} must not describe a plaque`)
   }
@@ -212,6 +215,26 @@ test('detection ignores what was earned before and reports what is unrecorded', 
   assert.ok(found.includes('first-exhibit'))
   assert.ok(found.includes('streak-3') && found.includes('streak-7'))
   assert.ok(found.includes('hall-complete:hall-a'))
+})
+
+test('a corrupt ledger renders oddly but never costs a save', () => {
+  // importProgress validates that `sessions` is an object, never its values.
+  // satisfied() runs inside award(), BEFORE persist() — so a throw here takes
+  // down the completion handler and loses the session just finished.
+  const corrupt = store({
+    sessions: { 'hall-a::a1': null as never, 'hall-a::a2': undefined as never },
+    concepts: { k: null as never },
+  })
+  assert.doesNotThrow(() => satisfied(corrupt, ctx), 'a corrupt session map must not throw')
+  assert.doesNotThrow(() => detect(corrupt, ctx), 'nor must detection over it')
+  assert.ok(
+    ids(satisfied(corrupt, ctx)).includes('first-exhibit'),
+    'the entries are still counted — this is about surviving them, not hiding them',
+  )
+  assert.ok(
+    !ids(satisfied(corrupt, ctx)).includes('first-flawless'),
+    'and a null session is certainly not a flawless run',
+  )
 })
 
 test('the id list is exhaustive over what detection can produce', () => {

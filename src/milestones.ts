@@ -128,6 +128,11 @@ export function describe(id: string, ctx: MilestoneCtx): Milestone | null {
 
   if (id.startsWith('hall-complete:')) {
     const packId = id.slice('hall-complete:'.length)
+    // A pack id, or nothing. `hall-complete:` alone would hang a nameless
+    // plaque reading " — complete" on the wall, and an arbitrary suffix would
+    // put learner-supplied text in a heading. Ids reach here from a ledger
+    // that can be hand-edited, so the shape is checked like any other.
+    if (!/^[a-z0-9][a-z0-9-]*$/i.test(packId)) return null
     const hall = ctx.halls.find((h) => h.packId === packId)
     return {
       id,
@@ -164,7 +169,12 @@ export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[
 
   // maxScore > 0 matters: an explainer scores 0 of 0, and `score === maxScore`
   // would make clicking through one a flawless run.
-  if (results.some((r) => r.maxScore > 0 && r.score === r.maxScore)) ids.push('first-flawless')
+  // `r &&`, because importProgress validates that `sessions` is an object but
+  // never its VALUES. A backup carrying `{"p::s": null}` imports cleanly, and
+  // this runs inside award() BEFORE persist() — so a TypeError here would take
+  // down the completion handler and silently lose the session that was just
+  // finished. A corrupt ledger may render oddly; it may not cost a save.
+  if (results.some((r) => r && r.maxScore > 0 && r.score === r.maxScore)) ids.push('first-flawless')
 
   // Both hall rules judge the same set. A hall with no sessions in it would be
   // vacuously COMPLETE ([].every() is true) and permanently UNVISITABLE
@@ -190,7 +200,7 @@ export function satisfied(store: ProgressStoreV2, ctx: MilestoneCtx): Milestone[
   for (const [days] of TIERS.streak) if (streak >= days) ids.push(`streak-${days}`)
 
   const solid = Object.values(store.concepts ?? {}).filter(
-    (c) => c.reviewCount > 0 && masteryBand(c.mastery) === 'solid',
+    (c) => c && c.reviewCount > 0 && masteryBand(c.mastery) === 'solid',
   ).length
   for (const [count] of TIERS.solid) if (solid >= count) ids.push(`solid-${count}`)
 
