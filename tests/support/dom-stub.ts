@@ -120,7 +120,24 @@ export class StubElement extends StubNode {
   }
   set className(v: string) {
     this.classList.replaceAll(v)
-    this.attributes.set('class', v)
+    // Route through the SAME rule sync() uses, rather than writing the raw
+    // string. Two bugs lived in the previous one-liner, and both were only
+    // half-fixed by teaching sync() to delete an empty class:
+    //
+    //  - `el.className = ''` (and setAttribute('class', ''), which lands
+    //    here) left `class` present with an empty value, so `[class]`
+    //    matched an element carrying no classes — the identical false
+    //    positive, by the identical mechanism, reached from the other side.
+    //  - the setter stored the raw string while the getter returns the
+    //    classList-NORMALISED value, so `setAttribute('class', '  a  b ')`
+    //    made getAttribute('class') and className disagree, and
+    //    `[class="a b"]` matched through one of them but not the other.
+    //
+    // Nothing in src/ hits either path today, which is exactly why it would
+    // have sat here until something did.
+    const normalised = this.classList.value
+    if (normalised === '') this.attributes.delete('class')
+    else this.attributes.set('class', normalised)
   }
   get id(): string {
     return this.attributes.get('id') ?? ''

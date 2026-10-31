@@ -767,9 +767,24 @@ try {
       // records a failure and CONTINUES, so that is a live path, not a
       // hypothetical. Same reasoning, and the same in-page clear, as the
       // screenshot block further down.
-      await page.goto(`${origin}/index.html?prime=floor#/`)
-      await page.evaluate('localStorage.clear()')
+      // The full prime-clear-rebuild dance, not two thirds of it. The
+      // version this replaces had the right idea and none of the guards the
+      // screenshot block spells out further down:
+      //  - page.goto is a bare Page.navigate and does NOT wait for the
+      //    document to commit, so the clear could land on the about:blank a
+      //    fresh tab starts on and throw SecurityError the moment it touched
+      //    localStorage — red, for a reason with nothing to do with the floor
+      //  - and the primed document has ALREADY painted .floor-canvas, so
+      //    waiting for that selector was satisfied by the stale pre-clear
+      //    DOM, leaving the zoom sequence measuring a page that had read
+      //    loadProgress() before the clear. The guard would have been applied
+      //    to a document other than the one measured, which is worse than no
+      //    guard: it reads as protection.
+      await page.goto(`${origin}/index.html?prime=floor`)
+      await page.waitFor('document.readyState !== "loading"', { label: 'floor prime' })
+      await page.evaluate('localStorage.clear(); window.__beforeClear = true')
       await page.goto(`${origin}/index.html?floor=1#/`)
+      await page.waitFor('!window.__beforeClear', { label: 'floor fresh document' })
       await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'floor canvas' })
       // The zoom controls are the pointer-free half of the floor, and a stub
       // with no layout can never drive the other half.
@@ -839,7 +854,16 @@ try {
       await page.send('Emulation.setDeviceMetricsOverride', {
         width: 390, height: 780, deviceScaleFactor: 2, mobile: true,
       })
+      // Marker again: the CURRENT document already has a .floor-canvas, so
+      // waiting for that selector proves nothing about the new one. Either
+      // the measurement below is taken on the old document — and since the
+      // emulation override resizes the existing page, innerWidth <= 400
+      // still passes, making "survives a phone-width viewport" vacuous — or
+      // the new document commits mid-check and querySelector returns null,
+      // failing on getBoundingClientRect of null.
+      await page.evaluate('window.__beforeNarrow = true')
       await page.goto(`${origin}/index.html?floor=2#/`)
+      await page.waitFor('!window.__beforeNarrow', { label: 'phone-width floor document' })
       await page.waitFor('!!document.querySelector(".floor-canvas")', { label: 'narrow floor' })
       // Assert the viewport actually IS narrow and the canvas was laid out
       // for it. Checking only that no error was thrown would let this pass on

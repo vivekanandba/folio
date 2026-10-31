@@ -105,20 +105,27 @@ jobs:
       - name: Install
         run: npm ci
       - name: Combined coverage floor
-        id: cov
         run: npm run coverage:gate
-      # Does a .coverage directory exist at all? Asked by LOOKING, in a step
-      # that always() guarantees will run, rather than by reasoning about
-      # whether `steps.cov.conclusion` is populated for a step that an earlier
-      # failure skipped. Review raised that as an open question and I could
-      # not settle it from the docs either; a gate whose correctness nobody
-      # can state is not a gate (CON-VER-006 — check the thing you can
-      # execute, rather than deriving it).
-      - name: Did coverage produce anything
+      # Is there an LCOV to upload? Asked by LOOKING, in a step that always()
+      # guarantees will run, rather than by reasoning about whether
+      # `steps.<id>.conclusion` is populated for a step an earlier failure
+      # skipped — review raised that as an open question and I could not
+      # settle it from the docs either. A gate whose correctness nobody can
+      # state is not a gate (CON-VER-006: check what you can execute).
+      #
+      # The glob, NOT the directory. coverage:all opens .coverage/unit.log
+      # the instant it starts, so `[ -d .coverage ]` is true before anything
+      # can have written an lcov: a coverage:unit that died at startup would
+      # set present=true, and the strict upload would add a second red step
+      # reading "No files were found" — the misdiagnosis this guard exists to
+      # prevent, reintroduced one level up (CON-VER-005). Asking the same
+      # question the upload asks is the only version that cannot disagree
+      # with it.
+      - name: Is there an lcov to upload
         id: lcov
         if: always()
         run: |
-          if [ -d .coverage ]; then
+          if ls .coverage/*.lcov >/dev/null 2>&1; then
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
@@ -131,20 +138,14 @@ jobs:
         # with "No files were found with the provided path" — a second failed
         # step naming a cause that is not the cause, pointing whoever reads
         # the log at the artifact glob instead of at the broken install
-        # (CON-VER-005). With the directory checked directly,
-        # if-no-files-found: error stays strict for the case it was added
-        # for: .coverage present but the glob matching nothing.
+        # (CON-VER-005). The guard above asks the SAME question this step
+        # asks — is there an lcov — so the two cannot disagree, and
+        # if-no-files-found: error keeps its meaning for the case it was
+        # added for: an lcov that was there a moment ago and is not now.
         if: always() && steps.lcov.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          # include-hidden-files, because `.coverage` starts with a dot and
-          # upload-artifact@v4 skips hidden paths by DEFAULT. This step has
-          # been uploading nothing since it was written — the job log says
-          # "No files were found with the provided path" — and
-          # if-no-files-found: warn kept it green while it did. Widening the
-          # glob from *.lcov did not help; the dot was the problem.
-          #
           # *.lcov, NOT * — the glob has to be able to fail.
           #
           # `.coverage/*` can no longer match nothing whenever the directory
@@ -174,10 +175,16 @@ jobs:
         # run's log into the job output already, so this is the convenience
         # copy. Holding it to `error` would be the same mistake in reverse —
         # a red step for something that is not a failure.
-        if: always() && steps.lcov.outputs.present == 'true'
+        #
+        # And NOT gated on the lcov. The logs are worth most precisely when
+        # there is no lcov, because then they hold the reason there isn't
+        # one. `warn` means a missing log cannot redden the job, so plain
+        # always() is safe here in a way it is not for the strict upload.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-logs
           path: .coverage/*.log
+          # Same dot-directory reason as above.
           include-hidden-files: true
           if-no-files-found: warn
