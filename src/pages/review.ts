@@ -82,8 +82,14 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
       ]),
     )
-    cue('complete', { perfect: false })
-    burst(stamp)
+    // A queue whose every concept was skipped (no cards, no drill) still
+    // reaches here. "0 concepts reviewed" is not an achievement, and sounding
+    // a chord plus a five-beat haptic over it rewards a round that never
+    // happened (CON-DATA-001: praise tracks something the learner did).
+    if (reviewed > 0) {
+      cue('complete', { perfect: false })
+      burst(stamp)
+    }
   }
 
   const runNext = async () => {

@@ -465,10 +465,20 @@ try {
       await page.goto(`${origin}/index.html#/`)
       await page.waitFor('!!document.querySelector(".topbar-sound")', { label: 'sound control' })
       const pressed = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-pressed')`)
+      const label = () => page.evaluate(`document.querySelector('.topbar-sound')?.getAttribute('aria-label')`)
       assert((await pressed()) === 'true', 'a fresh visitor should arrive with the museum audible')
+      const nameWhenOn = await label()
 
       await page.evaluate(`document.querySelector('.topbar-sound').click()`)
       assert((await pressed()) === 'false', 'clicking the control did not mute')
+      // A toggle's NAME is the thing; aria-pressed is the state. If the name
+      // changes with the state too, a screen reader reads the two together and
+      // announces the opposite of the truth ("mute … pressed" while sound is
+      // on). So the name must NOT move.
+      assert(
+        (await label()) === nameWhenOn,
+        `the control renamed itself when toggled ("${nameWhenOn}" → "${await label()}") — aria-pressed already carries the state`,
+      )
       const stored = await page.evaluate(`localStorage.getItem('folio-feedback')`)
       assert(stored === 'off', `the mute did not reach storage (got ${stored})`)
 
@@ -501,10 +511,13 @@ try {
         await other.goto(`${origin}/index.html?tab=2#/`)
         await other.waitFor('!!document.querySelector(".topbar-sound")', { label: 'second tab' })
         await other.evaluate(`document.querySelector('.topbar-sound').click()`)
-        await page.evaluate(`new Promise(r => setTimeout(r, 300))`)
-        assert(
-          (await pressed()) === 'false',
-          'muting in another tab left this one claiming the sound is still on',
+        // Poll, do not sleep. These jobs share a 4-vCPU box with other
+        // Playwright runs; a wall-clock assertion in a merge gate is the
+        // CON-VER-008 pattern — it would fail under load and teach everyone
+        // to re-run rather than to look.
+        await page.waitFor(
+          `document.querySelector('.topbar-sound')?.getAttribute('aria-pressed') === 'false'`,
+          { timeoutMs: 5000, label: 'this tab notices the other tab muted' },
         )
       } finally {
         await other.close()

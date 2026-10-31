@@ -1,7 +1,7 @@
 import './style.css'
 import { liveAnnounce, setLiveRegion } from './a11y'
 import { el } from './dom'
-import { cue, feedbackEnabled, setFeedbackEnabled } from './feedback'
+import { cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
 import { initPalette } from './palette'
 import { onRoute } from './router'
 import { renderConcept } from './pages/concept'
@@ -31,8 +31,12 @@ const SPEAKER_OFF = '\u{1F507}'
 const soundBtn = el('button', { class: 'topbar-sound', type: 'button' })
 function paintSoundBtn(): void {
   const on = feedbackEnabled()
+  // A toggle's NAME must be the thing, and aria-pressed the state. Naming it
+  // after the action ("Sound on — mute") while also setting aria-pressed=true
+  // makes a screen reader say the mute control is pressed while sound is on —
+  // the opposite of the truth.
   soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false')
-  soundBtn.setAttribute('aria-label', on ? 'Sound on \u2014 mute' : 'Sound off \u2014 unmute')
+  soundBtn.setAttribute('aria-label', 'Sound and haptics')
   soundBtn.setAttribute('title', on ? 'Mute sound and haptics' : 'Unmute sound and haptics')
   soundBtn.classList.toggle('is-muted', !on)
   soundBtn.replaceChildren(el('span', { 'aria-hidden': 'true' }, [on ? SPEAKER_ON : SPEAKER_OFF]))
@@ -52,7 +56,7 @@ paintSoundBtn()
 // museum was in fact silent. A control that reports the opposite of the
 // truth is worse than one that does not update.
 window.addEventListener('storage', (e) => {
-  if (e.key === null || e.key === 'folio-feedback') paintSoundBtn()
+  if (e.key === null || e.key === FEEDBACK_KEY) paintSoundBtn()
 })
 
 const skipLink = el('a', { class: 'skip-link', href: '#main' }, ['Skip to content'])

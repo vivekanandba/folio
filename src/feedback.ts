@@ -23,7 +23,11 @@ export interface CueOptions {
   perfect?: boolean
 }
 
-const KEY = 'folio-feedback'
+/** Exported so the shell can listen for it: a second copy of this string in
+ *  main.ts would silently stop matching the day the key is renamed, and the
+ *  cross-tab repaint it guards would fail exactly as it did before. */
+export const FEEDBACK_KEY = 'folio-feedback'
+const KEY = FEEDBACK_KEY
 
 /**
  * C major pentatonic, C5 → E6. Pentatonic because every degree agrees with
@@ -155,7 +159,11 @@ function notesFor(name: CueName, degree: number, opts: CueOptions): Note[] {
             { freq: 392.0, at: 0.12, dur: 0.75, type: 'sine', gain: 0.65 },
           ]
     case 'milestone':
-      // A brass shimmer: the plaque going up on the wall.
+      // A brass shimmer: the plaque going up on the wall. No caller yet — the
+      // thing that earns a plaque is PR 2 of specs/015-delight. It is defined
+      // here rather than later so the cue table stays exhaustive over CueName
+      // in one place; if milestones are abandoned, this goes with them.
+      //
       return [
         { freq: 392.0, at: 0, dur: 0.5, type: 'triangle', gain: 0.7 },
         { freq: 523.25, at: 0.09, dur: 0.5, type: 'triangle', gain: 0.7 },

@@ -87,40 +87,63 @@ export function closeAudio(): void {
   }
 }
 
+/**
+ * Retire a context that has stopped working. Chrome caps live AudioContexts
+ * per document (~6), so a broken one must be CLOSED rather than merely
+ * dropped — leaking one per failed cue would exhaust the cap and kill audio
+ * for the page outright, with no way back but a reload.
+ */
+function dropContext(): void {
+  const dead = ctx
+  ctx = null
+  settle(dead?.close())
+}
+
 /** Schedule a cue. Silent and side-effect-free when audio is unavailable. */
 export function play(notes: Note[]): void {
   const audio = context()
   if (!audio) return
   try {
-    // A context that autoplay policy parked in 'suspended' resumes on the
-    // gesture that produced this cue. Unawaited on purpose — but never
-    // unhandled: without activation this rejects rather than throwing.
-    if (audio.state === 'suspended') settle(audio.resume())
-    const now = audio.currentTime
-    for (const note of notes) {
-      const osc = audio.createOscillator()
-      const amp = audio.createGain()
-      osc.type = note.type ?? 'sine'
-      osc.frequency.setValueAtTime(note.freq, now + note.at)
-
-      // A tiny attack and a long decay: struck, not switched on. A square
-      // edge on either end is what makes synthesised feedback sound cheap.
-      const peak = (note.gain ?? 1) * MASTER
-      const start = now + note.at
-      const attack = Math.min(0.012, note.dur / 4)
-      amp.gain.setValueAtTime(SILENCE, start)
-      amp.gain.linearRampToValueAtTime(peak, start + attack)
-      amp.gain.exponentialRampToValueAtTime(SILENCE, start + note.dur)
-
-      osc.connect(amp)
-      amp.connect(audio.destination)
-      osc.start(start)
-      osc.stop(start + note.dur)
+    // A suspended context has a FROZEN currentTime. Scheduling onto it would
+    // queue every cue at the same instant in the past, and the moment audio
+    // became permitted the whole backlog would fire at once — one loud garble
+    // well above the master trim, which is the opposite of the point. So:
+    // resume first, lay the notes down only once the clock is running. If the
+    // resume is refused — no user activation, an interrupted iOS session —
+    // nothing is scheduled and nothing accumulates.
+    if (audio.state === 'suspended') {
+      audio.resume().then(() => schedule(audio, notes)).catch(dropContext)
+      return
     }
+    schedule(audio, notes)
   } catch {
-    // A cue is never worth failing a session over — but a context that has
-    // started refusing nodes is not going to recover, so drop it and let the
-    // next cue build a fresh one.
-    ctx = null
+    // A cue is never worth failing a session over, and a context that has
+    // started refusing nodes is not going to recover.
+    dropContext()
+  }
+}
+
+/** Lay the notes down on a context whose clock is actually running. */
+function schedule(audio: AudioContext, notes: Note[]): void {
+  const now = audio.currentTime
+  for (const note of notes) {
+    const osc = audio.createOscillator()
+    const amp = audio.createGain()
+    osc.type = note.type ?? 'sine'
+    osc.frequency.setValueAtTime(note.freq, now + note.at)
+
+    // A tiny attack and a long decay: struck, not switched on. A square edge
+    // on either end is what makes synthesised feedback sound cheap.
+    const peak = (note.gain ?? 1) * MASTER
+    const start = now + note.at
+    const attack = Math.min(0.012, note.dur / 4)
+    amp.gain.setValueAtTime(SILENCE, start)
+    amp.gain.linearRampToValueAtTime(peak, start + attack)
+    amp.gain.exponentialRampToValueAtTime(SILENCE, start + note.dur)
+
+    osc.connect(amp)
+    amp.connect(audio.destination)
+    osc.start(start)
+    osc.stop(start + note.dur)
   }
 }

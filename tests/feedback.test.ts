@@ -329,7 +329,7 @@ test('a closed audio context is replaced, not kept forever', () => {
   }
 })
 
-test('an audio device that misbehaves is still only silence', () => {
+test('an audio device that misbehaves is still only silence', async () => {
   fresh()
   const realAudio = g.AudioContext
   const install = (impl: unknown): void => {
@@ -343,16 +343,21 @@ test('an audio device that misbehaves is still only silence', () => {
     assert.doesNotThrow(() => cue('correct'), 'a refused AudioContext must not reach the session')
 
     // 2. The context exists but scheduling blows up part-way through a chord.
+    //    Chrome caps live AudioContexts per document (~6), so a context that
+    //    has started refusing nodes must be CLOSED, not merely dropped —
+    //    leaking one per failed cue kills audio for the page outright.
+    let closed = 0
     install(class {
-      state = 'suspended'
+      state = 'running'
       currentTime = 0
       destination = {}
-      resume(): void {}
+      resume(): Promise<void> { return Promise.resolve() }
       createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
       createOscillator(): unknown { throw new Error('too many nodes') }
-      close(): void { throw new Error('cannot close') }
+      close(): Promise<void> { closed += 1; return Promise.resolve() }
     })
     assert.doesNotThrow(() => cue('complete', { perfect: true }), 'a failed schedule must not reach the session')
+    assert.equal(closed, 1, 'a context that broke must be closed, not leaked')
 
     // 3. A context that works but refuses to CLOSE must not break muting.
     //    It has to schedule successfully first, or there would be no live
@@ -374,19 +379,79 @@ test('an audio device that misbehaves is still only silence', () => {
     //    close() rejects on an already-closed context. node:test fails the
     //    whole file on an unhandled rejection, so this assertion is the
     //    absence of one — a bare `void promise` turns this file red.
+    let refusedClosed = 0
     install(class {
       state = 'suspended'
       currentTime = 0
       destination = {}
       resume(): Promise<void> { return Promise.reject(new Error('NotAllowedError')) }
-      close(): Promise<void> { return Promise.reject(new Error('InvalidStateError')) }
+      close(): Promise<void> { refusedClosed += 1; return Promise.reject(new Error('InvalidStateError')) }
       createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
       createOscillator(): unknown {
         return { frequency: { setValueAtTime() {} }, connect() {}, start() {}, stop() {} }
       }
     })
+    g.__resetAudio()
     cue('correct')
+    await Promise.resolve()
+    await Promise.resolve()
+    assert.deepEqual(g.__audioLog, [], 'a refused resume must schedule nothing at all')
+    assert.equal(refusedClosed, 1, 'a context that refused to resume must be retired, not left open')
     setFeedbackEnabled(false)
+  } finally {
+    g.AudioContext = realAudio
+    fresh()
+  }
+})
+
+test('a suspended context is resumed BEFORE anything is scheduled', async () => {
+  fresh()
+  const realAudio = g.AudioContext
+  setFeedbackEnabled(false)
+  try {
+    // A suspended context's clock is FROZEN. Scheduling against it stacks
+    // every cue at the same instant in the past; the moment audio is
+    // permitted, the whole backlog fires at once as one loud garble. The
+    // clock here jumps on resume, so the note's start time says plainly
+    // which side of the resume it was read on.
+    g.AudioContext = class {
+      state = 'suspended'
+      currentTime = 0
+      destination = {}
+      async resume(): Promise<void> {
+        this.state = 'running'
+        this.currentTime = 10
+      }
+      close(): Promise<void> { return Promise.resolve() }
+      createGain(): unknown { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} } }
+      createOscillator(): unknown {
+        const self = this as unknown as { currentTime: number }
+        void self
+        return {
+          type: 'sine',
+          frequency: { value: 0, setValueAtTime(v: number) { this.value = v } },
+          connect() {},
+          start(t: number) { (this as { _s: number })._s = t },
+          stop(t: number) {
+            g.__audioLog.push({ type: 'sine', freq: 0, startAt: (this as { _s: number })._s, stopAt: t })
+          },
+        }
+      }
+    }
+    setFeedbackEnabled(true)
+    g.__resetAudio()
+    cue('correct')
+    assert.deepEqual(g.__audioLog, [], 'nothing may be scheduled while the clock is still frozen')
+
+    // Let the resume settle.
+    await Promise.resolve()
+    await Promise.resolve()
+    await Promise.resolve()
+    assert.equal(g.__audioLog.length, 1, 'the cue should land once the context is running')
+    assert.ok(
+      g.__audioLog[0].startAt >= 10,
+      `the clock was read before the resume (startAt ${g.__audioLog[0].startAt}, expected >= 10)`,
+    )
   } finally {
     g.AudioContext = realAudio
     fresh()
