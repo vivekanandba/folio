@@ -674,8 +674,36 @@ try {
       // 150ms and also monkeypatched location.reload to hold the navigation,
       // which does nothing at all: Location members are [LegacyUnforgeable].
       // It passed by outrunning the very reload it claimed to be holding.
-      await page.waitFor(
-        `(localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')`,
+      // Poll for the write AND the error list in ONE expression, so the
+      // verdict is taken from a single snapshot of a single document.
+      //
+      // Reading them in two round trips raced report.ts's own reload: the
+      // import schedules location.reload() 600ms after it writes, and
+      // waitFor returns the moment the write is visible. A reload landing in
+      // the gap either destroys the execution context mid-evaluate (red for
+      // timing — CON-VER-008, the thing the note below argues against) or
+      // hands back the fresh document's empty __e2eErrors, which is worse,
+      // because it looks like a pass. Both windows are narrow; the fleet
+      // notes describe this box reaching load 10 under three Playwright jobs,
+      // which is exactly when narrow windows stop being narrow.
+      const verdict = await page.waitFor(
+        // Returns a JSON snapshot as soon as there is anything to report —
+        // the write landing, OR an error appearing — and '' (falsy) while
+        // neither has happened, so the poll keeps polling.
+        //
+        // Stopping on an ERROR too, not just on the write, is what keeps the
+        // failure legible. An exception thrown before the store is written
+        // means the write never lands, so a poll that waits only for the
+        // write times out and reports "timed out waiting for the imported
+        // ledger to reach storage" — true, but it names the symptom and
+        // swallows the cause (CON-VER-005). Verified by throwing inside the
+        // import handler: this form names the exception instead.
+        `(() => {
+          const errors = Array.isArray(window.__e2eErrors) ? window.__e2eErrors : null
+          const written = (localStorage.getItem('folio-progress-v2') || '').includes('p2::s9')
+          if (!written && !(errors && errors.length)) return ''
+          return JSON.stringify({ written, errors: errors && errors.slice(0, 3) })
+        })()`,
         // 5000ms like its neighbours. The import must await file.text() and
         // then write, polled over a cross-process CDP round trip, on a box
         // the fleet notes describe as reaching load 10 under three Playwright
@@ -684,15 +712,22 @@ try {
         // makes the gate red for timing (CON-VER-008).
         { timeoutMs: 5000, intervalMs: 25, label: 'the imported ledger reaches storage' },
       )
-      // AFTER the write, not before it. report.ts's change handler is async —
-      // it awaits file.text() before writing — so calling this straight after
-      // dispatchEvent raced the handler and could only ever observe the
-      // export half, and anything the import threw would have landed in a
-      // __e2eErrors that the handler's 600ms location.reload() then wiped.
-      // This is the heaviest browser path in the suite (a synthetic download,
-      // a File read, a store rewrite and a reload); it is worth asking
-      // properly whether any of it threw.
-      await uncaughtErrors(page, 'while exporting and importing the ledger')
+      // The verdict was captured in the same evaluate as the write, above —
+      // not here, where the reload may already have replaced the document.
+      // Checked after the write rather than before it: report.ts's change
+      // handler is async and awaits file.text(), so asking straight after
+      // dispatchEvent could only ever observe the export half.
+      const ledger = JSON.parse(verdict)
+      assert(
+        ledger.errors !== null,
+        'the error collector was not installed (while exporting and importing the ledger)',
+      )
+      // Errors first: they are the CAUSE when the write is also missing.
+      assert(
+        ledger.errors.length === 0,
+        `${ledger.errors.length} uncaught error(s) while exporting and importing the ledger: ${JSON.stringify(ledger.errors)}`,
+      )
+      assert(ledger.written, 'the imported ledger never reached storage')
       return 'export → parse → import'
     } finally {
       await page.close()

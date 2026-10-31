@@ -185,7 +185,7 @@
        belonged to.
 
        (b) The original also read "summary + interrupt". The interrupt
-       panel is unreachable by construction —
+       panel is not reachable BY A FETCH FAILURE —
        `deriveFlashcards` catches both the concept note and every session
        load, so a broken archive yields a concept with no cards that the queue
        skips. Verified by breaking fetch two ways; written up at the foot of

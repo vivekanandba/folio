@@ -120,13 +120,20 @@ test('a round worked to the end tallies what was reviewed, and says so once', as
 
 // NOT tested here: the "Review interrupted" panel in advance()'s catch.
 //
-// It cannot be reached. runNext()'s only awaited call is deriveFlashcards,
-// and that swallows BOTH failure modes itself — a try/catch around the
-// concept note, and `.catch(() => null)` on every session load — so a broken
-// archive produces a concept with no cards, which the queue skips. Verified
-// by breaking fetch entirely mid-round, and again for session URLs only: the
-// round carried on and finished, and the panel never rendered.
+// What was verified: a FETCH failure cannot reach it. runNext()'s only
+// awaited call is deriveFlashcards, and that swallows both fetch failure
+// modes itself — a try/catch around the concept note, and `.catch(() => null)`
+// on every session load — so a broken archive produces a concept with no
+// cards, which the queue skips. Checked by breaking fetch entirely mid-round,
+// and again for session URLs only: the round carried on and finished, and the
+// panel never rendered.
 //
-// Left in place as insurance should deriveFlashcards ever stop catching, and
-// written down here so the next person measuring coverage knows those lines
-// are unreachable by construction rather than merely untested (CON-REP-002).
+// What is NOT true, and what an earlier version of this note claimed: that
+// the panel is "unreachable by construction". runNext() also calls
+// dailyDrill(), mountDrill()/mountFlashcards() and showSummary()
+// synchronously inside an async function, so a throw in any of them rejects
+// the promise advance() awaits and renders the panel. The handler is the only
+// guard against a defect anywhere in that body — which is precisely why
+// overstating the finding was dangerous: it invited the next reader to delete
+// it. Recorded as observed rather than as the stronger thing the observation
+// seemed to imply (CON-DATA-001, CON-REP-002).

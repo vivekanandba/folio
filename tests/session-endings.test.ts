@@ -248,10 +248,16 @@ function connectedEdges(spec: BlueprintSpec): [string, string][] {
  * session", pointing at the renderer rather than at the fixture. Which is
  * the exact failure this helper exists to prevent.
  */
-function satisfiableBlueprint(): BlueprintSpec {
+function satisfiableBlueprint(also: (s: BlueprintSpec) => boolean = () => true): BlueprintSpec {
   const found = sessionsOfKind('blueprint').find((d) => {
     const spec = d as unknown as BlueprintSpec
     if (spec.parts.some((p) => (p.max ?? 1) > 1)) return false
+    // Any EXTRA property the calling test needs of its fixture, applied while
+    // choosing rather than asserted afterwards. A test that needs a noDirect
+    // rule and merely asserts one is present fails for a fixture reason the
+    // moment content changes — which is the failure this finder exists to
+    // prevent, reintroduced one level up.
+    if (!also(spec)) return false
     if (!spec.rules.every((r) => ['connected', 'noDirect', 'pathExists'].includes(r.rule))) return false
 
     const edges = connectedEdges(spec)
@@ -413,7 +419,7 @@ test('inspecting a board that breaks a rule reports it, and does NOT finish', ()
   // `pathExists` rule came back broken too, so deleting `noDirect` from
   // evalRule entirely would have left this test green. Both of its
   // assertions were satisfied by the rules it was not testing.
-  const session = satisfiableBlueprint()
+  const session = satisfiableBlueprint((s) => s.rules.some((r) => r.rule === 'noDirect' && !!r.a && !!r.b))
   const forbiddenIndex = session.rules.findIndex((r) => r.rule === 'noDirect' && r.a && r.b)
   assert.ok(forbiddenIndex >= 0, 'this board forbids at least one direct connection')
   const forbidden = session.rules[forbiddenIndex]
@@ -510,10 +516,33 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
 
   assert.notEqual(weighing, resting, 'hovering a door says what it would cost')
   assert.equal(after, resting, 'and leaving it puts the panel back')
+  // The METER, if this fork has one — and what it does, not that it exists.
+  //
+  // An earlier version asserted only that `.decision-meter-ghost` was in the
+  // DOM, AFTER the mouseleave above. render() creates that element whenever
+  // session.meter is set and never adds or removes it on hover — only its
+  // width and `worse` class change — so the assertion was true before the
+  // test touched anything, could not observe the hover state it was placed
+  // after, and would have stayed green with the whole `if (meter && ...)`
+  // block deleted from showPreview().
   if (session.meter) {
-    assert.ok(
-      node(host).querySelector('.decision-meter-ghost'),
-      'a metered fork shows the shift as a ghost on the bar',
-    )
+    const ghost = () => node(host).querySelector('.decision-meter-ghost') as unknown as
+      { style: { width: string }; className: string }
+    assert.ok(ghost(), 'a metered fork draws a ghost on the bar')
+
+    // A door that MOVES the meter — `effect`, not `preview`. They need not be
+    // the same door, and a door with no effect leaves the ghost where it is.
+    const choices = startNode(session as never)!.choices as { effect?: number | null }[]
+    const moving = choices.findIndex((c) => c.effect != null && c.effect !== 0)
+    if (moving >= 0) {
+      const atRest = ghost().style.width
+      doors[moving].dispatchEvent({ type: 'mouseenter' })
+      const whileWeighing = ghost().style.width
+      doors[moving].dispatchEvent({ type: 'mouseleave' })
+      const restored = ghost().style.width
+
+      assert.notEqual(whileWeighing, atRest, 'hovering a door that costs something shifts the ghost')
+      assert.equal(restored, atRest, 'and leaving it puts the bar back')
+    }
   }
 })

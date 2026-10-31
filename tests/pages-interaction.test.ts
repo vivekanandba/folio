@@ -288,7 +288,17 @@ test('the hall filter chips hide and show categories', async () => {
 test('the palette answers Home, End and a click on its backdrop', async () => {
   const handle = initPalette()
   handle.open()
-  const dialog = document.querySelector('.cmdk') as unknown as (El & { open: boolean })
+  // The LAST .cmdk, not the first. initPalette() appends a fresh <dialog> to
+  // document.body on every call and never removes it, so by this point in the
+  // file there are three — and `querySelector` returns the one an EARLIER
+  // test built. This test was driving a dialog it had not opened: the closing
+  // `dialog.open === false` passed only because that earlier test happened to
+  // leave its own dialog open, so the backdrop-dismiss branch never ran. Add
+  // an Escape handler to palette.ts, or reorder the tests above, and the
+  // assertion would have gone on passing against an already-closed dialog.
+  const dialogs = document.querySelectorAll('.cmdk')
+  const dialog = dialogs[dialogs.length - 1] as unknown as (El & { open: boolean })
+  assert.equal(dialog.open, true, 'the palette this test opened is the one it drives')
   const input = dialog.querySelector('.cmdk-input')!
   input.value = 'a'
   input.dispatchEvent({ type: 'input', target: input })
