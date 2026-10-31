@@ -209,7 +209,19 @@ const server = await serve(PREVIEW, PORT)
  * (CON-DATA-001, CON-VER-005).
  */
 /**
- * Wait until the page really is the app's document, with storage reachable.
+ * Wait until a tab that was on about:blank has reached the app, with storage
+ * reachable.
+ *
+ * NOT a general cross-document guard, and the name should not be read as
+ * one. All three of its conditions are already true of a same-origin page,
+ * so after a goto from one app URL to another it returns on the first poll
+ * and proves nothing. That case needs a marker set on the OLD document and
+ * waited for to disappear — which is what __beforeClear and __beforeNarrow
+ * do below, and why they are not redundant with this.
+ *
+ * Stated plainly because the failure mode of getting it wrong is a guard
+ * that reads as protection and gives none, which is the specific trap this
+ * file has now fallen into twice.
  *
  * `document.readyState !== "loading"` does NOT prove that, and every use of
  * it as a commit guard in this file was wrong. page.goto is a bare
@@ -738,6 +750,12 @@ try {
           if (!written && !refusal && !(errors && errors.length)) return ''
           return JSON.stringify({
             written,
+            // The TRUE count, separate from the sample. Reporting
+            // errors.length after slicing to three said "3 uncaught
+            // error(s)" when there were ten — a failure message that
+            // understates the failure, which the sibling uncaughtErrors()
+            // helper gets right by keeping the two apart (CON-VER-005).
+            errorCount: errors ? errors.length : null,
             // Bounded. body.textContent runs every element's text together
             // with no separators, so an unbounded match drags the rest of the
             // page into the failure message and buries the reason it exists
@@ -761,13 +779,14 @@ try {
       // dispatchEvent could only ever observe the export half.
       const ledger = JSON.parse(verdict)
       assert(
-        ledger.errors !== null,
+        ledger.errorCount !== null,
         'the error collector was not installed (while exporting and importing the ledger)',
       )
       // Errors first: they are the CAUSE when the write is also missing.
       assert(
-        ledger.errors.length === 0,
-        `${ledger.errors.length} uncaught error(s) while exporting and importing the ledger: ${JSON.stringify(ledger.errors)}`,
+        ledger.errorCount === 0,
+        `${ledger.errorCount} uncaught error(s) while exporting and importing the ledger` +
+          `${ledger.errorCount > 3 ? ' (first 3)' : ''}: ${JSON.stringify(ledger.errors)}`,
       )
       // The refusal, in its own words, before the generic "never reached
       // storage" — the reason beats the symptom.

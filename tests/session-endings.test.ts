@@ -520,13 +520,39 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   // and the failure would read as "hovering says nothing" rather than as a
   // test indexing the wrong door.
   const startNode = (d: Record<string, unknown>) => {
-    const { nodes, startId } = d as { nodes: { id: string; choices?: { preview?: string }[] }[]; startId?: string }
+    const { nodes, startId } = d as {
+      nodes: { id: string; choices?: { preview?: string; effect?: number | null }[] }[]
+      startId?: string
+    }
     return nodes.find((n) => n.id === startId) ?? nodes[0]
   }
-  const session = sessionsOfKind('decision').find((d) =>
-    startNode(d)?.choices?.some((c) => c.preview),
-  ) as { nodes: { id: string; choices?: { preview?: string }[] }[]; startId?: string; meter?: unknown }
-  assert.ok(session, 'no shipped decision opens on a door with a preview')
+  // Chosen for EVERY property this test needs, not just the first one, and
+  // chosen rather than asserted afterwards — the rule satisfiableBlueprint()
+  // was written to enforce for the blueprint tests.
+  //
+  // The meter assertions below sit behind `if (session.meter)` and
+  // `if (moving >= 0)`. Selecting only on "the start node has a preview"
+  // left both of those conditions to luck: all seven shipped decisions
+  // happen to carry a meter and a moving first choice today, so the block
+  // runs — but a content change that put a preview-bearing, meter-less
+  // decision first would drop the whole showPreview() meter branch with
+  // this test still green and SILENT about it. A guarded assertion that
+  // nothing selects for is a coverage claim with no guarantee behind it.
+  const wanted = (d: Record<string, unknown>) => {
+    const start = startNode(d)
+    if (!start?.choices?.some((c) => c.preview)) return false
+    if (!(d as { meter?: unknown }).meter) return false
+    return start.choices.some((c) => c.effect != null && c.effect !== 0)
+  }
+  const session = sessionsOfKind('decision').find(wanted) as {
+    nodes: { id: string; choices?: { preview?: string; effect?: number | null }[] }[]
+    startId?: string
+    meter?: unknown
+  }
+  assert.ok(
+    session,
+    'no shipped decision opens on a metered fork with both a preview and a cost',
+  )
 
   const host = root()
   mod.mount(host, session as never, () => {})
@@ -554,24 +580,26 @@ test('hovering a door previews its consequence, and leaving puts it back', () =>
   // test touched anything, could not observe the hover state it was placed
   // after, and would have stayed green with the whole `if (meter && ...)`
   // block deleted from showPreview().
-  if (session.meter) {
-    const ghost = () => node(host).querySelector('.decision-meter-ghost') as unknown as
-      { style: { width: string }; className: string }
-    assert.ok(ghost(), 'a metered fork draws a ghost on the bar')
+  // No `if` here any more. The fixture is SELECTED for a meter and for a
+  // door that moves it, so both are now guarantees — and a guard that can
+  // silently skip the only assertions covering showPreview()'s meter branch
+  // is the thing this test was failing at two rounds ago.
+  const ghost = () => node(host).querySelector('.decision-meter-ghost') as unknown as
+    { style: { width: string }; className: string }
+  assert.ok(ghost(), 'a metered fork draws a ghost on the bar')
 
-    // A door that MOVES the meter — `effect`, not `preview`. They need not be
-    // the same door, and a door with no effect leaves the ghost where it is.
-    const choices = startNode(session as never)!.choices as { effect?: number | null }[]
-    const moving = choices.findIndex((c) => c.effect != null && c.effect !== 0)
-    if (moving >= 0) {
-      const atRest = ghost().style.width
-      doors[moving].dispatchEvent({ type: 'mouseenter' })
-      const whileWeighing = ghost().style.width
-      doors[moving].dispatchEvent({ type: 'mouseleave' })
-      const restored = ghost().style.width
+  // A door that MOVES the meter — `effect`, not `preview`. They need not be
+  // the same door, and a door with no effect leaves the ghost where it is.
+  const choices = startNode(session as never)!.choices as { effect?: number | null }[]
+  const moving = choices.findIndex((c) => c.effect != null && c.effect !== 0)
+  assert.ok(moving >= 0, 'the chosen fork has a door that costs something')
 
-      assert.notEqual(whileWeighing, atRest, 'hovering a door that costs something shifts the ghost')
-      assert.equal(restored, atRest, 'and leaving it puts the bar back')
-    }
-  }
+  const atRest = ghost().style.width
+  doors[moving].dispatchEvent({ type: 'mouseenter' })
+  const whileWeighing = ghost().style.width
+  doors[moving].dispatchEvent({ type: 'mouseleave' })
+  const restored = ghost().style.width
+
+  assert.notEqual(whileWeighing, atRest, 'hovering a door that costs something shifts the ghost')
+  assert.equal(restored, atRest, 'and leaving it puts the bar back')
 })

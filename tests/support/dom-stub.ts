@@ -66,6 +66,11 @@ function kebab(key: string): string {
   return key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
 }
 
+/** The inverse, for enumerating `dataset` back out of the attributes map. */
+function camel(attr: string): string {
+  return attr.slice('data-'.length).replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
 /**
  * Split a selector LIST on its top-level commas only.
  *
@@ -154,16 +159,50 @@ export class StubElement extends StubNode {
    * worst way for a gap to come back.
    */
   dataset: Record<string, string> = new Proxy({} as Record<string, string>, {
-    get: (_t, key: string) => this.attributes.get(`data-${kebab(key)}`),
-    set: (_t, key: string, value: string) => {
-      this.attributes.set(`data-${kebab(key)}`, String(value))
+    // Symbols are passed through to the target instead of being kebab-cased.
+    // `${el.dataset}` and any other symbol-keyed access (Symbol.toPrimitive,
+    // Symbol.toStringTag, util.inspect) reach these traps too, and a bare
+    // key.replace() threw "key.replace is not a function" — an error naming
+    // nothing a reader could act on, from a stub whose job is to make test
+    // failures legible.
+    get: (t, key) => {
+      if (typeof key === 'symbol') return (t as Record<symbol, unknown>)[key]
+      const name = `data-${kebab(key)}`
+      if (this.attributes.has(name)) return this.attributes.get(name)
+      // Fall through to the target for anything that is not a data-*
+      // attribute, so the object still behaves like an object. Returning
+      // attributes.get() unconditionally meant `toString` and `valueOf`
+      // resolved to undefined, and `\`${el.dataset}\`` died with "Cannot
+      // convert object to primitive value" — where a browser says
+      // "[object DOMStringMap]". Unknown data keys still read undefined,
+      // because the target is empty.
+      return (t as Record<string, unknown>)[key]
+    },
+    set: (t, key, value) => {
+      if (typeof key === 'symbol') (t as Record<symbol, unknown>)[key] = value
+      else this.attributes.set(`data-${kebab(key)}`, String(value))
       return true
     },
-    deleteProperty: (_t, key: string) => {
-      this.attributes.delete(`data-${kebab(key)}`)
+    deleteProperty: (t, key) => {
+      if (typeof key === 'symbol') delete (t as Record<symbol, unknown>)[key]
+      else this.attributes.delete(`data-${kebab(key)}`)
       return true
     },
-    has: (_t, key: string) => this.attributes.has(`data-${kebab(key)}`),
+    has: (t, key) =>
+      typeof key === 'symbol' ? key in t : this.attributes.has(`data-${kebab(key)}`),
+    // ENUMERATION, so Object.keys(el.dataset), {...el.dataset} and for…in
+    // see the data-* attributes. Without these two traps they all returned
+    // nothing — which is the same silent vacuum the Proxy was added to
+    // close, just reached by a different access path. ownKeys alone is not
+    // enough: Object.keys filters on enumerability, so a descriptor has to
+    // come back for each key too.
+    ownKeys: () => [...this.attributes.keys()].filter((k) => k.startsWith('data-')).map(camel),
+    getOwnPropertyDescriptor: (_t, key) => {
+      if (typeof key === 'symbol') return undefined
+      const name = `data-${kebab(key)}`
+      if (!this.attributes.has(name)) return undefined
+      return { value: this.attributes.get(name), enumerable: true, configurable: true, writable: true }
+    },
   })
   private listeners = new Map<string, ((ev: unknown) => void)[]>()
   /** Set directly by callers that assign innerHTML; not parsed. */
