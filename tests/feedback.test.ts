@@ -55,6 +55,22 @@ function fresh(): void {
 
 const freqs = (): number[] => g.__audioLog.map((n) => n.freq)
 
+/**
+ * Wait for a condition, with a deadline. NOT a fixed sleep: the deferred chord
+ * is driven by a ~440ms timer, and this suite shares a 4-vCPU box with
+ * Playwright jobs that put the load at 10. Sleeping "a bit longer than the
+ * timer" is a merge gate that goes red under load and reads as a product
+ * regression (CON-VER-008).
+ */
+async function until(ok: () => boolean, timeoutMs = 8000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (ok()) return true
+    await new Promise((r) => setTimeout(r, 20))
+  }
+  return ok()
+}
+
 test('the ladder climbs, then holds at the top', () => {
   assert.ok(RUN_LADDER.length >= 5, 'a ladder of four notes is not a run')
   for (let i = 1; i < RUN_LADDER.length; i++) {
@@ -128,6 +144,11 @@ test('muting silences every channel at once', () => {
 
   assert.deepEqual(g.__audioLog, [], 'muted: no tone was requested')
   assert.deepEqual(g.__vibrateLog, [], 'muted: no vibration was requested')
+  // cue('complete') arms its timer BEFORE the mute check (which lives in
+  // emit), and re-enabling does not cancel one. Disarm it here rather than
+  // leaving the next test to inherit a stray chord — this file's own first
+  // test does not call fresh(), so the cleanup cannot be assumed.
+  resetRun()
   setFeedbackEnabled(true)
 })
 
@@ -611,8 +632,10 @@ test('the finishing chord waits for the answer bell to ring out', async () => {
   assert.equal(g.__audioLog.length, 1, 'only the answer bell should have gone out so far')
   assert.deepEqual(g.__vibrateLog, [8], 'and only the answer tap')
 
-  await new Promise((r) => setTimeout(r, 600))
-  assert.ok(g.__audioLog.length > 1, 'the chord should arrive once the bell has finished')
+  assert.ok(
+    await until(() => g.__audioLog.length > 1),
+    'the chord should arrive once the bell has finished',
+  )
   const bell = g.__audioLog[0]
   const chordStarts = g.__audioLog.slice(1).map((n) => n.startAt)
   assert.ok(

@@ -583,9 +583,24 @@ try {
         // visual regression and is not one (CON-VER-008). localStorage.clear()
         // in page context is synchronous, and the assertion below turns any
         // future race into a sentence instead of a mystery.
-        await page.goto(`${origin}/index.html?shot=${shot.name}`)
-        await page.evaluate('localStorage.clear()')
-        await page.goto(`${origin}/index.html?shot=${shot.name}${shot.hash}`)
+        // Prime a document on this origin, clear there, then load the shot in
+        // a genuinely NEW document. Three things each have to be waited for,
+        // and skipping any of them was a bug in an earlier draft:
+        //  - goto is a bare Page.navigate; it does not wait for the document
+        //    to commit, and evaluating against the about:blank a fresh tab
+        //    starts on throws SecurityError the moment it touches localStorage
+        //  - the second URL must differ by more than its FRAGMENT, or it is a
+        //    same-document navigation and the clear never takes effect on a
+        //    rebuilt page (for `floor`, whose hash is empty, the primed
+        //    document has already painted .floor-canvas, so shot.ready would
+        //    be satisfied by the stale pre-clear DOM)
+        //  - and a marker set before the clear proves the document really was
+        //    rebuilt, rather than leaving that to be assumed
+        await page.goto(`${origin}/index.html?shot=${shot.name}&prime=1`)
+        await page.waitFor('document.readyState !== "loading"', { label: `${shot.name} prime` })
+        await page.evaluate('localStorage.clear(); window.__beforeClear = true')
+        await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
+        await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
         const leftovers = await page.evaluate('localStorage.length')
         assert(

@@ -74,7 +74,11 @@ export async function renderReview(root: HTMLElement): Promise<void> {
     // and suppressing only the chord would leave the two disagreeing.
     const stamp = reviewed > 0
       ? el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
-      : el('div', { class: 'muted small' }, ['Nothing was due that had material to review.'])
+      // role="status" either way: a learner on a screen reader who finishes a
+      // round where nothing had material still deserves to be told so.
+      : el('div', { class: 'muted small', role: 'status' }, [
+          'Nothing was due that had material to review.',
+        ])
     root.replaceChildren(
       header(),
       el('div', { class: 'result-card pop-in review-summary' }, [
