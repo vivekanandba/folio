@@ -1,4 +1,5 @@
 import { loadCatalog, loadPackMeta } from '../content'
+import { loadingLine } from '../curator'
 import { el } from '../dom'
 import { mountAurora } from '../shader'
 import { attachTilt } from '../tilt'
@@ -42,7 +43,7 @@ function statTile(value: string, label: string, tone = ''): HTMLElement {
 }
 
 export async function renderHub(root: HTMLElement): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('hub')]))
   const catalog = await loadCatalog()
   const metas = await Promise.all(catalog.packs.map((ref) => loadPackMeta(ref.path)))
 
@@ -79,7 +80,11 @@ export async function renderHub(root: HTMLElement): Promise<void> {
       ]),
     ]),
     el('div', { class: 'stat-row' }, [
-      statTile(String(streak), 'day streak', streak > 0 ? 'tone-good' : ''),
+      // A streak worth keeping gets a lit tile, not just a bigger number.
+      // Three is the first rung the museum hands out a plaque for, so it is
+      // the point at which the number stops being a count and starts being
+      // a thing you have.
+      statTile(String(streak), 'day streak', streak >= 3 ? 'tone-good tile-alight' : streak > 0 ? 'tone-good' : ''),
       statTile(String(reviewedToday), 'reviewed today'),
       statTile(retention == null ? '—' : `${Math.round(retention * 100)}%`, '30-day recall'),
       statTile(`${learnedCount}/${allConcepts.length}`, 'concepts learned'),

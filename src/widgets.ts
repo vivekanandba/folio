@@ -29,14 +29,28 @@ export function renderRichInto(host: HTMLElement, md: string): void {
   host.innerHTML = renderMarkdown(md)
   host.querySelectorAll<HTMLElement>('.viz-slot').forEach((slot) => {
     const raw = slot.getAttribute('data-viz')
-    if (!raw) return
+    // `widget-failed` on every path that will never mount. "Has not mounted
+    // yet" and "cannot mount at all" should not look identical from outside:
+    // anything that waits on hydration would otherwise burn its whole timeout
+    // on a figure that has already given up. Nothing waits on it today — the
+    // screenshot gate's wait was removed as vacuous — so this is a marker
+    // kept for the next thing that needs it, which the tests pin.
+    if (!raw) {
+      slot.classList.add('widget-failed')
+      return
+    }
     try {
       const spec = JSON.parse(raw)
-      mountWidget(slot, spec)
-      if (TOUCHABLE.has(spec?.type)) {
+      // Only invite touch if there is something to touch. mountWidget
+      // swallows its own failure, so without this a `sim` fence naming an
+      // unknown model would print "Interactive — please touch" above
+      // "(interactive figure unavailable)".
+      const mounted = mountWidget(slot, spec)
+      if (TOUCHABLE.has(spec?.type) && mounted) {
         slot.prepend(el('div', { class: 'touch-chip', 'aria-hidden': 'true' }, ['Interactive — please touch']))
       }
     } catch {
+      slot.classList.add('widget-failed')
       slot.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
     }
   })
@@ -53,13 +67,21 @@ export function richBlock(md: string, className = 'rich-block'): HTMLElement {
   return host
 }
 
-/** Mount an interactive figure into `host` from a JSON spec. Defensive: bad specs degrade gracefully. */
-export function mountWidget(host: HTMLElement, spec: Spec): void {
+/**
+ * Mount an interactive figure into `host` from a JSON spec. Defensive: bad
+ * specs degrade gracefully. Returns whether it mounted, so a caller can tell
+ * the two apart without reading a class back off the DOM — the chip inviting
+ * a learner to touch the figure depends on it.
+ */
+export function mountWidget(host: HTMLElement, spec: Spec): boolean {
   try {
     host.replaceChildren(build(spec))
     host.classList.add('widget-mounted')
+    return true
   } catch {
+    host.classList.add('widget-failed')
     host.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
+    return false
   }
 }
 

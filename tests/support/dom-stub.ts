@@ -315,6 +315,8 @@ export class StubElement extends StubNode {
 }
 
 class StubDocument extends StubElement {
+  /** Settable, so a test can be a backgrounded tab. */
+  hidden = false
   documentElement = new StubElement('html')
   body = new StubElement('body')
   head = new StubElement('head')
@@ -393,10 +395,21 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
     // hold the runner open. Sustained animation belongs to the browser suite.
     let frames = 0
     const FRAME_BUDGET = 3
+    // The budget is MODULE-level and shared by every test in a file, so one
+    // test that needs three frames leaves none for the next — and a test that
+    // never gets a frame passes vacuously while appearing to exercise an
+    // animation. Reset it per test that cares (CON-VER-008: a suite whose
+    // outcome depends on order is a defect in the suite).
+    g.__resetFrames = () => { frames = 0 }
     g.requestAnimationFrame = (fn: (t: number) => void): number => {
       if (frames >= FRAME_BUDGET) return 0
       frames += 1
-      const id = setTimeout(() => fn(frames * 16), 0)
+      // performance.now(), NOT a frame counter. The real rAF timestamp shares
+      // a clock with performance.now(), and code that measures elapsed time
+      // by subtracting one from the other — fx.ts's countUp does — got a
+      // huge negative number here and rendered nonsense. A stub that lies
+      // about an API's contract tests the lie.
+      const id = setTimeout(() => fn(performance.now()), 0)
       if (typeof id === 'object' && id && 'unref' in id) (id as { unref: () => void }).unref()
       return frames
     }
@@ -559,6 +572,13 @@ export function installDomStub(): { document: StubDocument; reset: () => void } 
       stubDocument.body.replaceChildren()
       stubDocument.head.replaceChildren()
       stubDocument.activeElement = null
+      // Frames too. The budget is module-level, so without this every file
+      // that calls reset() still inherits whatever earlier tests spent — and
+      // a test that gets no frame passes while appearing to drive an
+      // animation. __resetFrames only helped the one file that knew to call
+      // it (CON-VER-008: order-dependence is a defect in the suite).
+      const reset = (globalThis as Record<string, unknown>).__resetFrames
+      if (typeof reset === 'function') (reset as () => void)()
     },
   }
 }

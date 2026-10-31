@@ -52,14 +52,110 @@
 
 ## PR 3 — the curator's voice, and the polish
 
-- [ ] 14. Pin the clock for the four e2e captures **before** any time-varying
+- [x] 14. Pin the clock for the four e2e captures **before** any time-varying
        copy lands, so the gate cannot erode unnoticed
-- [ ] 15. `src/curator.ts` — per-route loading lines, time-of-day arrival line
-- [ ] 16. `ceremony()` called from `pages/review.ts` instead of its hand-copied
+- [x] 15. `src/curator.ts` — per-route loading lines, time-of-day arrival line
+- [x] 16. `ceremony()` called from `pages/review.ts` instead of its hand-copied
        stamp; `countUp()` on `.score-hero`; streak tile alive at ≥3 days;
        focus-visible choreography; the saved-note becomes a real plaque
-- [ ] 17. Recapture the four baselines in the pinned container; report drift
-- [ ] 18. Mutation-check; gates; ship
+- [x] 17. Recapture the four baselines in the pinned container; report drift.
+       ALL FOUR were re-recorded over this PR: `floor.png` for the greeting
+       (16.43%), and `halls`/`pack-math`/`concept-matrices` when the capture
+       scroll was pinned — which is itself the evidence that those three had
+       been photographed 68px down. (An earlier version of this line claimed
+       only `floor.png` changed. It was true of the first commit and is struck
+       here rather than only rebutted at 18h: a reader who stops at task 17
+       should not carry away a finding the same file later retracts.)
+- [x] 18. Mutation-check; gates; ship
+
+### Found while shipping PR 3 — the capture was racing the page
+
+- [x] 18b. The screenshot step's intermittent drift (halls 8.55%,
+       concept-matrices 9.54%) was **the camera, not the page**.
+
+       `page.screenshot()` captures the VIEWPORT, and `main.ts` focuses
+       `#main` on every route change, which scrolls it into view by 68px.
+       Whether that had happened by shutter time varied with load order and
+       with whether the service worker served the route from cache — so the
+       same page was photographed from two different offsets. 68px of a 900px
+       viewport is the 8.55% that kept appearing. Pinned with
+       `window.scrollTo(0, 0)` before the shutter, and `scrollY` is now one of
+       the conditions asserted there.
+
+       How it was finally found, after two wrong answers: the DOM was captured
+       ten times and was byte-identical every time, which ruled out everything
+       structural at once and pointed at rendering rather than content.
+
+       Ruled out by measurement along the way: leftover localStorage, a resume
+       card, a live aurora canvas, reduced-motion failing to apply, unhydrated
+       `.viz-slot` figures (zero pending on the FIRST poll — the wait added
+       for them was vacuous and has been removed), webfont loading, pending
+       images, and layout height.
+
+       Evidence for the fix: 2 failures in 6 runs before it; 11 consecutive
+       clean runs after, three of them at load average 10.5 — the condition
+       the fleet notes name as where Playwright jobs break. `halls.png` and
+       `pack-math.png` moved on recapture and the other two did not, which is
+       the independent confirmation that those were the two being shot 68px
+       down.
+
+       Corrections to the record, both mine. PR 1 said the earlier 8.55% was
+       the resume card: inferred, never observed. PR 3 then said it was
+       unhydrated figures and called it fixed: also inferred, and measurably
+       wrong — the wait it added could not fail. Twice I wrote a guess into a
+       commit message as a finding, while citing CON-DATA-001 elsewhere in the
+       same change.
+
+- [x] 18g. The focus ring SILENCED the page. `:focus-visible` is specificity
+       (0,1,0), the same as `.pulse` and `.fx-shake`, and written later — so
+       an `animation` shorthand on it wins over both. Measured by forcing the
+       pseudo-state: animation-name went `pulse-glow` → the ring's keyframe,
+       and adding `fx-shake` to the focused element did not change it back. A
+       keyboard user answering wrongly would have got NO shake — the exact
+       cohort the hunk was written for. The flourish is gone; the brass ring,
+       which was the valuable half, stays.
+
+- [x] 18h. Baseline record corrected. The PR body claimed only `floor.png`
+       changed and the other three were byte-identical. True of the first
+       commit; false of the PR — pinning the scroll re-recorded `halls`,
+       `pack-math` and `concept-matrices` too, which is itself the evidence
+       that those were being photographed 68px down.
+
+- [x] 18d. Three style rules in this PR rendered ZERO pixels. A bare
+       `:focus-visible` and a `.saved-note.plaque-card` already existed LATER
+       in style.css at identical specificity, so the new blocks lost the
+       cascade entirely — the brass ring, the overshoot and the pressed-in
+       plaque were all written, reviewed, described in a PR body, and dead.
+       The winning rules are edited in place now. A `border-radius` on the
+       bare `:focus-visible` also squared the round topbar button on focus,
+       which is the shape jump its own comment promised to avoid; browsers
+       follow the element's radius when drawing an outline, so there was
+       nothing to set.
+
+- [x] 18e. The pinned capture timestamp said "a Saturday morning" in its
+       comment and held a Tuesday EVENING (off by 3d12h), so the baseline
+       captured a greeting the record denied. And the clock was pinned while
+       the TIMEZONE was not — arrivalLine() reads getHours(), which is local,
+       so the same instant produces a different greeting on a box outside UTC
+       and the drift this work removed walks back in. Both fixed; the greeting
+       in the capture is now verified by probe, not assumed: "Good morning",
+       Sat Jun 06 2026 09:00:00 GMT+0000.
+
+- [x] 18f. A figure that cannot mount now marks itself `widget-failed` on all
+       three degradation paths. The wait that motivated it has since been
+       removed as vacuous, but the mark is right on its own terms: "has not
+       mounted yet" and "will never mount" should not look identical from
+       outside, and a test pins it.
+
+### Carried forward — e2e load sensitivity (wider than first recorded)
+
+- [ ] 18c. Several e2e checks assume the page has finished loading and time
+       out under heavy load: `explainer`, `blueprint`, the manifest link, and
+       the screenshot furniture waits. Reproduced deliberately at load ~6 with
+       three container runs beside four unit suites. CI runs the e2e alone in
+       its own job, so this is not reached there — but by the fleet's own rule
+       a check that fails under load is a suite defect, and the fix belongs to
+       the harness rather than to any one feature PR.
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 

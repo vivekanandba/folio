@@ -616,6 +616,53 @@ try {
         await page.send('Emulation.setEmulatedMedia', {
           features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
         })
+        // Freeze the clock as well as the motion. Anything the app derives
+        // from "now" — a streak, a lamp coming due, a greeting that changes
+        // with the hour — would otherwise drift the fingerprint by the day or
+        // the time of day, and the gate would erode without anyone touching
+        // the design. Combined with the storage clear below, every capture is
+        // the same visitor arriving at the same moment.
+        // The timezone as well as the instant. arrivalLine() reads getHours(),
+        // which is LOCAL — so a pinned UTC instant still produces a different
+        // greeting on a box in Chicago than on one in UTC, and the drift this
+        // whole hunk exists to remove walks straight back in.
+        await page.send('Emulation.setTimezoneOverride', { timezoneId: 'UTC' })
+        await page.send('Page.addScriptToEvaluateOnNewDocument', {
+          source: `(() => {
+            // Safe for captures that RECORD NOTHING, which these four are.
+            // progress.ts derives attempt ids from new Date().toISOString(),
+            // so a shot that played a session under this pin would give every
+            // event the same id and collapse them — and it would read as a
+            // progress bug rather than a harness one.
+            //
+            // 1780736400000 === 2026-06-06T09:00:00Z, a Saturday morning.
+            // Checked, not asserted: the first draft of this line claimed a
+            // Saturday morning and held a Tuesday EVENING, so the baseline
+            // captured a greeting the record said it did not (CON-VER-006).
+            const FIXED = 1780736400000
+            const Real = Date
+            function Pinned(...args) {
+              // Called WITHOUT new, Date() must return a string, not an
+              // object — anything doing String(Date()) would otherwise get
+              // something it cannot use.
+              if (!new.target) return new Real(FIXED).toString()
+              return args.length === 0 ? new Real(FIXED) : new Real(...args)
+            }
+            Pinned.prototype = Real.prototype
+            // now() still ADVANCES, from the pinned instant. Freezing it
+            // too would stop every elapsed-time calculation in the app dead:
+            // the cue queue in feedback.ts derives its next free slot from
+            // Date.now(), and with a frozen clock it would push queued cues
+            // further into the future forever. The capture needs stable
+            // COPY, not a stopped world. (No backticks in here: this whole
+            // block is a template literal.)
+            const t0 = performance.now()
+            Pinned.now = () => FIXED + Math.round(performance.now() - t0)
+            Pinned.parse = Real.parse
+            Pinned.UTC = Real.UTC
+            globalThis.Date = Pinned
+          })()`,
+        })
         // Capture a FIRST-TIME visitor, every time. Every page in this run
         // shares one profile, and the session-kind checks above PLAY sessions
         // — which writes real progress. The committed baselines had therefore
@@ -656,13 +703,81 @@ try {
         await page.goto(`${origin}/index.html?shot=${shot.name}&clean=1${shot.hash}`)
         await page.waitFor('!window.__beforeClear', { label: `${shot.name} fresh document` })
         await page.waitFor(shot.ready, { label: `${shot.name} furniture` })
-        const leftovers = await page.evaluate('localStorage.length')
-        assert(
-          leftovers === 0,
-          `the capture is not a first-time visitor — ${leftovers} key(s) survived the clear`,
-        )
-        // Settle entry animations so the capture is comparable run to run.
+        // Wait for CONDITIONS, then settle. A fixed sleep was the whole of it
+        // before, and under load a concept page's interactive figures had not
+        // hydrated when the shutter fired — a figure-sized hole, 9.54% of the
+        // frame, indistinguishable from a design regression. This is the same
+        // "duration instead of condition" mistake the smoke suite was rebuilt
+        // to remove; it had simply survived here (CON-VER-008).
+        // Webfonts: style.css imports Google Fonts at runtime, and a capture
+        // taken on the fallback face differs from one taken on Source Serif
+        // everywhere there is text. Measured as already loaded at this point
+        // on every shot, under load as well — kept because it is the right
+        // condition, not because it is currently doing work.
+        await page.evaluate(`document.fonts ? document.fonts.ready.then(() => true) : true`)
+        // Pin the SCROLL. page.screenshot() captures the VIEWPORT, so what is
+        // in frame depends on where the page is scrolled — and main.ts focuses
+        // #main on every route change, which scrolls it into view by 68px.
+        // Whether that has happened by shutter time varies with load order and
+        // with whether the service worker served the route from cache, so the
+        // same page was being captured from two different offsets. 68px of a
+        // 900px viewport is the 8.55% that kept appearing on `halls`.
+        await page.evaluate(`window.scrollTo(0, 0)`)
+        // Two animation frames, then settle. A frame callback runs BEFORE the
+        // compositor presents, so one rAF proves layout ran and the second
+        // proves the frame it produced was committed — a paint barrier rather
+        // than a hope. The settle stays at 600ms: it was briefly cut to 400
+        // on the theory that a condition above had replaced it, which
+        // measurement did not support.
+        await page.evaluate(`new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))`)
         await page.evaluate(`new Promise(r => setTimeout(r, 600))`)
+        // Checked HERE, immediately before the shutter, not before the settle:
+        // the earlier placement could not see anything written during those
+        // 600ms, and an `halls` capture carrying a resume card drifted 8.55%
+        // while the assertion reported a clean store.
+        const state = JSON.parse(await page.evaluate(`JSON.stringify({
+          keys: Object.keys(localStorage),
+          resume: !!document.querySelector('.resume-card'),
+          // The aurora is a LIVE WebGL canvas. mountAurora returns null under
+          // reduced motion and the CSS hides the element, so one on screen
+          // here means the emulation did not take — and an animating canvas
+          // in a fingerprint is drift by construction.
+          aurora: !!document.querySelector('.aurora-canvas'),
+          motion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+          // "Did the family ARRIVE", not "is this exact face ready".
+          //
+          // The status property reads 'loaded' whenever nothing is PENDING —
+          // including when the Google Fonts import never resolved at all,
+          // because then no face was registered and there is nothing to wait
+          // for. So a runner without egress would capture everything on a
+          // fallback face and be told the visit was clean (CON-VER-005).
+          //
+          // check('1rem ...') is the opposite mistake: it asks for one
+          // specific weight-400 face, and measurement showed it false on the
+          // halls capture while two Source Serif faces were loaded and in
+          // use. A gate that red-flags a correct capture teaches people to
+          // ignore it.
+          //
+          // One loaded face per family is the condition that is false exactly
+          // when the webfont did not arrive. fonts.ready above covers the
+          // pending case. (No backticks here: this block is a template literal.)
+          serif: !document.fonts || [...document.fonts].some((f) => f.family.indexOf('Source Serif') >= 0 && f.status === 'loaded'),
+          sans: !document.fonts || [...document.fonts].some((f) => f.family.indexOf('DM Sans') >= 0 && f.status === 'loaded'),
+          scrollY: Math.round(window.scrollY),
+        })`))
+        const wrong = [
+          state.keys.length ? `storage kept [${state.keys.join(', ')}]` : '',
+          state.resume ? 'a resume card is on screen' : '',
+          state.aurora ? 'a live aurora canvas is on screen' : '',
+          state.motion ? '' : 'reduced-motion emulation did not take',
+          state.serif ? '' : 'Source Serif 4 is not available — captured on a fallback face',
+          state.sans ? '' : 'DM Sans is not available — captured on a fallback face',
+          state.scrollY ? `the page is scrolled to ${state.scrollY}px` : '',
+        ].filter(Boolean)
+        // Named causes, not a bare "it differs". An intermittent screenshot
+        // failure that says only "8.55% changed" sends the next reader after
+        // a design regression that is not there (CON-VER-005).
+        assert(!wrong.length, `the capture is not a clean first visit — ${wrong.join('; ')}`)
         const png = await page.screenshot()
         // Full capture for humans/CI artifacts (gitignored); fingerprint for the gate.
         writeFileSync(join(BASELINES, `${shot.name}.current.png`), png)

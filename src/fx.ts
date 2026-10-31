@@ -103,6 +103,50 @@ export function donut(
   return wrap
 }
 
+/**
+ * Count a number up to its value instead of printing it.
+ *
+ * The score is the one number a learner actually looks at, and watching it
+ * climb reads as a tally being added up rather than a verdict already decided.
+ * Under reduced motion it is simply the final value — the figure IS the
+ * information, and only the counting is decoration.
+ */
+export function countUp(node: HTMLElement, to: number, durationMs = 650): void {
+  if (prefersReducedMotion() || !Number.isFinite(to) || to <= 0) {
+    node.textContent = String(to)
+    return
+  }
+  // Not wiped to '0' first. requestAnimationFrame does not run in a hidden
+  // tab, so a learner who finishes a round and switches away would come back
+  // to "0 concepts reviewed today" — the counter having erased the real value
+  // and never been given a frame to restore it. The node already holds the
+  // right number; the animation only has to overwrite it.
+  const start = performance.now()
+  const step = (now: number): void => {
+    // Bail if the page moved on — a counter ticking into a detached node is
+    // work nobody sees.
+    if (!node.isConnected) return
+    // A page the browser freezes or discards stops getting frames wherever it
+    // happens to be. Landing on the real value is the only safe place to
+    // stop, so a hidden page skips the animation rather than risking being
+    // abandoned showing 0.
+    if (document.hidden) {
+      node.textContent = String(to)
+      return
+    }
+    const t = Math.min(1, (now - start) / durationMs)
+    // Ease out: fast at first, settling onto the number rather than stopping.
+    const eased = 1 - (1 - t) ** 3
+    // No separate "land on it exactly" assignment: the loop's last frame is
+    // t === 1, where eased is 1 and Math.round(to) is `to`. A branch that
+    // cannot behave differently from the line above it is a line nobody can
+    // test and everybody has to read.
+    node.textContent = String(Math.round(to * eased))
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
 /** Dark immersive stage wrapper shared by every session kind. */
 export function stage(
   kind: string,
@@ -133,7 +177,9 @@ export function stage(
  */
 export function acquisitionCard(items: { title: string; note: string }[]): HTMLElement | null {
   if (!items.length) return null
-  const wrap = el('div', { class: 'acquisitions', role: 'status' }, [
+  // No role="status": both callers follow this with liveAnnounce(), and a
+  // region that IS honoured on insertion would then read the plaque twice.
+  const wrap = el('div', { class: 'acquisitions' }, [
     el('p', { class: 'eyebrow' }, [
       items.length === 1 ? 'The curator adds a plaque' : `The curator adds ${items.length} plaques`,
     ]),
@@ -160,10 +206,20 @@ export function acquisitionCard(items: { title: string; note: string }[]): HTMLE
  * stamp lands on the exhibit. Under reduced motion the stamp still renders
  * (it's information) — only the motion is dropped.
  */
-export function ceremony(stageEl: HTMLElement, opts: { perfect: boolean }): void {
+export function ceremony(
+  stageEl: HTMLElement,
+  opts: { perfect: boolean; label?: string; announce?: boolean },
+): void {
   stageEl.classList.add('stage-bloom')
-  const stamp = el('div', { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}`, role: 'status' }, [
-    opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited',
+  // role="status" by default, because for a session this stamp IS the
+  // announcement. A caller that composes its own message passes announce:
+  // false — two live regions in one pass means the shared one is overwritten
+  // and the learner hears whichever won the race.
+  const announce = opts.announce ?? true
+  const attrs: Record<string, string> = { class: `exhibit-stamp${opts.perfect ? ' mastered' : ''}` }
+  if (announce) attrs.role = 'status'
+  const stamp = el('div', attrs, [
+    opts.label ?? (opts.perfect ? 'Exhibit mastered' : 'Exhibit revisited'),
   ])
   const inner = stageEl.querySelector('.stage-inner') ?? stageEl
   inner.append(stamp)

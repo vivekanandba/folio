@@ -90,5 +90,19 @@ test('a round where every concept was skipped is not celebrated', async () => {
     'a round that cleared nothing must not be stamped "Gauntlet cleared"',
   )
 
+  // And it is SPOKEN, once. a11y.ts holds one message at a time and refills
+  // it on a timer, so two announcements in the same synchronous pass leave
+  // only the second — an empty round that also earned a plaque used to lose
+  // this sentence to the plaque's.
+  const a11y = await import('../src/a11y.ts')
+  const region = document.createElement('div')
+  a11y.setLiveRegion(region as unknown as HTMLElement)
+  const again = document.createElement('div') as unknown as HTMLElement
+  await review.renderReview(again)
+  await tick()
+  const said = (region as unknown as { textContent: string }).textContent
+  assert.match(said, /Review complete/, 'the round announces itself')
+  assert.match(said, /Nothing was due/, 'and says why it was empty, in the same message')
+
   storage().clear()
 })

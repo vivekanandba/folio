@@ -1,4 +1,5 @@
 import { loadCatalog, loadPackMeta, loadSession } from '../content'
+import { loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { getConceptState, getSessionResult } from '../progress'
 import { href } from '../router'
@@ -30,7 +31,7 @@ export async function renderPack(
   root: HTMLElement,
   packId: string,
 ): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['Loading…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('pack')]))
   const catalog = await loadCatalog()
   const hall = museumNum(catalog.packs.findIndex((p) => p.id === packId))
   const packPath = await resolvePackPath(packId)

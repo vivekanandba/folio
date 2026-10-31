@@ -1,5 +1,5 @@
 import { el } from '../dom'
-import { stage } from '../fx'
+import { countUp, stage } from '../fx'
 import type { QuizSession } from '../types'
 import { richBlock } from '../widgets'
 import { iconSpan } from './icon'
@@ -19,17 +19,21 @@ function mountQuiz(
 
   const render = () => {
     if (index >= max) {
+      const tally = el('span', {}, [String(score)])
       root.replaceChildren(
         stage('quiz', 'Quick check', session.title, [
           el('div', { class: 'result-card' }, [
             el('h2', {}, ['Session complete']),
-            el('p', { class: 'score-hero' }, [`${score} / ${max}`]),
+            // The score counts up rather than appearing: a tally being added
+            // in front of you reads differently from a verdict already made.
+            el('p', { class: 'score-hero' }, [tally, ` / ${max}`]),
             el('p', { class: 'muted' }, [
               'Refresh anytime — progress is saved on this device.',
             ]),
           ]),
         ]),
       )
+      countUp(tally, score)
       onComplete(score, max)
       return
     }

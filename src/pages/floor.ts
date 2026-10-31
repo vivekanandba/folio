@@ -1,5 +1,6 @@
 import { prefersReducedMotion } from '../a11y'
 import { loadCatalog, loadContentIndex, loadPackMeta } from '../content'
+import { arrivalLine, loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { getConceptState, loadProgress } from '../progress'
 import { href } from '../router'
@@ -50,7 +51,7 @@ const BAND_GLOW: Record<FloorNode['band'], number> = {
 
 
 export async function renderFloor(root: HTMLElement): Promise<void> {
-  root.replaceChildren(el('p', { class: 'muted' }, ['Lighting the halls…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('floor')]))
   const catalog = await loadCatalog()
   const metas = await Promise.all(catalog.packs.map((ref) => loadPackMeta(ref.path)))
 
@@ -476,6 +477,9 @@ export async function renderFloor(root: HTMLElement): Promise<void> {
   root.replaceChildren(
     el('header', { class: 'page-header floor-head' }, [
       el('h1', {}, ['The Folio Museum']),
+      // The museum greets you. Pure copy from the clock it is handed, so the
+      // screenshot gate can pin the hour rather than recapture by the day.
+      el('p', { class: 'floor-greeting' }, [arrivalLine(new Date())]),
       el('p', { class: 'muted floor-sub' }, [
         'Every concept is a lamp — dark is unvisited, pulsing is due. Drag to walk, scroll to lean in, tap to enter.',
       ]),

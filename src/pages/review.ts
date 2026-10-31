@@ -1,9 +1,10 @@
 import { liveAnnounce } from '../a11y'
 import { loadCatalog, loadPackMeta, sessionIdOf } from '../content'
+import { loadingLine } from '../curator'
 import { el, prettyId } from '../dom'
 import { cue, resetRun } from '../feedback'
 import { deriveFlashcards } from '../flashcards'
-import { acquisitionCard, burst } from '../fx'
+import { acquisitionCard, ceremony, countUp } from '../fx'
 import { mountDrill } from '../gauntlet/drill'
 import { dailyDrill } from '../gauntlet/generators'
 import { awardMilestones, loadProgress, recordConceptReview } from '../progress'
@@ -24,7 +25,7 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   // The daily round is its own run; it does not inherit one from a session.
   resetRun()
   root.classList.add('main-wide')
-  root.replaceChildren(el('p', { class: 'muted' }, ['Building your review…']))
+  root.replaceChildren(el('p', { class: 'muted' }, [loadingLine('today')]))
 
   const catalog = await loadCatalog()
   const metas = await Promise.all(
@@ -53,12 +54,16 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   if (!queue.length) {
     // The museum explains itself: a live forgetting curve while you wait.
     const curveHost = el('div', { class: 'viz-slot' })
-    mountSim(curveHost, {
+    const curve = mountSim(curveHost, {
       model: 'retention',
       title: 'Why folio nags you — the forgetting curve, live',
       caption: 'Memory decays; reviewing near the edge of forgetting multiplies stability. That timing is what the review queue computes.',
     })
-    curveHost.classList.add('widget-mounted')
+    // Marked from mountSim's RETURN, not asserted on its behalf. It returns
+    // null for an unknown model and renders "(unknown simulation)" instead,
+    // and this used to add `widget-mounted` either way — declaring a figure
+    // mounted that may never have been, to anything that reads the class.
+    curveHost.classList.add(curve ? 'widget-mounted' : 'widget-failed')
     root.replaceChildren(
       header(),
       el('header', { class: 'page-header' }, [
@@ -77,38 +82,57 @@ export async function renderReview(root: HTMLElement): Promise<void> {
   let reviewed = 0
 
   const showSummary = () => {
-    // Not `mastered`: finishing the round is attendance, not mastery — the
-    // grades were self-reported. The ordinary chord below says the same thing.
-    // And a round where every concept was skipped cleared no gauntlet at all,
-    // so it gets no stamp either — the stamp is the loudest claim on the card,
-    // and suppressing only the chord would leave the two disagreeing.
-    const stamp = reviewed > 0
-      ? el('div', { class: 'exhibit-stamp', role: 'status' }, ['Gauntlet cleared'])
-      // role="status" either way: a learner on a screen reader who finishes a
-      // round where nothing had material still deserves to be told so.
-      : el('div', { class: 'muted small', role: 'status' }, [
-          'Nothing was due that had material to review.',
-        ])
-    root.replaceChildren(
-      header(),
-      el('div', { class: 'result-card pop-in review-summary' }, [
-        el('h2', {}, ['Review complete']),
-        el('p', { class: 'score-hero' }, [String(reviewed)]),
-        el('p', {}, [
-          `concept${reviewed === 1 ? '' : 's'} reviewed today. Fresh drills return tomorrow.`,
-        ]),
-        stamp,
-        el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
+    // Everything this screen wants said, gathered and spoken ONCE. The live
+    // region holds one message at a time.
+    const spoken: string[] = [`Review complete. ${reviewed} concept${reviewed === 1 ? '' : 's'} reviewed.`]
+    if (reviewed > 0) spoken.push('Gauntlet cleared.')
+    const score = el('p', { class: 'score-hero' }, [String(reviewed)])
+    const card = el('div', { class: 'result-card pop-in review-summary' }, [
+      el('h2', {}, ['Review complete']),
+      score,
+      el('p', {}, [
+        `concept${reviewed === 1 ? '' : 's'} reviewed today. Fresh drills return tomorrow.`,
       ]),
-    )
-    // A queue whose every concept was skipped (no cards, no drill) still
-    // reaches here. "0 concepts reviewed" is not an achievement, and sounding
-    // a chord plus a five-beat haptic over it rewards a round that never
-    // happened (CON-DATA-001: praise tracks something the learner did).
+    ])
+    if (reviewed === 0) {
+      // A round where every concept was skipped cleared no gauntlet, so it is
+      // not stamped — the stamp is the loudest claim on the card, and sounding
+      // nothing while stamping "cleared" would leave the two disagreeing.
+      // role="status" so a screen reader is told as much (CON-DATA-001).
+      // The note is plain text and the announcement is COMPOSED below, not
+      // made here. a11y.ts clears the one shared region and re-fills it on a
+      // 30ms timer, so two liveAnnounce calls in the same synchronous pass
+      // leave only the second — and an empty round that also earns a plaque
+      // would lose exactly this sentence to the plaque's.
+      card.append(
+        el('div', { class: 'muted small' }, [
+          'Nothing was due that had material to review.',
+        ]),
+      )
+      spoken.push('Nothing was due that had material to review.')
+    }
+    const cta = el('p', {}, [
+      el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum']),
+    ])
+    root.replaceChildren(header(), card)
+    countUp(score, reviewed)
+
     if (reviewed > 0) {
       cue('complete', { perfect: false })
-      burst(stamp)
+      // ceremony(), not a hand-built stamp. This page used to re-implement
+      // the markup and the burst, so a change to how the museum celebrates
+      // reached every session and not the daily round. `perfect` stays false:
+      // these grades are self-reported, so this is attendance rather than
+      // mastery, and the label says exactly that.
+      // announce: false — this page composes one message below and speaks it
+      // once; a second live region here would race it.
+      ceremony(card, { perfect: false, label: 'Gauntlet cleared', announce: false })
     }
+    // The CTA goes on AFTER the ceremony. ceremony() appends its stamp to the
+    // end of the card, so building the card with the link already in it put
+    // the brass "Gauntlet cleared" plaque underneath "Back to the museum" —
+    // the stamp belongs to the result, not after the way out of it.
+    card.append(cta)
     // Awarded here, where they are also shown — recorded and celebrated in
     // the same breath, so neither can happen without the other.
     const earned = awardMilestones({ halls })
@@ -120,12 +144,13 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // so the shared one carries it — otherwise a plaque earned in the daily
       // review is a purely visual reward, while the same plaque on a session
       // page is announced.
-      liveAnnounce(
+      spoken.push(
         earned.length === 1
           ? `Plaque earned: ${earned[0].title}`
           : `${earned.length} plaques earned: ${earned.map((m) => m.title).join(', ')}`,
       )
     }
+    liveAnnounce(spoken.join(' '))
   }
 
   const runNext = async () => {

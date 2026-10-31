@@ -1,5 +1,6 @@
 import './style.css'
 import { liveAnnounce, setLiveRegion } from './a11y'
+import { loadingLine } from './curator'
 import { el } from './dom'
 import { adoptStoredPreference, cue, feedbackEnabled, FEEDBACK_KEY, setFeedbackEnabled } from './feedback'
 import { initPalette } from './palette'
@@ -99,7 +100,9 @@ function notFound(): void {
 onRoute(async (route) => {
   const render = async (): Promise<void> => {
     main.classList.remove('main-wide')
-    main.replaceChildren(el('p', { class: 'muted', role: 'status' }, ['Loading…']))
+    main.replaceChildren(
+      el('p', { class: 'muted', role: 'status' }, [loadingLine(route.name)]),
+    )
     try {
       switch (route.name) {
         case 'hub':
@@ -151,7 +154,18 @@ onRoute(async (route) => {
   const heading = main.querySelector('h1')
   const title = heading?.textContent?.trim()
   document.title = title ? `${title} · Folio` : 'Folio'
-  main.focus()
+  // preventScroll, because #main starts below the sticky topbar and is taller
+  // than the viewport: focusing it aligns its top edge to the scrollport and
+  // jumps the page ~68px on EVERY route change. Moving focus is for screen
+  // readers and the keyboard; it is not a request to scroll, and a learner
+  // who has just clicked a link should land at the top of what they chose.
+  //
+  // This was found as 8.55% of intermittent screenshot drift and first
+  // "fixed" by pinning the scroll in the capture harness — which hid it from
+  // the gate while leaving every real navigation jumping, and made the
+  // baselines encode a framing no user ever sees. The harness pin stays as
+  // belt-and-braces; this is the cause.
+  main.focus({ preventScroll: true })
   if (title) liveAnnounce(`${title} loaded`)
 })
 
