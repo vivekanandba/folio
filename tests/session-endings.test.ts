@@ -222,20 +222,62 @@ test('a sequence can be reordered from the keyboard, and scored', () => {
 
 interface BlueprintSpec {
   parts: { id: string; label: string; fixed?: boolean; max?: number }[]
-  rules: { rule: string; a?: string; b?: string; label: string }[]
+  rules: { rule: string; a?: string; b?: string; from?: string; to?: string; label: string }[]
+}
+
+/** The edge set `wireUp()` below produces: one wire per `connected` rule. */
+function connectedEdges(spec: BlueprintSpec): [string, string][] {
+  return spec.rules
+    .filter((r) => r.rule === 'connected' && r.a != null && r.b != null)
+    .map((r) => [r.a!, r.b!] as [string, string])
 }
 
 /**
- * The first shipped blueprint whose every rule is satisfied by "place each
- * part once, wire what `connected` asks for". That excludes boards needing
- * minCount (more than one of a part) and leaves noDirect and pathExists,
- * which hold automatically for such a board.
+ * The first shipped blueprint whose every rule is actually satisfied by
+ * "place each part once, wire what `connected` asks for" — evaluated, not
+ * assumed.
+ *
+ * An earlier version accepted any board whose rules were all drawn from
+ * {connected, noDirect, pathExists}, on the stated premise that the latter
+ * two "hold automatically for such a board". noDirect does. pathExists does
+ * not: `pathExists(from, to)` only holds if the `connected` pairs happen to
+ * chain from→to, which is a property of the content and not of the rule set.
+ * It is true of every shipped board today, so the premise was invisible —
+ * and a content-only change adding a qualifying board with an unchained
+ * pathExists would have failed "a board that meets every rule completes the
+ * session", pointing at the renderer rather than at the fixture. Which is
+ * the exact failure this helper exists to prevent.
  */
 function satisfiableBlueprint(): BlueprintSpec {
   const found = sessionsOfKind('blueprint').find((d) => {
     const spec = d as unknown as BlueprintSpec
     if (spec.parts.some((p) => (p.max ?? 1) > 1)) return false
-    return spec.rules.every((r) => ['connected', 'noDirect', 'pathExists'].includes(r.rule))
+    if (!spec.rules.every((r) => ['connected', 'noDirect', 'pathExists'].includes(r.rule))) return false
+
+    const edges = connectedEdges(spec)
+    const key = (a: string, b: string) => [a, b].sort().join('\u0000')
+    const wired = new Set(edges.map(([a, b]) => key(a, b)))
+
+    // Nothing the board forbids may be something the board also asks for.
+    if (spec.rules.some((r) => r.rule === 'noDirect' && r.a && r.b && wired.has(key(r.a, r.b)))) return false
+
+    // And every demanded path must actually be walkable over those wires.
+    const neighbours = new Map<string, string[]>()
+    for (const [a, b] of edges) {
+      neighbours.set(a, [...(neighbours.get(a) ?? []), b])
+      neighbours.set(b, [...(neighbours.get(b) ?? []), a])
+    }
+    const reaches = (from: string, to: string): boolean => {
+      const seen = new Set([from])
+      const queue = [from]
+      while (queue.length) {
+        const at = queue.shift()!
+        if (at === to) return true
+        for (const next of neighbours.get(at) ?? []) if (!seen.has(next)) { seen.add(next); queue.push(next) }
+      }
+      return false
+    }
+    return spec.rules.every((r) => r.rule !== 'pathExists' || (!!r.from && !!r.to && reaches(r.from, r.to)))
   })
   assert.ok(found, 'no shipped blueprint is satisfiable by one of each part')
   return found as unknown as BlueprintSpec
@@ -364,29 +406,50 @@ test('inspecting a board that breaks a rule reports it, and does NOT finish', ()
   // Inspect is formative: it is pressed repeatedly WHILE wiring. A board that
   // breaks a rule must come back judged and still editable, not completed.
   const mod = getModule('blueprint')!
-  const session = firstOfKind('blueprint') as {
-    parts: { id: string; label: string }[]
-    rules: { rule: string; a?: string; b?: string; label: string }[]
-  }
-  const forbidden = session.rules.find((r) => r.rule === 'noDirect' && r.a && r.b)
-  assert.ok(forbidden, 'this board forbids at least one direct connection')
+  // A board this walk can otherwise SATISFY, and the one forbidden wire on
+  // top of it. The earlier version placed every part, wired only the
+  // forbidden pair, and asserted `verdicts.some(/broken/)` — which proved
+  // nothing: with nothing else wired, every `connected` rule and the
+  // `pathExists` rule came back broken too, so deleting `noDirect` from
+  // evalRule entirely would have left this test green. Both of its
+  // assertions were satisfied by the rules it was not testing.
+  const session = satisfiableBlueprint()
+  const forbiddenIndex = session.rules.findIndex((r) => r.rule === 'noDirect' && r.a && r.b)
+  assert.ok(forbiddenIndex >= 0, 'this board forbids at least one direct connection')
+  const forbidden = session.rules[forbiddenIndex]
 
   const host = root()
   const scores: unknown[] = []
   mod.mount(host, session as never, () => scores.push(1))
   for (const chip of node(host).querySelectorAll('.bp-part')) chip.click()
 
-  // Wire exactly the pair the rules say must not be wired.
   const labels = () => node(host).querySelectorAll('.bp-node-label')
   const byName = (n: string) => labels().find((b) => b.textContent.trim().startsWith(n))
-  byName(session.parts.find((p) => p.id === forbidden!.a)!.label)!.click()
-  byName(session.parts.find((p) => p.id === forbidden!.b)!.label)!.click()
+  const labelOf = (id: string) => session.parts.find((p) => p.id === id)!.label
+  const wire = (aId: string, bId: string): void => {
+    byName(labelOf(aId))!.click()
+    byName(labelOf(bId))!.click()
+  }
+
+  // Everything the rules ask for — so the board would pass …
+  for (const [a, b] of connectedEdges(session)) wire(a, b)
+  // … and then exactly the one wire they forbid.
+  wire(forbidden.a!, forbidden.b!)
 
   node(host).querySelectorAll('button').find((b) => /inspect/i.test(b.textContent))!.click()
 
   const verdicts = node(host).querySelectorAll('.lab-goal-val')
   assert.equal(verdicts.length, session.rules.length, 'every rule is judged')
-  assert.ok(verdicts.some((v) => /broken/.test(v.textContent)), 'and the broken one says so')
+  // At the forbidden rule's OWN index, not "somewhere in the list".
+  assert.match(
+    verdicts[forbiddenIndex].textContent,
+    /broken/,
+    `the noDirect rule "${forbidden.label}" is the one reported broken`,
+  )
+  // And it is the ONLY one, which is what makes the assertion above mean
+  // "noDirect was evaluated" rather than "the board is a mess".
+  const broken = verdicts.filter((v) => /broken/.test(v.textContent))
+  assert.equal(broken.length, 1, 'and it is the only rule the board breaks')
   assert.deepEqual(scores, [], 'a board that breaks a rule is not completed')
 })
 

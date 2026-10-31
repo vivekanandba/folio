@@ -667,10 +667,6 @@ try {
         return 'dispatched'
       })()`)
       assert(imported === 'dispatched', `the ledger offers no file input (${imported})`)
-      // The heaviest browser path in this suite — a synthetic download, a
-      // File read, a store rewrite and a reload — and the only new check that
-      // was not asking whether any of it threw.
-      await uncaughtErrors(page, 'while exporting and importing the ledger')
       // Poll for the WRITE, do not sleep past it. The handler awaits
       // file.text() before writing and report.ts then schedules a reload
       // 600ms later, so a fixed wait is squeezed between two timings it does
@@ -688,6 +684,15 @@ try {
         // makes the gate red for timing (CON-VER-008).
         { timeoutMs: 5000, intervalMs: 25, label: 'the imported ledger reaches storage' },
       )
+      // AFTER the write, not before it. report.ts's change handler is async —
+      // it awaits file.text() before writing — so calling this straight after
+      // dispatchEvent raced the handler and could only ever observe the
+      // export half, and anything the import threw would have landed in a
+      // __e2eErrors that the handler's 600ms location.reload() then wiped.
+      // This is the heaviest browser path in the suite (a synthetic download,
+      // a File read, a store rewrite and a reload); it is worth asking
+      // properly whether any of it threw.
+      await uncaughtErrors(page, 'while exporting and importing the ledger')
       return 'export → parse → import'
     } finally {
       await page.close()
@@ -710,8 +715,19 @@ try {
         const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
         const shot = () => canvas.toDataURL()
         const buttons = [...document.querySelectorAll('.floor-controls button')]
-        const before = shot()
+        // Establish that the canvas is STILL first. Everything below reads
+        // "the bitmap changed" as evidence that the button did something —
+        // which is worth nothing if the canvas redraws on its own. floor.ts
+        // runs a rAF loop that animates while any concept is due, and this
+        // check inherits whatever the ledger check left in localStorage, so
+        // "it happens to be static today" is not a safe assumption to leave
+        // implicit. Asserting it makes a future animating fixture fail loudly
+        // here instead of quietly turning the three assertions below vacuous.
         await frame()
+        const settled = shot()
+        await frame()
+        const before = shot()
+        const still = settled === before
         buttons[0].click() // zoom in
         await frame()
         const zoomed = shot()
@@ -720,9 +736,10 @@ try {
         const fitted = shot()
         for (const b of buttons) b.click()
         await frame()
-        return JSON.stringify({ n: buttons.length, zoomedChanged: zoomed !== before, fitChanged: fitted !== zoomed })
+        return JSON.stringify({ n: buttons.length, still, zoomedChanged: zoomed !== before, fitChanged: fitted !== zoomed })
       })()`))
       assert(zoom.n >= 3, `expected zoom in/out/fit, found ${zoom.n} control(s)`)
+      assert(zoom.still, 'the floor canvas redraws on its own — "the bitmap changed" proves nothing here')
       assert(zoom.zoomedChanged, 'zooming in redrew nothing — the control is a no-op')
       assert(zoom.fitChanged, 'fit redrew nothing after a zoom')
       const clicked = zoom.n

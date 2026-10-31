@@ -170,8 +170,22 @@
        controls and `destroy()`, `sequence.ts` reorder, `blueprint.ts` wiring,
        `hub.ts` filter chips, `palette.ts` keyboard, and the tail.
 
-       RE-SCOPED, not quietly ticked: this originally read "summary +
-       interrupt". The interrupt panel is unreachable by construction —
+       RE-SCOPED, not quietly ticked. TWO things changed from the original
+       sentence, and the second was missed until review round 6 caught it.
+
+       (a) `widgets.ts` was in the original list and is NOT in the ticked
+       one. It was not done: it still measures 82.94% lines / 56.60%
+       branches (combined 86.3%), among the lowest in `src/`, with the
+       malformed-viz catch, the range input and the chart point click
+       uncovered. Dropping it from the sentence while ticking the box is
+       exactly the "four-fifths of a sentence counted as all of it" that
+       CON-PROC-012 forbids, and it is worse than leaving the box open,
+       because the record then reads as if the work were finished. Carried
+       forward as task 24 below rather than edited out of the task it
+       belonged to.
+
+       (b) The original also read "summary + interrupt". The interrupt
+       panel is unreachable by construction —
        `deriveFlashcards` catches both the concept note and every session
        load, so a broken archive yields a concept with no cards that the queue
        skips. Verified by breaking fetch two ways; written up at the foot of
@@ -184,6 +198,12 @@
        never from a lucky run. Six measurements (five local, one CI) spanned
        97.87–97.92%; the floor is 97.5, up from 94.8.
 - [x] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
+- [ ] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
+       the chart point click (82.94% lines / 56.60% branches today). Split
+       out of task 20, which silently dropped it; see the note there. Open
+       on purpose: this is the branch floor's thin margin (0.30pp) and the
+       cheapest place to earn it back, recorded in package.json's
+       `comment:coverage`.
 
 ## Manual verification (cannot be gated headlessly — CON-VER-007)
 

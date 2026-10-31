@@ -105,9 +105,20 @@ jobs:
       - name: Install
         run: npm ci
       - name: Combined coverage floor
+        id: cov
         run: npm run coverage:gate
       - name: Upload lcov
-        if: always()
+        # always(), so a FAILING coverage run still uploads its lcov — that is
+        # the run whose numbers someone wants to read. But not when the step
+        # that writes .coverage never ran: if checkout, setup-node or npm ci
+        # fails, a bare always() still fires this upload, which then goes red
+        # with "No files were found with the provided path" — a second failed
+        # step naming a cause that is not the cause, pointing whoever reads
+        # the log at the artifact glob instead of at the broken install
+        # (CON-VER-005). Gating on the step's own conclusion keeps
+        # if-no-files-found: error strict, because by then .coverage missing
+        # really is the artifact's problem.
+        if: always() && steps.cov.conclusion != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
