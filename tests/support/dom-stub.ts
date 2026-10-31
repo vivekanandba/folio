@@ -41,6 +41,17 @@ class StubClassList {
   }
   replaceAll(value: string): void {
     this.set = new Set(value.split(/\s+/).filter(Boolean))
+    // sync() like every other mutator. This was the ONE that skipped it,
+    // invisible while className read from the token set and exposed the
+    // moment className became the attribute: `c.className = 'a'` then
+    // `c.classList.replaceAll('zz')` left className "a", `.zz` matching,
+    // `[class="zz"]` not matching and outerHTML saying class="a" — the same
+    // "one element answers three contradictory things" the removeAttribute
+    // comment above claims is now impossible. Both callers happened to be
+    // safe (the className setter writes the attribute itself, and
+    // removeAttribute has already deleted it), which is exactly why it
+    // would have come back silently.
+    this.sync()
   }
   private sync(): void {
     // The DOM's own rule, which is narrower than either thing this has been
@@ -225,6 +236,12 @@ export class StubElement extends StubNode {
     return this.attributes.get('class') ?? ''
   }
   set className(v: string) {
+    // Assigning className ALWAYS sets the attribute, including to '', which
+    // is why this writes directly rather than leaning on replaceAll's
+    // sync(): sync() declines to create an attribute for an empty token set,
+    // and that is right for classList.remove() but wrong for an explicit
+    // assignment. Order matters — replaceAll syncs first, then the raw value
+    // lands, so the attribute keeps the spacing the caller wrote.
     this.classList.replaceAll(v)
     this.attributes.set('class', v)
   }

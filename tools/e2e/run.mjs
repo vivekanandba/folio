@@ -198,17 +198,6 @@ const SHOTS_INFORMATIONAL = !(recordedBrowser && recordedBrowser === currentBrow
 mkdirSync(BASELINES, { recursive: true })
 const server = await serve(PREVIEW, PORT)
 /**
- * How many uncaught errors a page has collected — and a refusal, not a zero,
- * if the collector is not there.
- *
- * The incident this guards (see tools/e2e/cdp.mjs) was four assertions
- * comparing 0 against 0 because nothing ever created window.__e2eErrors. The
- * first fix installed the collector; this is the second half of it, because
- * `window.__e2eErrors ? ….length : 0` would go quietly green again the day
- * the injection stops being applied. "Could not determine" is not "none"
- * (CON-DATA-001, CON-VER-005).
- */
-/**
  * Wait until a tab that was on about:blank has reached the app, with storage
  * reachable.
  *
@@ -246,6 +235,23 @@ async function committed(page, origin, label) {
   )
 }
 
+/**
+ * How many uncaught errors a page has collected — and a refusal, not a zero,
+ * if the collector is not there.
+ *
+ * The incident this guards is recorded in tools/e2e/cdp.mjs, which is the
+ * single account of it: reads of window.__e2eErrors with nothing ever
+ * creating it. This comment used to carry its own count ("four assertions
+ * comparing 0 against 0"), which contradicted cdp.mjs in the same PR — that
+ * file says the fourfold figure was itself an overstatement, and that one of
+ * the reads predates the change. Two records of one incident disagreeing is
+ * the failure both of them are arguing against, so this one no longer
+ * restates what the other owns.
+ *
+ * The refusal is the second half of the fix: `window.__e2eErrors ? ….length
+ * : 0` would go quietly green again the day the injection stops being
+ * applied. "Could not determine" is not "none" (CON-DATA-001, CON-VER-005).
+ */
 async function uncaughtErrors(page, where) {
   const n = await page.evaluate(
     'Array.isArray(window.__e2eErrors) ? window.__e2eErrors.length : -1',
@@ -308,7 +314,7 @@ try {
     const page = await browser.newPage()
     try {
       await page.goto(`${origin}/index.html`)
-      await page.waitFor('document.readyState === "complete"', { label: 'document ready' })
+      await committed(page, origin, 'document ready')
       const manifestHref = await page.evaluate(`document.querySelector('link[rel="manifest"]')?.getAttribute('href') ?? ''`)
       assert(manifestHref, 'no <link rel="manifest"> in the document')
       const apple = await page.evaluate(`!!document.querySelector('link[rel="apple-touch-icon"]')`)
@@ -325,7 +331,12 @@ try {
     const page = await browser.newPage()
     try {
       await page.goto(`${origin}/index.html#/`)
-      await page.waitFor('!!navigator.serviceWorker', { label: 'serviceWorker API' })
+      // committed(), not `!!navigator.serviceWorker`. That property is
+      // exposed on about:blank too — it is a potentially-trustworthy origin
+      // — so the guard passed before the navigation landed, and the
+      // register('/sw.js') on the next line would reject against a null
+      // origin rather than registering anything.
+      await committed(page, origin, 'serviceWorker API')
       const state = await page.evaluate(`(async () => {
         const reg = await navigator.serviceWorker.register('/sw.js')
         await navigator.serviceWorker.ready

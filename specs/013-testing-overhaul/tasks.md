@@ -75,8 +75,14 @@ empty string. Reconstructed from the three merged PRs (#52, #53, #54).*
       is gone. The teardown is deterministic.
 
       Residual drift, measured rather than inferred: the combined figure has
-      been observed between **97.85% and 98.06%** across twelve runs (ten
-      local, two in CI) — a 0.21pp band, about 18 lines of 8807. The browser
+      been observed between **97.85% and 98.08%** across twenty runs — a
+      0.23pp band, about 20 lines of 8807. The top moved from 98.06 as
+      review rounds 5-11 added tests; `package.json`'s
+      `comment:coverage-combined` is the primary record and this copy is
+      kept in step with it deliberately. Two records of one measurement
+      disagreeing is precisely what 14c was reopened to fix, so letting
+      this one drift while correcting the other would have reproduced the
+      defect inside its own fix. The browser
       half underneath swings much wider, 3965–4089 covered lines over six
       runs, most of it absorbed by the union because the unit half already
       covers those lines. shader.ts itself varies by three lines (150–153).
