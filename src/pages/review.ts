@@ -97,9 +97,9 @@ export async function renderReview(root: HTMLElement): Promise<void> {
         ]),
       )
     }
-    card.append(
-      el('p', {}, [el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum'])]),
-    )
+    const cta = el('p', {}, [
+      el('a', { class: 'primary', href: href({ name: 'hub' }) }, ['Back to the museum']),
+    ])
     root.replaceChildren(header(), card)
     countUp(score, reviewed)
 
@@ -112,6 +112,11 @@ export async function renderReview(root: HTMLElement): Promise<void> {
       // mastery, and the label says exactly that.
       ceremony(card, { perfect: false, label: 'Gauntlet cleared' })
     }
+    // The CTA goes on AFTER the ceremony. ceremony() appends its stamp to the
+    // end of the card, so building the card with the link already in it put
+    // the brass "Gauntlet cleared" plaque underneath "Back to the museum" —
+    // the stamp belongs to the result, not after the way out of it.
+    card.append(cta)
     // Awarded here, where they are also shown — recorded and celebrated in
     // the same breath, so neither can happen without the other.
     const earned = awardMilestones({ halls })

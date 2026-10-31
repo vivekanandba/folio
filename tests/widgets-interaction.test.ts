@@ -213,3 +213,40 @@ test('a sequence session accepts step selection', () => {
   for (const s of steps.slice(0, 4) as never as { click?: () => void }[]) s.click?.()
   assert.ok(host.textContent.length > 0)
 })
+
+/* ------------------------------------------- a figure that gives up ----- */
+
+test('a figure that cannot mount SAYS so, not just shows so', () => {
+  // The visible degradation — "(interactive figure unavailable)" — was always
+  // there. What was missing is a mark on the element, and the difference
+  // matters to anything waiting: without it, "has not hydrated yet" and
+  // "will never hydrate" look identical from outside, so the screenshot gate
+  // waited out its whole timeout on a figure that had already given up.
+  const host = document.createElement('div') as unknown as HTMLElement
+  const node = host as unknown as {
+    classList: { contains: (c: string) => boolean }
+    textContent: string
+    querySelectorAll: (s: string) => { classList: { contains: (c: string) => boolean } }[]
+  }
+
+  // 1. A spec that cannot be built.
+  widgets.mountWidget(host, { type: 'no-such-widget-kind' })
+  assert.ok(node.classList.contains('widget-failed'), 'a broken spec marks the slot')
+  assert.ok(!node.classList.contains('widget-mounted'), 'and does not claim to have mounted')
+  assert.match(node.textContent, /unavailable/)
+
+  // The other two paths — malformed JSON in a ```viz fence, and a slot with
+  // no spec at all — run inside renderRichInto, which finds its slots by
+  // querying parsed innerHTML. This stub deliberately does not parse
+  // innerHTML (see tests/support/dom-stub.ts), so those two are browser-only
+  // and the e2e's concept-page captures are what exercise them. Said here
+  // rather than left for a reader to wonder why they are missing.
+})
+
+test('a figure that mounts is marked mounted, not failed', () => {
+  const host = document.createElement('div') as unknown as HTMLElement
+  widgets.mountWidget(host, { type: 'gauge', value: 0.5, label: 'Test', caption: 'c' })
+  const node = host as unknown as { classList: { contains: (c: string) => boolean } }
+  assert.ok(node.classList.contains('widget-mounted'), 'the happy path still marks mounted')
+  assert.ok(!node.classList.contains('widget-failed'), 'and is not also marked failed')
+})

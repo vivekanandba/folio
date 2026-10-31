@@ -2221,35 +2221,7 @@ input[type='range'] {
 }
 .stat-tile.tile-alight { animation: tile-breathe 3.2s ease-in-out infinite alternate; }
 
-/* The keyboard path, designed rather than defaulted. Three :focus-visible
-   rules in 2800 lines meant tabbing through the museum looked like tabbing
-   through a form; the ring is now brass and lands with the same overshoot
-   the stamp does. Width and offset only — never a layout shift, which is what
-   makes a focus style feel broken. */
-@keyframes focus-land {
-  from { outline-offset: 6px; outline-color: transparent; }
-  to   { outline-offset: 2px; }
-}
-:focus-visible {
-  outline: 2px solid var(--brass-bright);
-  outline-offset: 2px;
-  border-radius: 4px;
-  animation: focus-land 0.18s cubic-bezier(0.2, 1.2, 0.4, 1);
-}
-.choice-btn:focus-visible,
-.choice-tile:focus-visible,
-.clue-card:focus-visible,
-.pack-card:focus-visible,
-.item-card:focus-visible {
-  outline-offset: 3px;
-  box-shadow: var(--shadow-2);
-}
 
-/* The exhibit's plaque, pressed in rather than printed on. */
-.saved-note.plaque-card {
-  border-left: 3px solid var(--brass);
-  background: linear-gradient(180deg, var(--brass-soft), var(--surface));
-}
 .theme-toggle {
   font: inherit;
   font-size: 1.05rem;
@@ -2264,10 +2236,36 @@ input[type='range'] {
 }
 .theme-toggle:hover { border-color: var(--accent); }
 
-/* Focus visibility for keyboard users */
+/* The keyboard path, designed rather than defaulted. Three :focus-visible
+   rules in 2800 lines meant tabbing through the museum looked like tabbing
+   through a form. Brass rather than teal, landing with the same overshoot the
+   exhibit stamp does.
+
+   Edited IN PLACE rather than added below: a second bare `:focus-visible` has
+   identical specificity, so whichever is written last wins — a new block
+   further up the file renders nothing at all, which is what the first draft
+   of this did.
+
+   Outline and offset ONLY. `border-radius` here would square the round topbar
+   buttons on focus, which is the visible shape jump a focus style must never
+   cause; browsers already follow the element's own radius when drawing an
+   outline, so there is nothing to set. */
+@keyframes focus-land {
+  from { outline-offset: 6px; outline-color: transparent; }
+  to   { outline-offset: 2px; }
+}
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brass-bright);
   outline-offset: 2px;
+  animation: focus-land 0.18s cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+.choice-btn:focus-visible,
+.choice-tile:focus-visible,
+.clue-card:focus-visible,
+.pack-card:focus-visible,
+.item-card:focus-visible {
+  outline-offset: 3px;
+  box-shadow: var(--shadow-2);
 }
 
 /* The router focuses <main> after every navigation (screen-reader/keyboard
@@ -2548,12 +2546,15 @@ details.deeper[open] > summary { border-bottom: 1px solid var(--line); margin-bo
   to { opacity: 1; transform: rotate(-4deg) scale(1); }
 }
 
-/* Saved-note plaque card */
+/* Saved-note plaque card — pressed into the wall rather than printed on it.
+   Edited in place for the same reason as :focus-visible above: an identical
+   selector added earlier in the file loses to this one and renders nothing. */
 .saved-note.plaque-card {
   display: grid;
   gap: 0.35rem;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--brass-soft), var(--surface));
   border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
   box-shadow: var(--shadow-1);
 }
 .saved-note.plaque-card p { margin: 0; }

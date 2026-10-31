@@ -29,7 +29,14 @@ export function renderRichInto(host: HTMLElement, md: string): void {
   host.innerHTML = renderMarkdown(md)
   host.querySelectorAll<HTMLElement>('.viz-slot').forEach((slot) => {
     const raw = slot.getAttribute('data-viz')
-    if (!raw) return
+    // `widget-failed` on every path that will never mount. Without it,
+    // "has not hydrated yet" and "cannot hydrate at all" look identical from
+    // the outside — and anything waiting for hydration (the screenshot gate
+    // does) waits out its whole timeout on a figure that already gave up.
+    if (!raw) {
+      slot.classList.add('widget-failed')
+      return
+    }
     try {
       const spec = JSON.parse(raw)
       mountWidget(slot, spec)
@@ -37,6 +44,7 @@ export function renderRichInto(host: HTMLElement, md: string): void {
         slot.prepend(el('div', { class: 'touch-chip', 'aria-hidden': 'true' }, ['Interactive — please touch']))
       }
     } catch {
+      slot.classList.add('widget-failed')
       slot.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
     }
   })
@@ -59,6 +67,7 @@ export function mountWidget(host: HTMLElement, spec: Spec): void {
     host.replaceChildren(build(spec))
     host.classList.add('widget-mounted')
   } catch {
+    host.classList.add('widget-failed')
     host.replaceChildren(el('p', { class: 'muted small' }, ['(interactive figure unavailable)']))
   }
 }

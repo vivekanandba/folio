@@ -116,8 +116,12 @@ export function countUp(node: HTMLElement, to: number, durationMs = 650): void {
     node.textContent = String(to)
     return
   }
+  // Not wiped to '0' first. requestAnimationFrame does not run in a hidden
+  // tab, so a learner who finishes a round and switches away would come back
+  // to "0 concepts reviewed today" — the counter having erased the real value
+  // and never been given a frame to restore it. The node already holds the
+  // right number; the animation only has to overwrite it.
   const start = performance.now()
-  node.textContent = '0'
   const step = (now: number): void => {
     // Bail if the page moved on — a counter ticking into a detached node is
     // work nobody sees.

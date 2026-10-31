@@ -622,11 +622,24 @@ try {
         // the time of day, and the gate would erode without anyone touching
         // the design. Combined with the storage clear below, every capture is
         // the same visitor arriving at the same moment.
+        // The timezone as well as the instant. arrivalLine() reads getHours(),
+        // which is LOCAL — so a pinned UTC instant still produces a different
+        // greeting on a box in Chicago than on one in UTC, and the drift this
+        // whole hunk exists to remove walks straight back in.
+        await page.send('Emulation.setTimezoneOverride', { timezoneId: 'UTC' })
         await page.send('Page.addScriptToEvaluateOnNewDocument', {
           source: `(() => {
-            const FIXED = 1781038800000 // 2026-06-06T09:00:00Z, a Saturday morning
+            // 1780736400000 === 2026-06-06T09:00:00Z, a Saturday morning.
+            // Checked, not asserted: the first draft of this line claimed a
+            // Saturday morning and held a Tuesday EVENING, so the baseline
+            // captured a greeting the record said it did not (CON-VER-006).
+            const FIXED = 1780736400000
             const Real = Date
             function Pinned(...args) {
+              // Called WITHOUT new, Date() must return a string, not an
+              // object — anything doing String(Date()) would otherwise get
+              // something it cannot use.
+              if (!new.target) return new Real(FIXED).toString()
               return args.length === 0 ? new Real(FIXED) : new Real(...args)
             }
             Pinned.prototype = Real.prototype
@@ -682,9 +695,15 @@ try {
         // frame, indistinguishable from a design regression. This is the same
         // "duration instead of condition" mistake the smoke suite was rebuilt
         // to remove; it had simply survived here (CON-VER-008).
+        // `.widget-failed` counts as settled. A figure that CANNOT mount — a
+        // malformed ```viz fence — degrades to "(interactive figure
+        // unavailable)" and never gains `widget-mounted`, so waiting only on
+        // the success class turns a graceful degradation into a 15s timeout
+        // blaming hydration. That is the misdiagnosis this block exists to
+        // prevent, committed by the fix for it (CON-VER-005).
         await page.waitFor(
-          `document.querySelectorAll('.viz-slot:not(.widget-mounted)').length === 0`,
-          { label: `${shot.name} figures hydrated` },
+          `document.querySelectorAll('.viz-slot:not(.widget-mounted):not(.widget-failed)').length === 0`,
+          { label: `${shot.name} figures settled` },
         )
         // Webfonts: style.css imports Google Fonts at runtime, and a capture
         // taken on the fallback face differs from one taken on Source Serif
@@ -706,7 +725,9 @@ try {
           // in a fingerprint is drift by construction.
           aurora: !!document.querySelector('.aurora-canvas'),
           motion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-          unhydrated: document.querySelectorAll('.viz-slot:not(.widget-mounted)').length,
+          // Not re-checking hydration here: the waitFor above already
+          // guarantees it, so a diagnostic for it could never fire — and an
+          // unreachable branch dressed as a check is worse than no check.
           fonts: document.fonts ? document.fonts.status : 'loaded',
         })`))
         const wrong = [
@@ -714,7 +735,6 @@ try {
           state.resume ? 'a resume card is on screen' : '',
           state.aurora ? 'a live aurora canvas is on screen' : '',
           state.motion ? '' : 'reduced-motion emulation did not take',
-          state.unhydrated ? `${state.unhydrated} figure(s) had not hydrated` : '',
           state.fonts === 'loaded' ? '' : `fonts are ${state.fonts}`,
         ].filter(Boolean)
         // Named causes, not a bare "it differs". An intermittent screenshot

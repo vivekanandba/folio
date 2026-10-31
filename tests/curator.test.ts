@@ -128,9 +128,20 @@ test('zero and nonsense are printed, not animated', async () => {
 
 test('a counter whose node has left the page gives up', async () => {
   const node = document.createElement('span') // never appended
+  node.append(document.createTextNode('5'))
   assert.doesNotThrow(() => countUp(node as unknown as HTMLElement, 5, 1))
   await frames()
-  // It starts at 0 and then bails on the first frame, rather than ticking
-  // into a node nobody can see.
-  assert.equal((node as unknown as { textContent: string }).textContent, '0')
+  // It bails on the first frame rather than ticking into a node nobody can
+  // see — and leaves the value it found, which is the one that was right.
+  assert.equal((node as unknown as { textContent: string }).textContent, '5')
+})
+
+test('a counter never erases the number it was given', async () => {
+  // requestAnimationFrame does not run in a hidden tab. An earlier draft set
+  // the node to '0' before the first frame, so finishing a round and
+  // switching away left "0 concepts reviewed today" on screen permanently.
+  const node = el()
+  node.append(document.createTextNode('9'))
+  countUp(node, 9, 50_000) // long enough that no frame can complete
+  assert.notEqual(text(node), '0', 'the real value must survive until a frame replaces it')
 })

@@ -72,14 +72,42 @@
        wearing the costume of a design regression, and the same
        duration-instead-of-condition mistake the smoke suite was rebuilt to
        remove. It now waits for every `.viz-slot` to hydrate and for
-       `document.fonts.ready`, and the capture asserts SIX named conditions
-       (storage, resume card, live aurora, reduced-motion, unhydrated figures,
-       font status) so a future race says what it was rather than printing a
-       percentage for the reader to guess at (CON-VER-005).
+       `document.fonts.ready`, and the capture asserts FIVE named conditions
+       (storage, resume card, live aurora, reduced-motion, font status) so a
+       future race says what it was rather than printing a percentage for the
+       reader to guess at (CON-VER-005). Five, not six: an earlier draft also
+       re-checked hydration, which the wait above already guarantees — an
+       unreachable branch dressed as a check.
 
        Correction to the record: PR 1 attributed an earlier intermittent 8.55%
        to the resume card. That was inferred, never observed — the measured
        cause is this one.
+
+- [x] 18d. Three style rules in this PR rendered ZERO pixels. A bare
+       `:focus-visible` and a `.saved-note.plaque-card` already existed LATER
+       in style.css at identical specificity, so the new blocks lost the
+       cascade entirely — the brass ring, the overshoot and the pressed-in
+       plaque were all written, reviewed, described in a PR body, and dead.
+       The winning rules are edited in place now. A `border-radius` on the
+       bare `:focus-visible` also squared the round topbar button on focus,
+       which is the shape jump its own comment promised to avoid; browsers
+       follow the element's radius when drawing an outline, so there was
+       nothing to set.
+
+- [x] 18e. The pinned capture timestamp said "a Saturday morning" in its
+       comment and held a Tuesday EVENING (off by 3d12h), so the baseline
+       captured a greeting the record denied. And the clock was pinned while
+       the TIMEZONE was not — arrivalLine() reads getHours(), which is local,
+       so the same instant produces a different greeting on a box outside UTC
+       and the drift this work removed walks back in. Both fixed; the greeting
+       in the capture is now verified by probe, not assumed: "Good morning",
+       Sat Jun 06 2026 09:00:00 GMT+0000.
+
+- [x] 18f. The hydration wait treated "cannot mount" as "not mounted yet". A
+       malformed ```viz fence degrades to "(interactive figure unavailable)"
+       and never gains `widget-mounted`, so the gate would have waited out its
+       full timeout blaming hydration — the misdiagnosis the wait was added to
+       prevent. Failed figures mark themselves `widget-failed` now.
 
 ### Carried forward — e2e load sensitivity (wider than first recorded)
 
