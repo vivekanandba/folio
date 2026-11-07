@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   gate:
+    # Bounded at several times the longest run seen (1.1 min, 2026-10-07..11-07); the default is 6 hours.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +55,7 @@ jobs:
   # Boot smoke: the blank-page bug class (layout feedback loops, dead module
   # graphs, missing furniture) that lint/tsc/unit tests can't see.
   smoke:
+    timeout-minutes: 10
     runs-on: ubuntu-latest # ships with google-chrome preinstalled
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +73,7 @@ jobs:
   # Screenshot comparison GATES here now, because this job runs the same pinned
   # browser the baselines were captured with.
   e2e:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     # Pinned browser, so the visual baselines are comparable to what runs here.
     # They are captured in this same image; the hosted runner's own Chrome
@@ -95,6 +99,7 @@ jobs:
   # unit run's line set. WebGL, pointer handling and the animation loop cannot
   # run under the DOM stub, so a unit-only figure permanently understates them.
   coverage:
+    timeout-minutes: 15
     runs-on: ubuntu-latest # ships with google-chrome preinstalled
     steps:
       - uses: actions/checkout@v4

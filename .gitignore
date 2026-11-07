@@ -30,3 +30,5 @@ tests/baselines/*.current.png
 
 # combined coverage output (lcov is regenerated, never committed)
 .coverage/
+# personal values the house-gates hook refuses to commit; never tracked
+.house-gates.denylist

@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   build:
+    # Under a minute in every run seen; the default is 6 hours.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       # The hashed asset names this build produced, so the deploy job can prove
@@ -53,6 +55,7 @@ jobs:
           path: dist
 
   deploy:
+    timeout-minutes: 10
     needs: build
     runs-on: ubuntu-latest
     environment:
