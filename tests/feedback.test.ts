@@ -804,9 +804,13 @@ test('a booked plaque waits for a cue the learner caused just before it (task 13
     assert.equal(times.length, 2)
     assert.ok(times[1] >= times[0] + 1120, 'the chord waits for the plaque it follows')
   } finally {
+    // Drop the booked cues BEFORE the real timers come back: cancelPending()
+    // clears every id it holds, and these ids are fakes. Handed to Node's
+    // clearTimeout, a numeric id clears whichever live timer was coerced to
+    // that number — another test's, if any was.
+    resetRun()
     Date.now = realNow
     w.setTimeout = realSet
     w.clearTimeout = realClear
-    resetRun() // drops the fake timer ids; clearTimeout on them is harmless
   }
 })

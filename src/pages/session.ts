@@ -69,8 +69,9 @@ export async function renderSession(
     if (card) {
       extendAcquisitionCard(card, items)
     } else {
-      card = acquisitionCard(items)
-      if (!card) return
+      // Non-null: acquisitionCard() returns null only for an empty list,
+      // and that was turned away above.
+      card = acquisitionCard(items)!
       cue('milestone')
       shell.append(card)
     }
