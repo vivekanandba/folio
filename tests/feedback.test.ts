@@ -756,3 +756,61 @@ test('cues are requested at a civil volume', () => {
   assert.ok(note.stopAt > note.startAt, 'a note must have a duration')
   assert.ok(note.stopAt - note.startAt < 1.5, 'a feedback cue is short — this is not a soundtrack')
 })
+
+test('a booked plaque waits for a cue the learner caused just before it (task 13d)', () => {
+  fresh()
+  // Deterministic, not slept: the clock is pinned and the timers are
+  // recorded, so the assertion is about WHEN the plaque was booked to speak
+  // rather than about how long this box took to get there (CON-VER-008).
+  const w = (globalThis as unknown as { window: { setTimeout: unknown; clearTimeout: unknown } }).window
+  const realSet = w.setTimeout
+  const realClear = w.clearTimeout
+  const realNow = Date.now
+  const armed = new Map<number, { delay: number; at: number }>()
+  let nextId = 1
+  let clock = 1_000_000
+  try {
+    Date.now = () => clock
+    w.setTimeout = (_fn: () => void, ms = 0) => {
+      const id = nextId++
+      armed.set(id, { delay: ms, at: clock })
+      return id
+    }
+    w.clearTimeout = (id: number) => { armed.delete(id) }
+
+    cue('correct') // speaks now, and the room is busy for its span
+    cue('milestone') // so the plaque is booked for when the bell ends
+    assert.equal(armed.size, 1, 'one cue waiting')
+    const booked = [...armed.values()][0]
+    const plaqueAt = booked.at + booked.delay
+
+    // The learner answers again just before the plaque was due. Their cue
+    // speaks at once — and the plaque must now wait for IT, or the plaque's
+    // vibrate() cancels the answer's pattern mid-way.
+    clock = plaqueAt - 50
+    cue('wrong')
+    assert.equal(armed.size, 1, 'the plaque is still booked exactly once')
+    const moved = [...armed.values()][0]
+    const wrongEnds = clock + 300
+    assert.ok(
+      moved.at + moved.delay >= wrongEnds,
+      `the plaque speaks over the answer (answer ends ${wrongEnds}, plaque at ${moved.at + moved.delay})`,
+    )
+
+    // And the room's free time follows the plaque, so a chord booked next
+    // still queues behind it rather than beside it.
+    cue('complete', { perfect: false })
+    const times = [...armed.values()].map((t) => t.at + t.delay).sort((a, b) => a - b)
+    assert.equal(times.length, 2)
+    assert.ok(times[1] >= times[0] + 1120, 'the chord waits for the plaque it follows')
+  } finally {
+    // Drop the booked cues BEFORE the real timers come back: cancelPending()
+    // clears every id it holds, and these ids are fakes. Handed to Node's
+    // clearTimeout, a numeric id clears whichever live timer was coerced to
+    // that number — another test's, if any was.
+    resetRun()
+    Date.now = realNow
+    w.setTimeout = realSet
+    w.clearTimeout = realClear
+  }
+})

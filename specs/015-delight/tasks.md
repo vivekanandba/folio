@@ -39,16 +39,24 @@
 
 ### Carried forward from round 6 — known, small, not blocking
 
-- [ ] 13c. `session.ts` can render TWO plaque cards for one finish (the
+- [x] 13c. `session.ts` can render TWO plaque cards for one finish (the
        synchronous ones, then the hall-shaped ones after `loadHalls()`), with
        two `cue('milestone')` calls ~2.3s apart. It fires on the best finish
        there is — the last exhibit of a hall. Merge the second into the first
        card if one is already on screen.
-- [ ] 13d. `feedback.ts`'s queue exempts `correct`/`wrong`/`reveal` from
+       DONE: `extendAcquisitionCard()` in fx.ts; the second wave joins the
+       card silently and the eyebrow counts both. tests/pages.test.ts pins
+       one card, both titles, the count and one shimmer — each mutation-checked.
+- [x] 13d. `feedback.ts`'s queue exempts `correct`/`wrong`/`reveal` from
        waiting AND from being waited for, so a `reveal` landing just before a
        queued `milestone` still has its haptic truncated — the failure the
        queue exists to prevent, in the one direction its tests do not cover.
        No page produces that ordering today.
+       DONE: a cue that speaks at once now pushes every booked cue to after
+       its own span (`pushBack()`), order kept. Pinned with a frozen clock and
+       recorded timers, not a sleep. The opposite direction — a learner's tap
+       during a plaque ALREADY sounding — is left as is on purpose: what they
+       pressed answers them now.
 
 ## PR 3 — the curator's voice, and the polish
 
@@ -204,7 +212,7 @@
        unable to tell whether the margin was 0.35pp or 0.37pp, or which copy
        was stale. The number is gone from here rather than re-typed.
 - [x] 23. Close or re-scope task 14c in specs/013-testing-overhaul/tasks.md
-- [ ] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
+- [x] 24. Cover `widgets.ts` — the malformed-viz catch, the range input and
        the chart point click (82.94% lines / 56.60% branches today). Split
        out of task 20, which silently dropped it; see the note there. Open
        on purpose: the branch floor has the thinnest margin of the three and this is the
@@ -213,6 +221,13 @@
        one measurement disagreeing, which is the defect this PR spends
        several comments arguing against. package.json's `comment:coverage`
        is the one copy, and it names the command to re-measure with.
+       DONE: tests/widgets-figures.test.ts. widgets.ts 100% lines, 88.16%
+       branches (whole unit suite); the slot loop runs for real by handing
+       renderRichInto pre-built slots, since the stub does not parse
+       innerHTML. Covering it found a STUB defect, not a product one: the stub
+       had no `prepend()`, so every touchable figure it hydrated threw inside
+       the try and came out marked mounted AND failed. Unit floors ratcheted
+       to 96/89.5/81 off the minimum of three runs.
 
 ## Manual verification (cannot be gated headlessly — CON-VER-007)
 

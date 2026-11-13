@@ -321,6 +321,19 @@ export class StubElement extends StubNode {
     }
     this.rawHtml = ''
   }
+  /**
+   * Missing until specs/015 task 24: renderRichInto prepends the "please
+   * touch" chip, and without this the call threw inside its try, so every
+   * touchable figure the stub hydrated came out marked mounted AND failed.
+   * A stub that throws where a browser does not reports a bug that is not
+   * there (CON-VER-005).
+   */
+  prepend(...nodes: (StubNode | string)[]): void {
+    const rest = this.childNodes
+    this.childNodes = []
+    this.append(...nodes)
+    this.childNodes.push(...rest)
+  }
   appendChild<T extends StubNode>(node: T): T {
     this.append(node)
     return node

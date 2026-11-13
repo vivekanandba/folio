@@ -131,21 +131,14 @@ test('the report and review pages render', async () => {
   rendered(v as never, 'review')
 })
 
-test('plaques earned on the spot are shown; hall plaques wait, and are not spent', async () => {
-  // Two halves with different timing. What saveSessionResult already recorded
-  // is shown SYNCHRONOUSLY — deferring it behind a network round-trip risked
-  // spending a plaque the learner never saw, since detect() never offers a
-  // recorded one again. The hall-shaped plaques need the whole catalog, so
-  // they are awarded afterwards and only if the learner is still here.
-  //
-  // The fixture is the smallest hall in the museum with six of its seven
-  // exhibits already behind us, so finishing the seventh WOULD complete it.
-  // That is what makes the guard observable: with it, nothing is granted into
-  // the detached page; without it, the hall plaque is spent on an empty room.
-  const storage = globalThis.localStorage as unknown as Storage
-  storage.clear()
-  const progress = await import('../src/progress.ts')
-  const PACK = 'equity-wi-2026-07'
+const HALL_PACK = 'equity-wi-2026-07'
+
+/**
+ * The smallest hall in the museum with six of its seven exhibits already
+ * behind us, so finishing the seventh WOULD complete it — the finish that
+ * earns plaques in both waves.
+ */
+function sixOfSeven(storage: Storage): void {
   // Everything but the detective, which is the one of the seven this driver
   // can actually finish by clicking — blueprint needs wires dragged.
   const DONE = [
@@ -154,18 +147,19 @@ test('plaques earned on the spot are shown; hall plaques wait, and are not spent
   ]
   const sessions: Record<string, unknown> = {}
   for (const id of DONE) {
-    sessions[`${PACK}::${id}`] = {
-      packId: PACK, sessionId: id, kind: 'quiz', score: 1, maxScore: 1,
+    sessions[`${HALL_PACK}::${id}`] = {
+      packId: HALL_PACK, sessionId: id, kind: 'quiz', score: 1, maxScore: 1,
       completedAt: '2026-09-01T00:00:00.000Z',
     }
   }
   storage.setItem('folio-progress-v2', JSON.stringify({
     version: 2, sessions, concepts: {}, attempts: [], daily: {},
   }))
+}
 
-  // root() is detached from the document, which is the "has left" condition.
-  const el = root()
-  await pages.session.renderSession(el, PACK, 'spot-the-compounder')
+/** Render the seventh exhibit into `el`, play it to the end, and let the halls land. */
+async function finishTheSeventh(el: HTMLElement) {
+  await pages.session.renderSession(el, HALL_PACK, 'spot-the-compounder')
   type Btn = { click: () => void; getAttribute: (a: string) => string | null }
   const node = el as unknown as { textContent: string; querySelectorAll: (s: string) => Btn[] }
   // Priority, not document order. A single comma-selector picks the
@@ -178,21 +172,79 @@ test('plaques earned on the spot are shown; hall plaques wait, and are not spent
     if (!live) break
     live.click()
   }
-
   // Wait on the EVENT, not on a duration. content.ts memoises every fetch, so
   // awaiting loadHalls() awaits the very promise the page is waiting on; a
   // macrotask later, its .then has run.
   const { loadHalls } = await import('../src/content.ts')
   const halls = await loadHalls()
   await new Promise((r) => setTimeout(r, 20))
+  return halls
+}
 
-  const hall = halls.find((h) => h.packId === PACK)!
+test('plaques earned on the spot are shown; hall plaques wait, and are not spent', async () => {
+  // Two halves with different timing. What saveSessionResult already recorded
+  // is shown SYNCHRONOUSLY — deferring it behind a network round-trip risked
+  // spending a plaque the learner never saw, since detect() never offers a
+  // recorded one again. The hall-shaped plaques need the whole catalog, so
+  // they are awarded afterwards and only if the learner is still here.
+  //
+  // That is what makes the guard observable: with it, nothing is granted into
+  // the detached page; without it, the hall plaque is spent on an empty room.
+  const storage = globalThis.localStorage as unknown as Storage
+  storage.clear()
+  const progress = await import('../src/progress.ts')
+  sixOfSeven(storage)
+
+  // root() is detached from the document, which is the "has left" condition.
+  const halls = await finishTheSeventh(root())
+
+  const hall = halls.find((h) => h.packId === HALL_PACK)!
   assert.equal(hall.sessionIds.length, 7, 'fixture: the smallest hall still has seven exhibits')
   assert.ok(
-    progress.awardMilestones({ halls }).some((m) => m.id === `hall-complete:${PACK}`),
+    progress.awardMilestones({ halls }).some((m) => m.id === `hall-complete:${HALL_PACK}`),
     'the hall plaque was NOT spent on a page the learner had left',
   )
   storage.clear()
+})
+
+test('one finish hangs ONE card, even when its plaques arrive in two waves (task 13c)', async () => {
+  // The same finish with the learner still on the page. The plaques known at
+  // save time go up at once; the hall plaque follows when the catalog lands.
+  // It used to hang a second card under the first, with a second fanfare.
+  const storage = globalThis.localStorage as unknown as Storage
+  storage.clear()
+  sixOfSeven(storage)
+  ;(globalThis as unknown as { __resetVibrate: () => void }).__resetVibrate()
+  const el = root()
+  ;(document.body as unknown as { append: (n: unknown) => void }).append(el)
+  try {
+    await finishTheSeventh(el)
+    type N = { textContent: string; querySelector: (s: string) => N | null }
+    const node = el as unknown as { querySelectorAll: (s: string) => N[] }
+    const cards = node.querySelectorAll('.acquisitions')
+    assert.equal(cards.length, 1, 'both waves share one card')
+    // One class at a time: the stub refuses descendant selectors outright.
+    const titles = node.querySelectorAll('.acquisition').map((p) => p.querySelector('h3')?.textContent ?? '')
+    assert.ok(titles.length >= 2, `a first-wave plaque and the hall plaque (got ${titles.join(' | ')})`)
+    assert.ok(titles.some((t) => /complete/i.test(t)), `the hall plaque joined the card (got ${titles.join(' | ')})`)
+    const eyebrow = cards[0].querySelector('.eyebrow')?.textContent
+    assert.equal(eyebrow, `The curator adds ${titles.length} plaques`, 'the count covers both waves')
+
+    // And one fanfare. The plaque cue is queued behind the finishing chord,
+    // so wait for the first to land, then for longer than a second one would
+    // take to follow it. Under load a late timer can only HIDE a second
+    // fanfare, never invent one, so this cannot go red on a slow box.
+    const vib = (globalThis as unknown as { __vibrateLog: (number | number[])[] }).__vibrateLog
+    const shimmers = () => vib.filter((v) => Array.isArray(v) && v.length === 7).length
+    const deadline = Date.now() + 8000
+    while (shimmers() < 1 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 20))
+    assert.equal(shimmers(), 1, 'the first wave sounds its shimmer')
+    await new Promise((r) => setTimeout(r, 1500))
+    assert.equal(shimmers(), 1, 'the second wave joins silently rather than sounding again')
+  } finally {
+    ;(el as unknown as { remove: () => void }).remove()
+    storage.clear()
+  }
 })
 
 test('the Acquisitions shelf shows the plaques that were actually earned', async () => {

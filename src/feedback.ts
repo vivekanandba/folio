@@ -68,8 +68,17 @@ const CUE_MS: Record<CueName, number> = {
  */
 let freeAt = 0
 
+/** A cue booked for later: what it is, and when it will speak. */
+interface Pending {
+  id: number
+  start: number
+  name: CueName
+  degree: number
+  opts: CueOptions
+}
+
 /** Cues waiting their turn, in the order they will speak. */
-let pendingCues: number[] = []
+let pendingCues: Pending[] = []
 
 /**
  * Drop everything not yet spoken. A learner who has left the exhibit — or
@@ -77,7 +86,7 @@ let pendingCues: number[] = []
  * leaves one armed hands it to whichever test happens to wait next.
  */
 function cancelPending(): void {
-  for (const id of pendingCues) window.clearTimeout(id)
+  for (const p of pendingCues) window.clearTimeout(p.id)
   pendingCues = []
   freeAt = 0
 }
@@ -269,13 +278,47 @@ export function cue(name: CueName, opts: CueOptions = {}): void {
 
   if (start <= now) {
     emit(name, degree, opts)
+    // A cue that spoke at once is still WAITED FOR by anything already
+    // booked. Without this a reveal landing just before a queued plaque was
+    // cut off by it: the plaque's vibrate() cancels whatever pattern is
+    // running, the exact truncation the queue exists to prevent, in the one
+    // direction it did not cover (specs/015-delight task 13d). The other
+    // direction — a learner's tap during a plaque already sounding — is left
+    // alone on purpose: what they pressed must answer them now.
+    if (!queued) pushBack(now + CUE_MS[name], now)
     return
   }
-  const id = window.setTimeout(() => {
-    pendingCues = pendingCues.filter((t) => t !== id)
-    emit(name, degree, opts)
-  }, start - now)
-  pendingCues.push(id)
+  book({ id: 0, start, name, degree, opts }, now)
+}
+
+function book(p: Pending, now: number): void {
+  arm(p, now)
+  pendingCues.push(p)
+}
+
+function arm(p: Pending, now: number): void {
+  p.id = window.setTimeout(() => {
+    pendingCues = pendingCues.filter((q) => q !== p)
+    emit(p.name, p.degree, p.opts)
+  }, p.start - now)
+}
+
+/**
+ * Move every booked cue that would start before `from` to after it, keeping
+ * their order: the queue was laid end to end, so shifting the first means
+ * shifting the rest behind it.
+ */
+function pushBack(from: number, now: number): void {
+  let cursor = from
+  for (const p of pendingCues) {
+    if (p.start < cursor) {
+      window.clearTimeout(p.id)
+      p.start = cursor
+      arm(p, now)
+    }
+    cursor = p.start + CUE_MS[p.name]
+  }
+  freeAt = Math.max(freeAt, cursor)
 }
 
 /** Actually speak. Separate from cue() because a deferred chord lands here. */
