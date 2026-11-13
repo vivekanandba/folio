@@ -20,6 +20,38 @@ import { join } from 'node:path'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/** A sleep that cannot keep the process alive — for the losing side of a race. */
+const idle = (ms) => new Promise((r) => setTimeout(r, ms).unref())
+
+/**
+ * Stop Chrome and delete its profile, in that order and for real. One
+ * implementation for both callers: the failed launch used to delete straight
+ * after SIGKILL and could replace "the endpoint never came up" with an
+ * ENOTEMPTY stack trace.
+ *
+ * Waiting for EXIT matters because Chrome's child processes keep writing the
+ * disk cache after the parent is signalled; the old fixed 150ms lost that
+ * race under load (specs/015-delight task 18c). The timers are unref'd: a
+ * Promise.race does not cancel its loser, and a plain one held a passing run
+ * open for the full 5s × load after Chrome had already gone.
+ */
+async function teardown(proc, profile) {
+  const exited = proc.exitCode !== null || proc.signalCode !== null
+    ? Promise.resolve()
+    : new Promise((r) => proc.once('exit', r))
+  proc.kill('SIGTERM')
+  await Promise.race([exited, idle(5000 * timeoutScale())])
+  proc.kill('SIGKILL')
+  await Promise.race([exited, idle(2000)])
+  try {
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  } catch (err) {
+    // A leftover temp profile is litter, not a failed check: say so and let
+    // the run's own verdict stand.
+    console.warn(`cdp: could not remove ${profile} (${err.code ?? err.message}); left for the OS`)
+  }
+}
+
 /**
  * How much longer than its base a deadline should be on THIS box, right now.
  *
@@ -83,8 +115,7 @@ export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
     await sleep(100)
   }
   if (!version) {
-    proc.kill('SIGKILL')
-    rmSync(profile, { recursive: true, force: true })
+    await teardown(proc, profile)
     throw new Error(port
       ? `chrome devtools endpoint never came up on :${port}`
       : 'chrome never wrote DevToolsActivePort — it did not start, or could not open a debugging port')
@@ -99,25 +130,7 @@ export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
       try {
         await fetch(`http://127.0.0.1:${port}/json/close`).catch(() => {})
       } finally {
-        // Wait for Chrome to actually EXIT before deleting its profile. The
-        // old fixed 150ms let its child processes keep writing the disk cache
-        // while rmSync walked the tree, and under load the run died with
-        // ENOTEMPTY after every check had passed — leaving the profile
-        // behind in /tmp as well (specs/015-delight task 18c).
-        const exited = proc.exitCode !== null || proc.signalCode !== null
-          ? Promise.resolve()
-          : new Promise((r) => proc.once('exit', r))
-        proc.kill('SIGTERM')
-        await Promise.race([exited, sleep(5000 * timeoutScale())])
-        proc.kill('SIGKILL')
-        await Promise.race([exited, sleep(2000)])
-        try {
-          rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
-        } catch (err) {
-          // A leftover temp profile is litter, not a failed check: say so and
-          // let the run's own verdict stand.
-          console.warn(`cdp: could not remove ${profile} (${err.code ?? err.message}); left for the OS`)
-        }
+        await teardown(proc, profile)
       }
     },
   }

@@ -196,8 +196,18 @@
        keep-alive close race) left the rate unchanged (2/26 after vs ~4/45
        before), and was reverted rather than shipped with a comment claiming
        a cause. CI runs smoke alone on a hosted runner and has never shown
-       it. Next step: server-side request logging on a failing run, to tell
-       "never arrived" from "arrived and was dropped".
+       it.
+       The same class reached a LONE e2e once, at load ~30 from other repos'
+       jobs: "Failed to register a ServiceWorker … an unknown error occurred
+       when fetching the script". That variant was first seen AFTER the
+       18c isolation changes (port 0, private build dirs) and never before
+       them; causality is neither shown nor excluded, since the failure rate
+       is too low to separate by a handful of runs. Next step, now wired:
+       the e2e and smoke servers record each path's fate (arrived /
+       finished / aborted, aborts logged live) and the smoke's timeout
+       names it per failed module, so the next occurrence says "never
+       arrived" or "arrived and was dropped". 13 runs under contention since
+       produced no failure to read.
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 

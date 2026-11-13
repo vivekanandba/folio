@@ -43,14 +43,36 @@ const MIME = {
   '.webmanifest': 'application/manifest+json',
 }
 
+/**
+ * What the server itself saw, by path: arrived, finished, aborted. specs/015
+ * task 18d — under load some module requests come back status 0 in the
+ * browser, and this is what tells "never reached us" from "reached us and was
+ * dropped". Aborts are logged as they happen.
+ */
+const served = new Map()
+
 function serve(dir, port) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname)
+    const t0 = Date.now()
+    const rec = served.get(path) ?? { arrived: 0, finished: 0, aborted: 0 }
+    served.set(path, rec)
+    rec.arrived++
+    res.on('finish', () => { rec.finished++ })
+    res.on('close', () => {
+      if (res.writableFinished) return
+      rec.aborted++
+      console.error(`serve: response for ${path} ABORTED after ${Date.now() - t0}ms`)
+    })
     let file = join(dir, path === '/' ? 'index.html' : path)
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
     if (!existsSync(file)) { res.writeHead(404); res.end('nope'); return }
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' })
     createReadStream(file).pipe(res)
+  })
+  server.on('clientError', (err, socket) => {
+    console.error(`serve: client error ${err.code ?? err.message}`)
+    socket.destroy()
   })
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)))
 }
@@ -171,7 +193,13 @@ try {
           notOk: performance.getEntriesByType('resource').filter((r) => r.responseStatus !== 200).map((r) => r.name.replace(location.origin, '') + ' ' + r.responseStatus + ' ' + r.transferSize + 'B'),
           errors: Array.isArray(window.__e2eErrors) ? window.__e2eErrors.slice(0, 3) : 'collector missing',
         })`).catch((e) => `(could not read the page: ${e.message})`)
-        throw new Error(`${err.message}; saw ${seen}`)
+        // And the server's side of every request the page saw fail.
+        let server = ''
+        try {
+          const failed = JSON.parse(seen).notOk.filter((n) => n.startsWith('/')).map((n) => n.split(' ')[0])
+          server = `; server saw ${JSON.stringify(Object.fromEntries(failed.map((f) => [f, served.get(f) ?? 'NEVER ARRIVED'])))}`
+        } catch { /* the page could not be read; seen already says so */ }
+        throw new Error(`${err.message}; saw ${seen}${server}`)
       }
       check.assert(await page.content())
       console.log(`✓ ${check.name}`)
