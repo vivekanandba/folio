@@ -14,7 +14,7 @@ import { createReadStream, existsSync, mkdtempSync, readFileSync, readdirSync, r
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
-import { test } from 'node:test'
+import { after, test } from 'node:test'
 import { promisify } from 'node:util'
 
 const execFileP = promisify(execFile)
@@ -69,11 +69,20 @@ test('the linter REFUSES malformed content, with a message naming the file', asy
 
 /* ---------------------------------------------------- the preview builder --- */
 
+// A private build directory, built once for the tests below that read it.
+// Rebuilding the shared .preview/ is how this suite used to pull files out
+// from under a running e2e (specs/015-delight task 18c), and two of these
+// suites at once out from under each other.
+const PREVIEW_DIR = mkdtempSync(join(tmpdir(), 'folio-preview-'))
+after(() => rmSync(PREVIEW_DIR, { recursive: true, force: true }))
+let built: Promise<{ code: number; out: string }> | null = null
+const buildPreview = () => (built ??= run([join(ROOT, 'tools/preview/build.mjs'), '--out', PREVIEW_DIR]))
+
 test('the preview build emits runnable JS with every vite-ism patched', async () => {
-  const { code, out } = await run([join(ROOT, 'tools/preview/build.mjs')])
+  const { code, out } = await buildPreview()
   assert.equal(code, 0, `preview build should succeed:\n${out}`)
 
-  const srcDir = join(ROOT, '.preview/src')
+  const srcDir = join(PREVIEW_DIR, 'src')
   const files: string[] = []
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir)) {
@@ -101,10 +110,39 @@ test('the preview build emits runnable JS with every vite-ism patched', async ()
   }
 })
 
+test('the preview build refuses to delete a directory that is not its own', async () => {
+  // The builder rm -rf's its output before writing it, so --out is guarded by
+  // construction (CON-PROC-006). Test the refusal, not only the success: a
+  // directory next to the allowed ones, holding something that must survive.
+  //
+  // EVERY path offered here is disposable. A broken guard runs rm -rf on
+  // whatever this test hands it, and the first draft handed it the repo
+  // root — reached only if an earlier path happened to be refused. Mutating
+  // the guard showed how close that was: the loop stopped one path short.
+  // The paths below differ from the allowed ones in each way the guard
+  // checks — wrong prefix, right prefix in the wrong parent, a deeper path.
+  const victim = mkdtempSync(join(tmpdir(), 'not-folio-'))
+  try {
+    writeFileSync(join(victim, 'keep.txt'), 'precious')
+    for (const out of [victim, join(victim, 'folio-preview-x'), join(victim, 'deeper', 'still')]) {
+      const { code, out: log } = await run([join(ROOT, 'tools/preview/build.mjs'), '--out', out])
+      assert.equal(code, 2, `--out ${out} must be refused:\n${log}`)
+      assert.match(log, /refusing to build into/)
+    }
+    const { code } = await run([join(ROOT, 'tools/preview/build.mjs'), '--out'])
+    assert.equal(code, 2, 'a bare --out is refused too, not read as the default')
+    assert.equal(readFileSync(join(victim, 'keep.txt'), 'utf8'), 'precious', 'and nothing was touched')
+  } finally {
+    rmSync(victim, { recursive: true, force: true })
+  }
+})
+
 test('every emitted preview module actually parses', async () => {
   // Type-stripping can emit something syntactically broken; the browser finds
   // out at runtime, which is exactly when nobody is watching.
-  const srcDir = join(ROOT, '.preview/src')
+  const { code } = await buildPreview()
+  assert.equal(code, 0, 'preview build should succeed')
+  const srcDir = join(PREVIEW_DIR, 'src')
   const files: string[] = []
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir)) {
@@ -173,9 +211,12 @@ test('every pack loads over HTTP exactly as the app asks for it', async () => {
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' })
     createReadStream(file).pipe(res)
   })
-  await new Promise<void>((r) => server.listen(8139, '127.0.0.1', () => r()))
+  // Port 0: the OS picks a free one. A fixed 8139 made two unit runs at once
+  // fail each other with EADDRINUSE (specs/015-delight task 18c).
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()))
+  const port = (server.address() as { port: number }).port
   try {
-    const base = 'http://127.0.0.1:8139/content'
+    const base = `http://127.0.0.1:${port}/content`
     const catalog = await (await fetch(`${base}/catalog.json`)).json() as { packs: { id: string; path: string }[] }
     assert.ok(catalog.packs.length >= 13, 'the catalog should serve every pack')
 

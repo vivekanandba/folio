@@ -20,15 +20,18 @@
 // one. Each check now names the furniture it waits for, via CDP.
 
 import { execFileSync, execSync } from 'node:child_process'
-import { createReadStream, existsSync, globSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, globSync, mkdtempSync, rmSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { launch } from '../e2e/cdp.mjs'
 import { findChrome } from '../e2e/chrome.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
-const PREVIEW = join(ROOT, '.preview')
-const PORT = 8123
+// Private, for the reason tools/preview/build.mjs gives: a shared .preview/
+// can be rebuilt under a server that is reading it.
+const PREVIEW = mkdtempSync(join(tmpdir(), 'folio-preview-'))
+process.on('exit', () => rmSync(PREVIEW, { recursive: true, force: true }))
 
 /* ------------------------------------------------------------ browser --- */
 
@@ -127,7 +130,7 @@ function mustMatch(dom, re, label) {
 /* ---------------------------------------------------------------- main --- */
 
 console.log('building preview…')
-execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs')], {
+execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs'), '--out', PREVIEW], {
   stdio: 'inherit',
 })
 
@@ -138,7 +141,9 @@ if (!chrome) {
 }
 console.log(`chromium: ${chrome}`)
 
-const server = await serve(PREVIEW, PORT)
+// Port 0, as in the e2e: a fixed port collides when two runs share a box.
+const server = await serve(PREVIEW, 0)
+const PORT = server.address().port
 const browser = await launch(chrome)
 let failures = 0
 try {
@@ -148,7 +153,26 @@ try {
     try {
       await page.goto(url)
       // Wait for the furniture this route is defined by — never for a clock.
-      await page.waitFor(check.ready, { timeoutMs: 15000, label: `${check.name} furniture` })
+      try {
+        await page.waitFor(check.ready, { timeoutMs: 15000, label: `${check.name} furniture` })
+      } catch (err) {
+        // Say what WAS there. "Timed out" alone cannot tell a slow page from
+        // one that threw and will never finish (CON-VER-005).
+        const seen = await page.evaluate(`JSON.stringify({
+          url: location.href,
+          readyState: document.readyState,
+          main: (document.querySelector('main')?.textContent ?? '').trim().slice(0, 160),
+          // Whether the app ran at all, and how far the module graph got.
+          appChildren: document.getElementById('app')?.childElementCount ?? -1,
+          modules: performance.getEntriesByType('resource').filter((r) => r.name.includes('/src/')).length,
+          lastModules: performance.getEntriesByType('resource').filter((r) => r.name.includes('/src/')).slice(-3).map((r) => r.name.replace(location.origin, '') + ' ' + Math.round(r.duration) + 'ms'),
+          // A module that fails to LOAD fires its error on the script element,
+          // which a window error collector never sees — but its status shows.
+          notOk: performance.getEntriesByType('resource').filter((r) => r.responseStatus !== 200).map((r) => r.name.replace(location.origin, '') + ' ' + r.responseStatus + ' ' + r.transferSize + 'B'),
+          errors: Array.isArray(window.__e2eErrors) ? window.__e2eErrors.slice(0, 3) : 'collector missing',
+        })`).catch((e) => `(could not read the page: ${e.message})`)
+        throw new Error(`${err.message}; saw ${seen}`)
+      }
       check.assert(await page.content())
       console.log(`✓ ${check.name}`)
     } catch (e) {

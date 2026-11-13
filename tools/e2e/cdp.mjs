@@ -14,14 +14,36 @@
 // expires. Node 22 ships a global WebSocket and fetch, so this needs nothing
 // from npm — which Article I requires and the offline box enforces.
 import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { availableParallelism, loadavg, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/**
+ * How much longer than its base a deadline should be on THIS box, right now.
+ *
+ * Every deadline in this harness detects a hang; none is a timing assertion.
+ * A fixed 15s made them assertions anyway: on the fleet's 4-vCPU VM, with
+ * other repos' Playwright jobs at load ~10, a healthy page took longer than
+ * 15s to mount and the gate went red on code that was fine (specs/015-delight
+ * task 18c — reproduced at load ~40: the lab stage, the floor canvas). By the
+ * fleet's rule that is a suite defect, not noise (CON-VER-008).
+ *
+ * So the deadline stretches with the one-minute load per core, read when the
+ * wait STARTS, never below its base and capped at 8× so a genuine hang still
+ * ends. E2E_TIMEOUT_SCALE overrides it, for a reader who wants to rule load
+ * out. The factor is printed in every timeout, so a red log says which.
+ */
+export function timeoutScale() {
+  const forced = Number(process.env.E2E_TIMEOUT_SCALE)
+  if (forced > 0) return forced
+  const perCore = loadavg()[0] / Math.max(1, availableParallelism())
+  return Math.min(8, Math.max(1, perCore))
+}
+
 /** Launch headless Chrome with the DevTools endpoint open. */
-export async function launch(chromePath, { port = 9333, timeoutMs = 20000 } = {}) {
+export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'folio-e2e-'))
   const proc = spawn(
     chromePath,
@@ -31,17 +53,25 @@ export async function launch(chromePath, { port = 9333, timeoutMs = 20000 } = {}
       '--no-sandbox',
       '--hide-scrollbars',
       '--disable-dev-shm-usage',
-      `--remote-debugging-port=${port}`,
+      // Port 0, and read back the one Chrome chose. A fixed port was worse
+      // than a collision: a second run polling it found the FIRST run's
+      // Chrome answering /json/version and drove that browser instead
+      // (specs/015-delight task 18c). DevToolsActivePort is written into this
+      // run's own profile, so it can only ever name this run's browser.
+      '--remote-debugging-port=0',
       `--user-data-dir=${profile}`,
       'about:blank',
     ],
     { stdio: ['ignore', 'ignore', 'pipe'] },
   )
 
-  const deadline = Date.now() + timeoutMs
+  const deadline = Date.now() + timeoutMs * timeoutScale()
   let version = null
+  let port = 0
   while (Date.now() < deadline) {
     try {
+      port ||= Number(readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')[0]) || 0
+      if (!port) throw new Error('no port yet')
       const res = await fetch(`http://127.0.0.1:${port}/json/version`)
       if (res.ok) {
         version = await res.json()
@@ -55,7 +85,9 @@ export async function launch(chromePath, { port = 9333, timeoutMs = 20000 } = {}
   if (!version) {
     proc.kill('SIGKILL')
     rmSync(profile, { recursive: true, force: true })
-    throw new Error(`chrome devtools endpoint never came up on :${port}`)
+    throw new Error(port
+      ? `chrome devtools endpoint never came up on :${port}`
+      : 'chrome never wrote DevToolsActivePort — it did not start, or could not open a debugging port')
   }
 
   return {
@@ -67,10 +99,25 @@ export async function launch(chromePath, { port = 9333, timeoutMs = 20000 } = {}
       try {
         await fetch(`http://127.0.0.1:${port}/json/close`).catch(() => {})
       } finally {
+        // Wait for Chrome to actually EXIT before deleting its profile. The
+        // old fixed 150ms let its child processes keep writing the disk cache
+        // while rmSync walked the tree, and under load the run died with
+        // ENOTEMPTY after every check had passed — leaving the profile
+        // behind in /tmp as well (specs/015-delight task 18c).
+        const exited = proc.exitCode !== null || proc.signalCode !== null
+          ? Promise.resolve()
+          : new Promise((r) => proc.once('exit', r))
         proc.kill('SIGTERM')
-        await sleep(150)
+        await Promise.race([exited, sleep(5000 * timeoutScale())])
         proc.kill('SIGKILL')
-        rmSync(profile, { recursive: true, force: true })
+        await Promise.race([exited, sleep(2000)])
+        try {
+          rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+        } catch (err) {
+          // A leftover temp profile is litter, not a failed check: say so and
+          // let the run's own verdict stand.
+          console.warn(`cdp: could not remove ${profile} (${err.code ?? err.message}); left for the OS`)
+        }
       }
     },
   }
@@ -162,7 +209,9 @@ async function newPage(port) {
      * client: readiness is a condition, not a duration.
      */
     async waitFor(expression, { timeoutMs = 15000, intervalMs = 100, label = expression } = {}) {
-      const deadline = Date.now() + timeoutMs
+      const scale = timeoutScale()
+      const budget = Math.round(timeoutMs * scale)
+      const deadline = Date.now() + budget
       let lastErr = null
       while (Date.now() < deadline) {
         try {
@@ -179,7 +228,8 @@ async function newPage(port) {
         }
         await sleep(intervalMs)
       }
-      throw new Error(`timed out after ${timeoutMs}ms waiting for: ${label}${lastErr ? ` (${lastErr.message})` : ''}`)
+      const how = scale > 1 ? ` (${timeoutMs}ms × load ${scale.toFixed(1)})` : ''
+      throw new Error(`timed out after ${budget}ms${how} waiting for: ${label}${lastErr ? ` (${lastErr.message})` : ''}`)
     },
     async content() {
       return page.evaluate('document.documentElement.outerHTML')
