@@ -15,17 +15,23 @@
 //   node tools/e2e/run.mjs --update   (accept current screenshots as baseline)
 
 import { execFileSync, execSync } from 'node:child_process'
-import { createReadStream, existsSync, globSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, globSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { launch } from './cdp.mjs'
 import { browserIdentity, findChrome } from './chrome.mjs'
 import { toLcov, v8ToLines } from './coverage.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
-const PREVIEW = join(ROOT, '.preview')
+// A private build, never the shared .preview/: the unit suite rebuilds that
+// one (delete, then write) and used to do it under a running e2e — see
+// tools/preview/build.mjs and specs/015-delight task 18c.
+const PREVIEW = mkdtempSync(join(tmpdir(), 'folio-preview-'))
+// On every exit path, including the early ones: 'exit' handlers run
+// synchronously, which rmSync is.
+process.on('exit', () => rmSync(PREVIEW, { recursive: true, force: true }))
 const BASELINES = join(ROOT, 'tests/baselines')
-const PORT = 8124
 const UPDATE = process.argv.includes('--update')
 
 /**
@@ -57,14 +63,36 @@ const MIME = {
   '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 }
 
+/**
+ * What the server itself saw, by path: arrived, finished, aborted. specs/015
+ * task 18d — under load some module requests come back status 0 in the
+ * browser, and this is what tells "never reached us" from "reached us and was
+ * dropped". Aborts are logged as they happen.
+ */
+const served = new Map()
+
 function serve(dir, port) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname)
+    const t0 = Date.now()
+    const rec = served.get(path) ?? { arrived: 0, finished: 0, aborted: 0 }
+    served.set(path, rec)
+    rec.arrived++
+    res.on('finish', () => { rec.finished++ })
+    res.on('close', () => {
+      if (res.writableFinished) return
+      rec.aborted++
+      console.error(`serve: response for ${path} ABORTED after ${Date.now() - t0}ms`)
+    })
     let file = join(dir, path === '/' ? 'index.html' : path)
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
     if (!existsSync(file)) { res.writeHead(404); res.end('nope'); return }
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' })
     createReadStream(file).pipe(res)
+  })
+  server.on('clientError', (err, socket) => {
+    console.error(`serve: client error ${err.code ?? err.message}`)
+    socket.destroy()
   })
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)))
 }
@@ -186,7 +214,7 @@ async function pixelDiff(page, aBase64, bBase64, tolerance = 12) {
 /* ------------------------------------------------------------------ main --- */
 
 console.log('building preview…')
-execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs')], { stdio: 'inherit' })
+execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs'), '--out', PREVIEW], { stdio: 'inherit' })
 
 const chrome = findChrome()
 if (!chrome) { console.error('e2e: no Chromium found (set CHROME_BIN)'); process.exit(2) }
@@ -196,7 +224,10 @@ if (UPDATE) writeFileSync(BASELINE_BROWSER_FILE, `${currentBrowser}\n`)
 const SHOTS_INFORMATIONAL = !(recordedBrowser && recordedBrowser === currentBrowser)
 
 mkdirSync(BASELINES, { recursive: true })
-const server = await serve(PREVIEW, PORT)
+// Port 0: the OS picks a free one, so two runs on one box cannot collide
+// (specs/015-delight task 18c). Everything else reads `origin`.
+const server = await serve(PREVIEW, 0)
+const PORT = server.address().port
 /**
  * Wait until a tab that was on about:blank has reached the app, with storage
  * reachable.
@@ -262,7 +293,7 @@ async function uncaughtErrors(page, where) {
   assert(false, `${n} uncaught error(s) ${where}: ${seen}`)
 }
 
-const browser = instrument(await launch(chrome, { port: 9344 }))
+const browser = instrument(await launch(chrome))
 const origin = `http://127.0.0.1:${PORT}`
 
 try {
@@ -315,8 +346,24 @@ try {
     try {
       await page.goto(`${origin}/index.html`)
       await committed(page, origin, 'document ready')
-      const manifestHref = await page.evaluate(`document.querySelector('link[rel="manifest"]')?.getAttribute('href') ?? ''`)
-      assert(manifestHref, 'no <link rel="manifest"> in the document')
+      // Wait for the link, not just for a document. Under load (specs/015
+      // task 18c) this read once came back empty from a page that had not
+      // settled, and "no <link rel=manifest>" sent the reader to index.html
+      // for a defect that was not there. On a timeout, say WHICH document
+      // was read, so "absent" and "not ours yet" cannot look alike
+      // (CON-VER-005).
+      let manifestHref = ''
+      try {
+        manifestHref = await page.waitFor(
+          `document.querySelector('link[rel="manifest"]')?.getAttribute('href') ?? ''`,
+          { label: 'the manifest link' },
+        )
+      } catch (err) {
+        const seen = await page.evaluate(
+          'JSON.stringify({ url: location.href, readyState: document.readyState, links: document.head ? document.head.querySelectorAll("link").length : -1 })',
+        )
+        assert(false, `no <link rel="manifest"> in the document (${err.message}; read ${seen})`)
+      }
       const apple = await page.evaluate(`!!document.querySelector('link[rel="apple-touch-icon"]')`)
       assert(apple, 'no apple-touch-icon — iOS home-screen installs read this, not the manifest')
       return manifestHref

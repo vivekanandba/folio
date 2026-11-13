@@ -20,15 +20,18 @@
 // one. Each check now names the furniture it waits for, via CDP.
 
 import { execFileSync, execSync } from 'node:child_process'
-import { createReadStream, existsSync, globSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, globSync, mkdtempSync, rmSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { launch } from '../e2e/cdp.mjs'
 import { findChrome } from '../e2e/chrome.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
-const PREVIEW = join(ROOT, '.preview')
-const PORT = 8123
+// Private, for the reason tools/preview/build.mjs gives: a shared .preview/
+// can be rebuilt under a server that is reading it.
+const PREVIEW = mkdtempSync(join(tmpdir(), 'folio-preview-'))
+process.on('exit', () => rmSync(PREVIEW, { recursive: true, force: true }))
 
 /* ------------------------------------------------------------ browser --- */
 
@@ -40,14 +43,36 @@ const MIME = {
   '.webmanifest': 'application/manifest+json',
 }
 
+/**
+ * What the server itself saw, by path: arrived, finished, aborted. specs/015
+ * task 18d — under load some module requests come back status 0 in the
+ * browser, and this is what tells "never reached us" from "reached us and was
+ * dropped". Aborts are logged as they happen.
+ */
+const served = new Map()
+
 function serve(dir, port) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname)
+    const t0 = Date.now()
+    const rec = served.get(path) ?? { arrived: 0, finished: 0, aborted: 0 }
+    served.set(path, rec)
+    rec.arrived++
+    res.on('finish', () => { rec.finished++ })
+    res.on('close', () => {
+      if (res.writableFinished) return
+      rec.aborted++
+      console.error(`serve: response for ${path} ABORTED after ${Date.now() - t0}ms`)
+    })
     let file = join(dir, path === '/' ? 'index.html' : path)
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
     if (!existsSync(file)) { res.writeHead(404); res.end('nope'); return }
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' })
     createReadStream(file).pipe(res)
+  })
+  server.on('clientError', (err, socket) => {
+    console.error(`serve: client error ${err.code ?? err.message}`)
+    socket.destroy()
   })
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)))
 }
@@ -127,7 +152,7 @@ function mustMatch(dom, re, label) {
 /* ---------------------------------------------------------------- main --- */
 
 console.log('building preview…')
-execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs')], {
+execFileSync(process.execPath, ['--experimental-strip-types', join(ROOT, 'tools/preview/build.mjs'), '--out', PREVIEW], {
   stdio: 'inherit',
 })
 
@@ -138,7 +163,9 @@ if (!chrome) {
 }
 console.log(`chromium: ${chrome}`)
 
-const server = await serve(PREVIEW, PORT)
+// Port 0, as in the e2e: a fixed port collides when two runs share a box.
+const server = await serve(PREVIEW, 0)
+const PORT = server.address().port
 const browser = await launch(chrome)
 let failures = 0
 try {
@@ -148,7 +175,32 @@ try {
     try {
       await page.goto(url)
       // Wait for the furniture this route is defined by — never for a clock.
-      await page.waitFor(check.ready, { timeoutMs: 15000, label: `${check.name} furniture` })
+      try {
+        await page.waitFor(check.ready, { timeoutMs: 15000, label: `${check.name} furniture` })
+      } catch (err) {
+        // Say what WAS there. "Timed out" alone cannot tell a slow page from
+        // one that threw and will never finish (CON-VER-005).
+        const seen = await page.evaluate(`JSON.stringify({
+          url: location.href,
+          readyState: document.readyState,
+          main: (document.querySelector('main')?.textContent ?? '').trim().slice(0, 160),
+          // Whether the app ran at all, and how far the module graph got.
+          appChildren: document.getElementById('app')?.childElementCount ?? -1,
+          modules: performance.getEntriesByType('resource').filter((r) => r.name.includes('/src/')).length,
+          lastModules: performance.getEntriesByType('resource').filter((r) => r.name.includes('/src/')).slice(-3).map((r) => r.name.replace(location.origin, '') + ' ' + Math.round(r.duration) + 'ms'),
+          // A module that fails to LOAD fires its error on the script element,
+          // which a window error collector never sees — but its status shows.
+          notOk: performance.getEntriesByType('resource').filter((r) => r.responseStatus !== 200).map((r) => r.name.replace(location.origin, '') + ' ' + r.responseStatus + ' ' + r.transferSize + 'B'),
+          errors: Array.isArray(window.__e2eErrors) ? window.__e2eErrors.slice(0, 3) : 'collector missing',
+        })`).catch((e) => `(could not read the page: ${e.message})`)
+        // And the server's side of every request the page saw fail.
+        let server = ''
+        try {
+          const failed = JSON.parse(seen).notOk.filter((n) => n.startsWith('/')).map((n) => n.split(' ')[0])
+          server = `; server saw ${JSON.stringify(Object.fromEntries(failed.map((f) => [f, served.get(f) ?? 'NEVER ARRIVED'])))}`
+        } catch { /* the page could not be read; seen already says so */ }
+        throw new Error(`${err.message}; saw ${seen}${server}`)
+      }
       check.assert(await page.content())
       console.log(`✓ ${check.name}`)
     } catch (e) {

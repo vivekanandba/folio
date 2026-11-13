@@ -157,13 +157,57 @@
 
 ### Carried forward — e2e load sensitivity (wider than first recorded)
 
-- [ ] 18c. Several e2e checks assume the page has finished loading and time
+- [x] 18c. Several e2e checks assume the page has finished loading and time
        out under heavy load: `explainer`, `blueprint`, the manifest link, and
        the screenshot furniture waits. Reproduced deliberately at load ~6 with
        three container runs beside four unit suites. CI runs the e2e alone in
        its own job, so this is not reached there — but by the fleet's own rule
        a check that fails under load is a suite defect, and the fix belongs to
        the harness rather than to any one feature PR.
+
+       DONE, and the record above was WRONG about the cause. Reproducing it
+       showed the "three container runs beside four unit suites" setup was
+       contaminated: the unit suite rebuilt the shared .preview/ (delete,
+       then write) while the e2e was serving it — a 404 manifest and an
+       index.html with zero links, read as "load sensitivity". Fixed, all
+       five defects found:
+       (a) shared .preview/ — the builder takes a guarded --out (refusal
+           tested, CON-PROC-006); unit, e2e and smoke each build privately;
+       (b) fixed HTTP ports (8123, 8124, 8139) — now port 0;
+       (c) fixed DevTools ports (9333, 9344) — a second run found the FIRST
+           run's Chrome answering and would have driven it; now
+           --remote-debugging-port=0 read back from DevToolsActivePort;
+       (d) close() deleted the Chrome profile 150ms after SIGTERM, racing its
+           child processes — ENOTEMPTY after every check had passed, and the
+           profile left in /tmp; now waits for exit;
+       (e) every deadline is a hang detector, now stretched by load per core
+           (capped 8x, printed in the message, E2E_TIMEOUT_SCALE overrides).
+       Measured after: two e2e runs, smoke, and two unit suites at once, at
+       load ~30, all green. The manifest check and the smoke now say WHAT
+       they saw on a timeout, which is how 18d below was found.
+
+- [ ] 18d. At load ~40 on 4 vCPU (10 per core — beyond what the fleet's
+       runners reach), about 1 smoke run in 12 boots a blank app: several of
+       our OWN /src/*.js modules come back status 0, 0 bytes from the
+       loopback server, so the module graph never evaluates and nothing
+       throws. Observed twice in 26 runs, with the request list in the
+       failure message. NOT root-caused. One hypothesis was tested and
+       DISPROVED: `connection: close` on every response (against a
+       keep-alive close race) left the rate unchanged (2/26 after vs ~4/45
+       before), and was reverted rather than shipped with a comment claiming
+       a cause. CI runs smoke alone on a hosted runner and has never shown
+       it.
+       The same class reached a LONE e2e once, at load ~30 from other repos'
+       jobs: "Failed to register a ServiceWorker … an unknown error occurred
+       when fetching the script". That variant was first seen AFTER the
+       18c isolation changes (port 0, private build dirs) and never before
+       them; causality is neither shown nor excluded, since the failure rate
+       is too low to separate by a handful of runs. Next step, now wired:
+       the e2e and smoke servers record each path's fate (arrived /
+       finished / aborted, aborts logged live) and the smoke's timeout
+       names it per failed module, so the next occurrence says "never
+       arrived" or "arrived and was dropped". 13 runs under contention since
+       produced no failure to read.
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 

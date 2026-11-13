@@ -4,18 +4,51 @@
 // module paths, patches the two vite-isms (style.css import, BASE_URL), and
 // assembles a static .preview/ dir servable with `python3 -m http.server`.
 //
-//   node --experimental-strip-types tools/preview/build.mjs
+//   node --experimental-strip-types tools/preview/build.mjs [--out DIR]
 //   python3 -m http.server 8077 -d .preview
+//
+// --out exists so that two consumers never share one directory. They used to:
+// the unit suite rebuilt .preview/ (rm -rf, then write) while the e2e was
+// SERVING it, and the browser got a 404 manifest and an index.html with no
+// links — read as an e2e "load sensitivity" defect for weeks (specs/015-delight
+// task 18c). The unit suite, the e2e and the smoke now each build privately.
 //
 // This is a LAYOUT/BEHAVIOUR preview, not the production build: no minify,
 // no bundling, no font downloads (offline box falls back to system fonts).
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { stripTypeScriptTypes } from 'node:module'
-import { dirname, join, relative, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { patchViteIsms } from './vite-isms.mjs'
 
 const ROOT = new URL('../..', import.meta.url).pathname
-const OUT = join(ROOT, '.preview')
+const DEFAULT_OUT = join(ROOT, '.preview')
+
+/**
+ * Where to build. The directory is DELETED first, so where may be any path at
+ * all only by construction, not by a caller remembering (CON-PROC-006): the
+ * repo's own .preview/, or a folio-preview-* directory directly inside the
+ * system temp dir — what mkdtemp hands the consumers. Anything else is
+ * refused before anything is touched.
+ */
+function previewOut(argv) {
+  const i = argv.indexOf('--out')
+  if (i === -1) return DEFAULT_OUT
+  const want = argv[i + 1] ? resolve(argv[i + 1]) : ''
+  const tmpOk = dirname(want) === resolve(tmpdir()) && basename(want).startsWith('folio-preview-')
+  if (want !== DEFAULT_OUT && !tmpOk) {
+    throw new Error(`refusing to build into ${want || '(nothing)'}: --out must be .preview/ or ${join(tmpdir(), 'folio-preview-*')}, because the build deletes it first`)
+  }
+  return want
+}
+
+let OUT
+try {
+  OUT = previewOut(process.argv.slice(2))
+} catch (err) {
+  console.error(`preview: ${err.message}`)
+  process.exit(2)
+}
 
 rmSync(OUT, { recursive: true, force: true })
 mkdirSync(join(OUT, 'src'), { recursive: true })
