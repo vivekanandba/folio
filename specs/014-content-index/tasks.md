@@ -9,4 +9,4 @@
 - [x] 5. Tests: index is current, index endpoints exist, rule refuses
 - [x] 6. verify-build asserts the index ships
 - [x] 7. Gates and measurement
-- [ ] 8. Ship via /ship (PR links specs/014-content-index/)
+- [x] 8. Ship via /ship (PR links specs/014-content-index/) — shipped as #66

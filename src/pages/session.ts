@@ -3,7 +3,7 @@ import { loadHalls, loadPackMeta, loadSession } from '../content'
 import { loadingLine } from '../curator'
 import { el } from '../dom'
 import { cue, resetRun } from '../feedback'
-import { acquisitionCard, ceremony } from '../fx'
+import { acquisitionCard, ceremony, extendAcquisitionCard } from '../fx'
 import { awardMilestones, saveSessionResult } from '../progress'
 import type { Hall, Milestone } from '../milestones'
 import { href } from '../router'
@@ -56,12 +56,24 @@ export async function renderSession(
   shell.append(mount)
 
 
-  /** Hang plaques on the wall, and say so out loud. */
+  /**
+   * Hang plaques on the wall, and say so out loud. One finish gets one card
+   * and one shimmer: the hall-shaped plaques that arrive after the catalog
+   * join the card already up rather than hanging a second one ~2s later with
+   * a second fanfare (specs/015-delight task 13c). The best finish there is —
+   * the last exhibit of a hall — is exactly the one that earns both waves.
+   */
+  let card: HTMLElement | null = null
   const showPlaques = (items: Milestone[]): void => {
-    const card = acquisitionCard(items)
-    if (!card) return
-    cue('milestone')
-    shell.append(card)
+    if (!items.length) return
+    if (card) {
+      extendAcquisitionCard(card, items)
+    } else {
+      card = acquisitionCard(items)
+      if (!card) return
+      cue('milestone')
+      shell.append(card)
+    }
     // A live region that is inserted ALREADY holding its content is not
     // reliably announced — the region has to exist before the mutation. The
     // app keeps one for exactly this, so the plaque reaches a screen reader

@@ -179,16 +179,31 @@ export function acquisitionCard(items: { title: string; note: string }[]): HTMLE
   if (!items.length) return null
   // No role="status": both callers follow this with liveAnnounce(), and a
   // region that IS honoured on insertion would then read the plaque twice.
-  const wrap = el('div', { class: 'acquisitions' }, [
-    el('p', { class: 'eyebrow' }, [
-      items.length === 1 ? 'The curator adds a plaque' : `The curator adds ${items.length} plaques`,
-    ]),
-    ...items.map((m, i) =>
+  const wrap = el('div', { class: 'acquisitions' }, [el('p', { class: 'eyebrow' })])
+  extendAcquisitionCard(wrap, items)
+  return wrap
+}
+
+/**
+ * Hang more plaques on a card already on the wall. One finish can earn plaques
+ * in two waves — the ones known at save time, then the hall-shaped ones once
+ * the catalog arrives — and two cards for one finish read as two separate
+ * events (specs/015-delight task 13c). A later wave staggers from zero, since
+ * it arrives on its own beat, and the eyebrow counts every plaque on the card.
+ */
+export function extendAcquisitionCard(card: HTMLElement, items: { title: string; note: string }[]): void {
+  const total = card.querySelectorAll('.acquisition').length + items.length
+  const eyebrow = card.querySelector('.eyebrow')
+  if (eyebrow) {
+    eyebrow.textContent = total === 1 ? 'The curator adds a plaque' : `The curator adds ${total} plaques`
+  }
+  card.append(
+    ...items.map((m, n) =>
       el('div', {
         class: `acquisition${prefersReducedMotion() ? '' : ' plaque-in'}`,
         // Staggered so several arriving at once read as a sequence rather
         // than a pile.
-        style: prefersReducedMotion() ? '' : `animation-delay:${i * 140}ms`,
+        style: prefersReducedMotion() ? '' : `animation-delay:${n * 140}ms`,
       }, [
         el('span', { class: 'acquisition-mark', 'aria-hidden': 'true' }, ['✦']),
         el('div', {}, [
@@ -197,8 +212,7 @@ export function acquisitionCard(items: { title: string; note: string }[]): HTMLE
         ]),
       ]),
     ),
-  ])
-  return wrap
+  )
 }
 
 /**
