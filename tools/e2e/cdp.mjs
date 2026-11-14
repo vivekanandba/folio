@@ -96,6 +96,23 @@ export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
     ],
     { stdio: ['ignore', 'ignore', 'pipe'] },
   )
+  // DRAIN stderr. It was piped and never read: a pipe holds ~64KB, and once
+  // full, any Chrome process that writes a log line blocks on the write. A
+  // quiet e2e run already writes ~31KB, half of it. This was suspected for
+  // specs/015-delight task 18d and then measured NOT to be that cause (no run
+  // came near 64KB) — it is fixed because it is a latent hang, and the tail
+  // it keeps is what finally explained 18d.
+  const stderr = { bytes: 0, tail: [] }
+  proc.stderr.setEncoding('utf8')
+  proc.stderr.on('data', (chunk) => {
+    stderr.bytes += Buffer.byteLength(chunk)
+    for (const line of chunk.split('\n')) {
+      if (!line.trim()) continue
+      stderr.tail.push(line)
+      if (stderr.tail.length > 40) stderr.tail.shift()
+      if (/crash|network service/i.test(line)) console.error(`chrome: ${line}`)
+    }
+  })
 
   const deadline = Date.now() + timeoutMs * timeoutScale()
   let version = null
@@ -123,6 +140,8 @@ export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
 
   return {
     port,
+    /** How much Chrome has written to stderr, and its last lines. */
+    stderr,
     async newPage() {
       return newPage(port)
     },
@@ -131,6 +150,7 @@ export async function launch(chromePath, { timeoutMs = 20000 } = {}) {
         await fetch(`http://127.0.0.1:${port}/json/close`).catch(() => {})
       } finally {
         await teardown(proc, profile)
+        if (process.env.E2E_CHROME_STDERR) console.error(`chrome stderr: ${stderr.bytes} bytes`)
       }
     },
   }

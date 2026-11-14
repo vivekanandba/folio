@@ -186,28 +186,33 @@
        load ~30, all green. The manifest check and the smoke now say WHAT
        they saw on a timeout, which is how 18d below was found.
 
-- [ ] 18d. At load ~40 on 4 vCPU (10 per core — beyond what the fleet's
+- [x] 18d. At load ~40 on 4 vCPU (10 per core — beyond what the fleet's
        runners reach), about 1 smoke run in 12 boots a blank app: several of
-       our OWN /src/*.js modules come back status 0, 0 bytes from the
-       loopback server, so the module graph never evaluates and nothing
-       throws. Observed twice in 26 runs, with the request list in the
-       failure message. NOT root-caused. One hypothesis was tested and
-       DISPROVED: `connection: close` on every response (against a
-       keep-alive close race) left the rate unchanged (2/26 after vs ~4/45
-       before), and was reverted rather than shipped with a comment claiming
-       a cause. CI runs smoke alone on a hosted runner and has never shown
-       it.
-       The same class reached a LONE e2e once, at load ~30 from other repos'
-       jobs: "Failed to register a ServiceWorker … an unknown error occurred
-       when fetching the script". That variant was first seen AFTER the
-       18c isolation changes (port 0, private build dirs) and never before
-       them; causality is neither shown nor excluded, since the failure rate
-       is too low to separate by a handful of runs. Next step, now wired:
-       the e2e and smoke servers record each path's fate (arrived /
-       finished / aborted, aborts logged live) and the smoke's timeout
-       names it per failed module, so the next occurrence says "never
-       arrived" or "arrived and was dropped". 13 runs under contention since
-       produced no failure to read.
+       our OWN /src/*.js modules come back status 0, 0 bytes, so the module
+       graph never evaluates and nothing throws.
+       DIAGNOSED — an environment limit, not a product or harness defect.
+       Evidence, in the order it was gathered (2026-11-13/14):
+       - `connection: close` on every response (a keep-alive close race) left
+         the rate unchanged (2/26 vs ~4/45) and was reverted.
+       - Server-side request records: the failed modules had ARRIVED and
+         FINISHED, none aborted — and in another failure the failed requests
+         NEVER ARRIVED. The server is exonerated either way.
+       - Chrome's stderr, now drained and tailed: "The FetchEvent for
+         …/src/computes.js resulted in a network error response". The
+         service worker answers Response.error() only when its own fetch()
+         rejects with no cached copy — so Chrome's network stack failed the
+         request, sometimes after the bytes arrived, sometimes before sending.
+         The same class hit a fetch the worker does NOT handle (sw.js itself,
+         at registration), so the worker surfaces it rather than causes it.
+       - The undrained stderr pipe was suspected and measured NOT to be the
+         cause: no run wrote more than 32KB of a ~64KB pipe. Drained anyway,
+         since a quiet e2e already writes half of it.
+       Not reproduced at the load the fleet's runners reach (~2.5 per core);
+       CI runs these jobs alone. The service worker was deliberately NOT
+       changed: a retry there would rest on an unproven mechanism, and with
+       no worker the browser's own fetch fails the same way. If this ever
+       appears at ordinary load, the failure message now names every failed
+       request, the server's record of it, and Chrome's last log lines.
 
 ## PR 4 — spend the headroom (extends specs/013 task 14c)
 
