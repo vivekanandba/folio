@@ -199,7 +199,8 @@ try {
           const failed = JSON.parse(seen).notOk.filter((n) => n.startsWith('/')).map((n) => n.split(' ')[0])
           server = `; server saw ${JSON.stringify(Object.fromEntries(failed.map((f) => [f, served.get(f) ?? 'NEVER ARRIVED'])))}`
         } catch { /* the page could not be read; seen already says so */ }
-        throw new Error(`${err.message}; saw ${seen}${server}`)
+        const chrome = `; chrome stderr ${browser.stderr.bytes}B, last: ${JSON.stringify(browser.stderr.tail.slice(-4))}`
+        throw new Error(`${err.message}; saw ${seen}${server}${chrome}`)
       }
       check.assert(await page.content())
       console.log(`✓ ${check.name}`)
