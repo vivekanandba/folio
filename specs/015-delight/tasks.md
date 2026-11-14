@@ -207,6 +207,11 @@
        - The undrained stderr pipe was suspected and measured NOT to be the
          cause: no run wrote more than 32KB of a ~64KB pipe. Drained anyway,
          since a quiet e2e already writes half of it.
+       Still untested: the sw.js variant was first seen AFTER #78's
+       isolation changes (port 0, private build dirs) and never before them.
+       The evidence above makes those changes an unlikely cause — the
+       failures are inside Chrome's network stack — but no run compared
+       them, so that remains an open question rather than an answer.
        Not reproduced at the load the fleet's runners reach (~2.5 per core);
        CI runs these jobs alone. The service worker was deliberately NOT
        changed: a retry there would rest on an unproven mechanism, and with
